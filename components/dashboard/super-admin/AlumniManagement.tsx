@@ -32,7 +32,7 @@ interface Alumni {
   id: string;
   name: string;
   email: string;
-  password: string;
+  password?: string;
   linkedIn: string | null;
   batchYear: string;
   studentId: string | null;
@@ -261,7 +261,7 @@ export default function AlumniManagement() {
                             <Key size={14} className="text-emerald-600" />
                             <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Access Key</span>
                          </div>
-                         <span className="text-xs font-black text-slate-900 tracking-wider mono">{a.password}</span>
+                         <span className="text-xs font-black text-slate-900 tracking-wider mono">••••••••</span>
                       </div>
 
                       {a.linkedIn ? (
