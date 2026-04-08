@@ -22,11 +22,11 @@ interface AnalyticsData {
   total_needy: string | number;
   zakat_count: string | number;
   lillah_count: string | number;
-  sadka_count: string | number;
   rte_count: string | number;
   zakat_amount: number;
   lillah_amount: number;
-  sadka_amount: number;
+  zakat_paid: string | number;
+  lillah_paid: string | number;
   total_needy_amount: number;
 }
 
@@ -60,10 +60,9 @@ export default function NeedyAnalytics() {
     needy: acc.needy + Number(curr.total_needy),
     zakat: acc.zakat + Number(curr.zakat_count),
     lillah: acc.lillah + Number(curr.lillah_count),
-    sadka: acc.sadka + Number(curr.sadka_count),
     rte: acc.rte + Number(curr.rte_count),
     amount: acc.amount + curr.total_needy_amount
-  }), { needy: 0, zakat: 0, lillah: 0, sadka: 0, rte: 0, amount: 0 });
+  }), { needy: 0, zakat: 0, lillah: 0, rte: 0, amount: 0 });
 
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -79,7 +78,7 @@ export default function NeedyAnalytics() {
            {[
              { label: 'Total Needy', value: totals.needy, icon: <Heart size={16} />, color: 'text-rose-600', bg: 'bg-rose-50' },
              { label: 'RTE Students', value: totals.rte, icon: <ShieldCheck size={16} />, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-             { label: 'Total Spons.', value: totals.zakat + totals.lillah + totals.sadka, icon: <Users size={16} />, color: 'text-teal-600', bg: 'bg-teal-50' },
+             { label: 'Total Spons.', value: totals.zakat + totals.lillah, icon: <Users size={16} />, color: 'text-teal-600', bg: 'bg-teal-50' },
              { label: 'Remaining Budget', value: `₹${(totals.amount / 100000).toFixed(2)}L`, icon: <TrendingUp size={16} />, color: 'text-amber-600', bg: 'bg-amber-50' },
            ].map((stat, i) => (
              <div key={i} className="bg-white px-6 py-4 rounded-md border border-slate-100 shadow-sm flex items-center space-x-3">
@@ -131,27 +130,51 @@ export default function NeedyAnalytics() {
                  <div className="p-8 space-y-6">
                     
                     {/* Aid Categories Breakdown */}
-                    <div className="space-y-4">
-                       {[
-                         { label: 'Zakat Fund', count: std.zakat_count, amount: std.zakat_amount, color: 'text-amber-600', bg: 'bg-amber-50/50', border: 'border-amber-100' },
-                         { label: 'Lillah Fund', count: std.lillah_count, amount: std.lillah_amount, color: 'text-teal-600', bg: 'bg-teal-50/50', border: 'border-teal-100' },
-                         { label: 'Sadka Fund', count: std.sadka_count, amount: std.sadka_amount, color: 'text-emerald-600', bg: 'bg-emerald-50/50', border: 'border-emerald-100' }
-                       ].map((spons, i) => (
-                         <div key={i} className={`${spons.bg} ${spons.border} border rounded-md p-6 flex items-center justify-between group/item hover:bg-white hover:shadow-xl hover:shadow-slate-200 transition-all duration-300`}>
-                            <div className="space-y-1">
-                               <p className={`text-[10px] font-black uppercase tracking-[0.2em] ${spons.color}`}>{spons.label}</p>
-                               <div className="flex items-baseline space-x-2">
-                                  <span className="text-2xl font-black text-slate-900 tracking-tight">₹{spons.amount.toLocaleString('en-IN')}</span>
-                                  <span className="text-[10px] font-bold text-slate-400">Remaining</span>
+                     <div className="space-y-6">
+                        {[
+                          { label: 'Zakat Fund', count: std.zakat_count, amount: std.zakat_amount, paid: std.zakat_paid, color: 'text-amber-600', barColor: 'bg-amber-500', bg: 'bg-amber-50/50', border: 'border-amber-100' },
+                          { label: 'Lillah Fund', count: std.lillah_count, amount: std.lillah_amount, paid: std.lillah_paid, color: 'text-teal-600', barColor: 'bg-teal-500', bg: 'bg-teal-50/50', border: 'border-teal-100' }
+                        ].map((spons, i) => {
+                          const fees = parseFloat(std.fees as string) || 0;
+                          const totalRequired = Number(spons.count) * fees;
+                          const paidAmount = parseFloat(spons.paid as string) || 0;
+                          const percentage = totalRequired > 0 ? Math.round((paidAmount / totalRequired) * 100) : 0;
+                          
+                          return (
+                            <div key={i} className={`${spons.bg} ${spons.border} border rounded-md p-6 space-y-4 group/item hover:bg-white hover:shadow-xl hover:shadow-slate-200 transition-all duration-300`}>
+                               <div className="flex items-center justify-between">
+                                  <div className="space-y-0.5">
+                                     <p className={`text-[9px] font-black uppercase tracking-[0.2em] ${spons.color}`}>{spons.label}</p>
+                                     <p className="text-xl font-black text-slate-900 tracking-tight">₹{paidAmount.toLocaleString('en-IN')}</p>
+                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Already Collected</p>
+                                  </div>
+                                  <div className="text-right">
+                                     <p className="text-lg font-black text-slate-900 leading-none">{spons.count}</p>
+                                     <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter mt-1">Recipients</p>
+                                  </div>
+                               </div>
+
+                               <div className="space-y-2">
+                                  <div className="flex justify-between items-center text-[8px] font-black uppercase tracking-widest">
+                                     <span className="text-slate-400">Sync Progress</span>
+                                     <span className={spons.color}>{percentage}%</span>
+                                  </div>
+                                  <div className="h-1 w-full bg-slate-100 rounded-full overflow-hidden">
+                                     <div 
+                                       className={`h-full ${spons.barColor} transition-all duration-1000`} 
+                                       style={{ width: `${Math.min(100, percentage)}%` }}
+                                     />
+                                  </div>
+                               </div>
+
+                               <div className="flex items-center justify-between pt-2 border-t border-slate-100/50">
+                                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Remaining Balance</span>
+                                  <span className="text-sm font-black text-rose-600 tracking-tighter">₹{spons.amount.toLocaleString('en-IN')}</span>
                                </div>
                             </div>
-                            <div className="text-right">
-                               <p className="text-xl font-black text-slate-900 leading-none">{spons.count}</p>
-                               <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter mt-1">Recipients</p>
-                            </div>
-                         </div>
-                       ))}
-                    </div>
+                          );
+                        })}
+                     </div>
 
                     {/* Secondary Metrics */}
                     <div className="grid grid-cols-2 gap-4">

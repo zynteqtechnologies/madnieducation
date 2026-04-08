@@ -28,7 +28,8 @@ export async function GET(request: Request) {
     } else {
       // Fetch Alumni directory
       const result = await pool.query(`
-        SELECT * FROM "Alumni" 
+        SELECT id, name, email, "linkedIn", "batchYear", "studentId", "createdAt" 
+        FROM "Alumni" 
         WHERE "schoolId" = $1 
         ORDER BY "batchYear" DESC, name ASC
       `, [session.schoolId]);

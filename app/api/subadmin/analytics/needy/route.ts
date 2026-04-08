@@ -18,11 +18,9 @@ export async function GET() {
         COUNT(s.id) FILTER (WHERE s."isNeedy" = true) as total_needy,
         COUNT(s.id) FILTER (WHERE s."isNeedy" = true AND s."sponsorshipType" ILIKE '%Zakat%') as zakat_count,
         COUNT(s.id) FILTER (WHERE s."isNeedy" = true AND s."sponsorshipType" ILIKE '%Lillah%') as lillah_count,
-        COUNT(s.id) FILTER (WHERE s."isNeedy" = true AND s."sponsorshipType" ILIKE '%Sadka%') as sadka_count,
         COUNT(s.id) FILTER (WHERE s."isUnderRTE" = true) as rte_count,
         COALESCE(SUM(CASE WHEN s."isNeedy" = true AND s."sponsorshipType" ILIKE '%Zakat%' THEN s."aidPaidAmount" ELSE 0 END), 0) as zakat_paid,
-        COALESCE(SUM(CASE WHEN s."isNeedy" = true AND s."sponsorshipType" ILIKE '%Lillah%' THEN s."aidPaidAmount" ELSE 0 END), 0) as lillah_paid,
-        COALESCE(SUM(CASE WHEN s."isNeedy" = true AND s."sponsorshipType" ILIKE '%Sadka%' THEN s."aidPaidAmount" ELSE 0 END), 0) as sadka_paid
+        COALESCE(SUM(CASE WHEN s."isNeedy" = true AND s."sponsorshipType" ILIKE '%Lillah%' THEN s."aidPaidAmount" ELSE 0 END), 0) as lillah_paid
       FROM "Standard" std
       LEFT JOIN "Student" s ON std.id = s."standardId"
       WHERE std."schoolId" = $1
@@ -37,14 +35,12 @@ export async function GET() {
       const fees = parseFloat(row.fees) || 0;
       const zakat_total = parseInt(row.zakat_count) * fees;
       const lillah_total = parseInt(row.lillah_count) * fees;
-      const sadka_total = parseInt(row.sadka_count) * fees;
       
       return {
         ...row,
         zakat_amount: Math.max(0, zakat_total - parseFloat(row.zakat_paid)),
         lillah_amount: Math.max(0, lillah_total - parseFloat(row.lillah_paid)),
-        sadka_amount: Math.max(0, sadka_total - parseFloat(row.sadka_paid)),
-        total_needy_amount: Math.max(0, (parseInt(row.total_needy) * fees) - (parseFloat(row.zakat_paid) + parseFloat(row.lillah_paid) + parseFloat(row.sadka_paid)))
+        total_needy_amount: Math.max(0, (parseInt(row.total_needy) * fees) - (parseFloat(row.zakat_paid) + parseFloat(row.lillah_paid)))
       };
     });
 
