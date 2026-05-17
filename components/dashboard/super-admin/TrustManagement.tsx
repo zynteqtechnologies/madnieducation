@@ -1,12 +1,13 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { 
-  Building2, 
-  Search, 
-  Plus, 
-  Trash2, 
-  Edit3, 
+import Link from 'next/link';
+import {
+  Building2,
+  Search,
+  Plus,
+  Trash2,
+  Edit3,
   Calendar,
   User as UserIcon,
   Phone,
@@ -35,19 +36,6 @@ export default function TrustManagement() {
   const [trusts, setTrusts] = useState<Trust[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [editingTrust, setEditingTrust] = useState<Trust | null>(null);
-
-  // Form State
-  const [formData, setFormData] = useState({
-    trustName: '',
-    registrationNo: '',
-    establishmentYear: '',
-    presidentName: '',
-    presidentNo: '',
-    trusteesName: '', 
-    trusteesNo: '', 
-  });
 
   useEffect(() => {
     fetchTrusts();
@@ -67,41 +55,6 @@ export default function TrustManagement() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-
-    const payload = {
-      ...formData,
-      id: editingTrust?.id,
-      establishmentYear: formData.establishmentYear ? parseInt(formData.establishmentYear) : null,
-      trusteesName: formData.trusteesName.split(',').map(s => s.trim()).filter(Boolean),
-      trusteesNo: formData.trusteesNo.split(',').map(s => s.trim()).filter(Boolean),
-    };
-
-    try {
-      const res = await fetch('/api/admin/trusts', {
-        method: editingTrust ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      if (res.ok) {
-        setShowAddForm(false);
-        setEditingTrust(null);
-        resetForm();
-        fetchTrusts();
-      } else {
-        const data = await res.json();
-        setError(data.error);
-      }
-    } catch (err) {
-      setError('Network error.');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this trust?')) return;
@@ -117,170 +70,121 @@ export default function TrustManagement() {
     }
   };
 
-  const handleEdit = (trust: Trust) => {
-    setEditingTrust(trust);
-    setFormData({
-      trustName: trust.trustName,
-      registrationNo: trust.registrationNo,
-      establishmentYear: trust.establishmentYear?.toString() || '',
-      presidentName: trust.presidentName || '',
-      presidentNo: trust.presidentNo || '',
-      trusteesName: trust.trusteesName.join(', '),
-      trusteesNo: trust.trusteesNo.join(', '),
-    });
-    setShowAddForm(true);
-  };
-
-  const resetForm = () => {
-    setFormData({
-      trustName: '',
-      registrationNo: '',
-      establishmentYear: '',
-      presidentName: '',
-      presidentNo: '',
-      trusteesName: '',
-      trusteesNo: '',
-    });
-  };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-slate-900 tracking-tight">Trust Organizations</h2>
-          <p className="text-sm text-slate-500 mt-1">Manage institutional trusts and governing bodies.</p>
-        </div>
-        <button 
-          onClick={() => { setShowAddForm(true); setEditingTrust(null); resetForm(); }}
-          className="bg-indigo-600 text-white px-5 py-2.5 rounded-md hover:bg-indigo-700 transition font-semibold text-sm shadow-sm flex items-center"
+    <div className="space-y-4 animate-in fade-in duration-500">
+
+      <div className="flex justify-end pt-2">
+        <Link
+          href="/superadmin/trust/new"
+          className="bg-[#1A3D63] text-white px-5 py-2.5 rounded-xl hover:bg-[#0A1931] transition font-semibold text-xs shadow-sm shadow-[#1A3D63]/10 flex items-center group"
         >
-          <Plus size={18} className="mr-2" />
-          <span>New Trust</span>
-        </button>
+          <div className="bg-white/10 p-1 rounded-lg mr-2 group-hover:scale-110 transition-transform">
+            <Plus size={16} strokeWidth={3} />
+          </div>
+          <span>New trust</span>
+        </Link>
       </div>
 
       {error && (
         <div className="p-4 bg-rose-50 border border-rose-100 rounded-md flex items-center space-x-3 text-rose-700 text-sm">
-           <ShieldCheck size={18} />
-           <p>{error}</p>
+          <ShieldCheck size={18} />
+          <p>{error}</p>
         </div>
       )}
 
-      {/* Trust Cards - Simple & Sober */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {loading && !trusts.length ? (
-           <div className="col-span-full py-20 flex flex-col items-center justify-center space-y-3">
-              <Loader2 className="animate-spin text-slate-400" size={32} />
-              <p className="text-slate-400 text-xs font-medium">Loading trusts...</p>
-           </div>
-        ) : trusts.length === 0 ? (
-           <div className="col-span-full py-20 bg-white border border-slate-200 rounded-md text-center text-slate-400 font-medium text-sm">
-              No trusts registered.
-           </div>
-        ) : (
-          trusts.map(trust => (
-            <div key={trust.id} className="bg-white rounded-md border border-slate-200 shadow-sm p-6 hover:border-indigo-200 transition-all group">
-               <div className="flex items-start justify-between mb-6">
-                  <div className="flex items-center space-x-4">
-                     <div className="w-12 h-12 rounded-md bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-500 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
-                        <Building2 size={24} />
-                     </div>
-                     <div>
-                        <h4 className="text-base font-bold text-slate-900">{trust.trustName}</h4>
-                        <div className="flex items-center space-x-2 mt-1">
-                           <span className="text-[10px] font-bold text-slate-400 px-2 py-0.5 bg-slate-50 rounded border border-slate-100">REG: {trust.registrationNo}</span>
-                           {trust.establishmentYear && <span className="text-[10px] font-bold text-slate-400 px-2 py-0.5 bg-slate-50 rounded border border-slate-100">EST: {trust.establishmentYear}</span>}
+      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden mt-8">
+        <div className="overflow-x-auto">
+          <table className="w-full table-fixed min-w-[1100px]">
+            <thead>
+              <tr className="bg-slate-50/50 border-b border-slate-100">
+                <th className="px-6 py-4 text-[11px] font-semibold text-slate-400 text-left w-[35%]">Trust name</th>
+                <th className="px-6 py-4 text-[11px] font-semibold text-slate-400 text-left w-[22%]">Registration</th>
+                <th className="px-6 py-4 text-[11px] font-semibold text-slate-400 text-center w-[8%]">Est.</th>
+                <th className="px-6 py-4 text-[11px] font-semibold text-slate-400 text-left w-[17%]">President</th>
+                <th className="px-6 py-4 text-[11px] font-semibold text-slate-400 text-left w-[18%] pr-14">Trustees</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-50">
+              {loading && !trusts.length ? (
+                <tr>
+                  <td colSpan={4} className="py-20 text-center">
+                    <Loader2 className="animate-spin text-slate-400 mx-auto mb-2" size={32} />
+                    <p className="text-slate-400 text-xs font-medium">Loading trusts...</p>
+                  </td>
+                </tr>
+              ) : trusts.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="py-20 text-center text-slate-400 font-medium text-sm">
+                    No trusts registered.
+                  </td>
+                </tr>
+              ) : (
+                trusts.map(trust => (
+                <tr key={trust.id} className="hover:bg-slate-50/40 transition-all group align-middle">
+                    <td className="px-6 py-3.5">
+                      <div className="flex items-center space-x-3.5">
+                        <div className="w-10 h-10 rounded-xl bg-slate-100/50 border border-slate-200/60 flex flex-shrink-0 items-center justify-center text-slate-400 group-hover:bg-[#1A3D63]/10 group-hover:text-[#1A3D63] transition-all">
+                          <Building2 size={18} strokeWidth={1.5} />
                         </div>
-                     </div>
-                  </div>
-                  <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                     <button onClick={() => handleEdit(trust)} className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-all"><Edit3 size={16} /></button>
-                     <button onClick={() => handleDelete(trust.id)} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-all"><Trash2 size={16} /></button>
-                  </div>
-               </div>
+                        <div className="min-w-0">
+                          <p className="text-[12px] font-semibold text-slate-700 leading-snug group-hover:text-[#1A3D63] transition-colors">{trust.trustName}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-3.5">
+                      <div className="space-y-1">
+                        <p className="text-[11px] font-semibold text-slate-600 tracking-tight leading-tight">
+                          {trust.registrationNo}
+                        </p>
+                        <p className="text-[9px] text-slate-400 font-medium tracking-tighter italic">Official registration</p>
+                      </div>
+                    </td>
+                    <td className="px-6 py-3.5 text-center">
+                      <span className="text-[12px] font-semibold text-slate-500 font-mono tracking-tighter">
+                        {trust.establishmentYear || '—'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-3.5">
+                      <div className="space-y-1">
+                        <p className="text-[12px] font-semibold text-slate-700">{trust.presidentName || 'N/A'}</p>
+                        <div className="flex items-center space-x-1.5 opacity-60">
+                          <Phone size={10} className="text-slate-500" />
+                          <p className="text-[10px] text-slate-600 font-semibold">{trust.presidentNo || 'No contact'}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-3.5 pr-14 relative">
+                      <div className="space-y-1.5">
+                        <div className="flex items-center space-x-1.5">
+                           <span className="inline-flex items-center justify-center w-5 h-5 rounded-md bg-[#1A3D63]/5 text-[#1A3D63] text-[10px] font-semibold border border-[#1A3D63]/10 flex-shrink-0">
+                            {trust.trusteesName.length}
+                          </span>
+                          <p className="text-[10px] font-semibold text-slate-500 tracking-widest">Active trustees</p>
+                        </div>
+                        <p className="text-[10px] text-slate-400 font-medium leading-relaxed line-clamp-1 group-hover:line-clamp-none transition-all">
+                          {trust.trusteesName.join(', ')}
+                        </p>
+                      </div>
 
-               <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-md">
-                  <div>
-                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">President</p>
-                     <p className="text-sm font-semibold text-slate-800">{trust.presidentName || 'N/A'}</p>
-                     <p className="text-xs text-slate-500 mt-0.5">{trust.presidentNo || 'No contact'}</p>
-                  </div>
-                  <div className="text-right">
-                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Governance</p>
-                     <p className="text-sm font-semibold text-slate-800">{trust.trusteesName.length} Trustees</p>
-                     <p className="text-xs text-slate-400 mt-0.5">{trust.trusteesName.slice(0, 2).join(', ')}</p>
-                  </div>
-               </div>
-
-               <div className="mt-4 pt-4 border-t border-slate-100 flex justify-between items-center">
-                  <span className="text-[10px] font-medium text-slate-400">Record ID: {trust.id.slice(0,8)}</span>
-                  <button onClick={() => handleEdit(trust)} className="text-indigo-600 text-[11px] font-bold flex items-center hover:underline">
-                     Update Identity <ChevronRight size={14} className="ml-1" />
-                  </button>
-               </div>
-            </div>
-          ))
-        )}
+                      {/* Actions Overlay for a cleaner idle look */}
+                      <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col space-y-1 px-1 opacity-0 group-hover:opacity-100 transition-all scale-95 group-hover:scale-100">
+                        <Link href={`/superadmin/trust/${trust.id}/edit`} className="p-1.5 text-slate-400 hover:text-[#1A3D63] hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 rounded-lg transition-all" title="Edit Record">
+                          <Edit3 size={14} />
+                        </Link>
+                        <button onClick={(e) => { e.stopPropagation(); handleDelete(trust.id); }} className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-100 rounded-lg transition-all" title="Delete Permanent">
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      {/* Simple Form Modal */}
-      {showAddForm && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-in fade-in duration-300">
-           <div className="bg-white w-full max-w-xl rounded-md shadow-2xl p-8 relative overflow-y-auto max-h-[90vh]">
-              <div className="flex justify-between items-center mb-8">
-                <h3 className="text-lg font-bold text-slate-900">{editingTrust ? 'Update Trust Record' : 'Register New Trust'}</h3>
-                <button onClick={() => setShowAddForm(false)} className="text-slate-400 hover:text-slate-600 transition-colors"><X size={20} /></button>
-              </div>
-
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">Trust Name</label>
-                    <input type="text" required value={formData.trustName} onChange={e => setFormData({ ...formData, trustName: e.target.value })} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-md outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white text-sm transition-all" />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">Registration No</label>
-                    <input type="text" required value={formData.registrationNo} onChange={e => setFormData({ ...formData, registrationNo: e.target.value })} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-md outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white text-sm transition-all" />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">Est. Year</label>
-                    <input type="number" value={formData.establishmentYear} onChange={e => setFormData({ ...formData, establishmentYear: e.target.value })} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-md outline-none focus:ring-1 focus:ring-indigo-500 focus:bg-white text-sm transition-all" />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">President Name</label>
-                    <input type="text" value={formData.presidentName} onChange={e => setFormData({ ...formData, presidentName: e.target.value })} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-md outline-none text-sm" />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">President Contact</label>
-                    <input type="text" value={formData.presidentNo} onChange={e => setFormData({ ...formData, presidentNo: e.target.value })} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-md outline-none text-sm" />
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">Trustees Names (Comma separated)</label>
-                  <textarea value={formData.trusteesName} onChange={e => setFormData({ ...formData, trusteesName: e.target.value })} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-md outline-none text-sm resize-none h-24" />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">Trustees Contacts (Comma separated)</label>
-                  <textarea value={formData.trusteesNo} onChange={e => setFormData({ ...formData, trusteesNo: e.target.value })} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-md outline-none text-sm resize-none h-24" />
-                </div>
-                
-                <div className="flex space-x-3 pt-6">
-                   <button type="button" onClick={() => setShowAddForm(false)} className="flex-1 py-3 bg-slate-100 text-slate-600 rounded-md font-bold text-sm tracking-tight hover:bg-slate-200 transition-all">Cancel</button>
-                   <button type="submit" disabled={loading} className="flex-[2] py-3 bg-indigo-600 text-white rounded-md font-bold text-sm tracking-tight shadow-md hover:bg-indigo-700 transition-all">
-                     {loading ? <Loader2 className="animate-spin mx-auto" size={18} /> : <span>{editingTrust ? 'Apply Changes' : 'Complete Registration'}</span>}
-                   </button>
-                </div>
-              </form>
-           </div>
-        </div>
-      )}
 
     </div>
   );

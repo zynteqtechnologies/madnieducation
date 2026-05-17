@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { getSessionFromCookies } from '@/lib/auth';
-import { uploadMedia } from '@/lib/cloudinary';
+import { uploadMedia } from '@/lib/imagekit';
 
 export async function GET() {
   try {

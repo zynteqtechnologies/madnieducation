@@ -1,13 +1,13 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { 
-  Layers, 
-  Search, 
-  Plus, 
-  Trash2, 
-  Edit3, 
-  ShieldCheck, 
+import {
+  Layers,
+  Search,
+  Plus,
+  Trash2,
+  Edit3,
+  ShieldCheck,
   X,
   Loader2,
   ChevronRight,
@@ -23,8 +23,15 @@ interface Standard {
   batchYear: string | null;
 }
 
+interface AcademicYear {
+  id: string;
+  label: string;
+  statusTag: string;
+}
+
 export default function StandardManagement() {
   const [standards, setStandards] = useState<Standard[]>([]);
+  const [academicYears, setAcademicYears] = useState<AcademicYear[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
@@ -40,7 +47,18 @@ export default function StandardManagement() {
 
   useEffect(() => {
     fetchStandards();
+    fetchYears();
   }, []);
+
+  const fetchYears = async () => {
+    try {
+      const res = await fetch('/api/subadmin/academic-years');
+      const data = await res.json();
+      if (res.ok) setAcademicYears(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const fetchStandards = async () => {
     setLoading(true);
@@ -124,130 +142,145 @@ export default function StandardManagement() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      
-      {/* Search and Action Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-slate-900 tracking-tight">Academic Standards</h2>
-          <p className="text-sm text-slate-500 mt-1 uppercase text-[10px] tracking-widest font-black">Grade Configuration & Fee Structure</p>
+
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-slate-100 mb-8">
+        <div className="space-y-1">
+          <h2 className="text-xl font-bold text-slate-900 tracking-tight">Academic standards</h2>
+          <p className="text-xs text-slate-500 font-medium tracking-tight">Grade configuration and institutional fee structures</p>
         </div>
-        <button 
+        <button
           onClick={() => { setShowAddForm(true); setEditingStandard(null); resetForm(); }}
-          className="bg-emerald-600 text-white px-6 py-3 rounded-md hover:bg-emerald-700 transition font-bold text-xs shadow-sm flex items-center active:scale-95 transition-all"
+          className="bg-emerald-600 text-white px-5 py-2.5 rounded-xl hover:bg-emerald-700 transition font-bold text-[12px] shadow-lg shadow-emerald-600/10 flex items-center w-fit"
         >
-          <Plus size={16} className="mr-2" />
-          <span>Config Standard</span>
+          <Plus size={18} className="mr-2" />
+          <span>Add standard</span>
         </button>
       </div>
 
       {error && (
         <div className="p-4 bg-rose-50 border border-rose-100 rounded-md flex items-center space-x-3 text-rose-700 text-xs font-semibold">
-           <ShieldCheck size={16} />
-           <p>{error}</p>
+          <ShieldCheck size={16} />
+          <p>{error}</p>
         </div>
       )}
 
-      {/* Standards List */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        {loading && !standards.length ? (
-           <div className="col-span-full py-20 flex flex-col items-center justify-center space-y-3">
-              <Loader2 className="animate-spin text-emerald-600" size={32} />
-              <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">Retrieving Configurations...</p>
-           </div>
-        ) : standards.length === 0 ? (
-           <div className="col-span-full py-20 bg-white border border-dashed border-slate-200 rounded-md text-center text-slate-400 font-bold text-xs uppercase tracking-widest italic">
-              No academic standards localized.
-           </div>
-        ) : (
-          standards.map(std => (
-            <div key={std.id} className="bg-white rounded-md border border-slate-200 shadow-sm p-6 hover:border-indigo-500/20 hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-500 group">
-               <div className="flex items-start justify-between mb-6">
-                  <div className="flex items-center space-x-4">
-                     <div className="w-12 h-12 rounded-md bg-slate-50 border border-slate-100 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-600 group-hover:text-white transition-all duration-500">
-                        <Layers size={22} />
-                     </div>
-                     <div>
-                        <h4 className="text-base font-black text-slate-900 tracking-tight">{std.standardName}</h4>
-                        <div className="flex items-center space-x-2 mt-1">
-                           <span className="text-[10px] font-black text-slate-400 px-2 py-0.5 bg-slate-50 rounded border border-slate-100 uppercase tracking-tighter">DIV: {std.division || 'MAIN'}</span>
-                           <span className="text-[10px] font-black text-emerald-600 px-2 py-0.5 bg-emerald-50 rounded border border-emerald-100 uppercase tracking-tighter">{std.batchYear || 'NO BATCH'}</span>
+      {/* Standards List - Transitioned to Professional Table */}
+      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden mt-8">
+        <div className="overflow-x-auto">
+          <table className="w-full table-fixed min-w-[1000px]">
+            <thead>
+              <tr className="bg-slate-50/50 border-b border-slate-100">
+                <th className="px-6 py-4 text-[11px] font-semibold text-slate-400 text-left w-[35%]">Grade</th>
+                <th className="px-6 py-4 text-[11px] font-semibold text-slate-400 text-left w-[25%]">Fees</th>
+                <th className="px-6 py-4 text-[11px] font-semibold text-slate-400 text-left w-[30%]">Batch</th>
+                <th className="px-6 py-4 text-[11px] font-semibold text-slate-400 text-right w-[10%] pr-8">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-50">
+              {loading && !standards.length ? (
+                <tr><td colSpan={4} className="px-6 py-12 text-center"><Loader2 className="animate-spin text-emerald-600 mx-auto" size={24} /></td></tr>
+              ) : standards.length === 0 ? (
+                <tr><td colSpan={4} className="px-6 py-12 text-center text-slate-400 text-sm italic">No academic standards localized.</td></tr>
+              ) : (
+                standards.map(std => (
+                  <tr key={std.id} className="hover:bg-slate-50/40 transition-all group align-middle">
+                    <td className="px-6 py-5">
+                      <div className="flex items-center space-x-3.5">
+                        <div className="w-10 h-10 rounded-xl bg-slate-100/50 border border-slate-200/60 flex items-center justify-center text-slate-400 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-all">
+                          <Layers size={18} strokeWidth={1.5} />
                         </div>
-                     </div>
-                  </div>
-                  <div className="flex space-x-1">
-                     <button onClick={() => handleEdit(std)} className="p-2 text-slate-300 hover:text-emerald-600 hover:bg-emerald-50 rounded-md transition-all"><Edit3 size={16} /></button>
-                     <button onClick={() => handleDelete(std.id)} className="p-2 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-all"><Trash2 size={16} /></button>
-                  </div>
-               </div>
-
-               <div className="bg-slate-50/50 p-4 rounded-md border border-slate-50">
-                  <div className="flex justify-between items-center">
-                     <div className="space-y-1">
-                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Base Tuition Fee</p>
-                        <p className="text-base font-black text-slate-900 flex items-center truncate">
-                           <IndianRupee size={14} className="mr-1 text-emerald-500" />
-                           {parseFloat(std.fees as string).toLocaleString('en-IN')}
-                        </p>
-                     </div>
-                     <Activity size={20} className="text-slate-100 group-hover:text-amber-400 transition-colors" />
-                  </div>
-               </div>
-
-               <div className="mt-4 pt-4 border-t border-slate-50 flex justify-between items-center">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">ID-LINK: {std.id.slice(0,8)}</span>
-                  <button onClick={() => handleEdit(std)} className="text-emerald-600 text-[10px] font-black uppercase tracking-widest flex items-center hover:translate-x-1 transition-transform">
-                     Modify Config <ChevronRight size={14} className="ml-1" />
-                  </button>
-               </div>
-            </div>
-          ))
-        )}
+                        <div className="min-w-0">
+                          <p className="text-[14px] font-bold text-slate-700 leading-snug">{std.standardName}</p>
+                          <p className="text-[10px] text-slate-400 mt-1 font-medium italic">Div: {std.division || 'Main'}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-5">
+                       <div className="flex items-center space-x-1 font-bold text-slate-700">
+                          <IndianRupee size={14} className="text-emerald-500" />
+                          <span className="text-[14px]">{parseFloat(std.fees as string).toLocaleString('en-IN')}</span>
+                       </div>
+                    </td>
+                    <td className="px-6 py-5">
+                       <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-[10px] font-bold rounded-lg border border-emerald-100/50">
+                          {std.batchYear || 'Floating'}
+                       </span>
+                    </td>
+                    <td className="px-6 py-5 text-right pr-8">
+                       <div className="flex items-center justify-end space-x-2 opacity-0 group-hover:opacity-100 transition-all scale-95 group-hover:scale-100">
+                        <button onClick={() => handleEdit(std)} className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 rounded-lg transition-all" title="Modify Context">
+                          <Edit3 size={15} />
+                        </button>
+                        <button onClick={() => handleDelete(std.id)} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-100 rounded-lg transition-all" title="Delete Policy">
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Config Form Modal */}
       {showAddForm && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-in fade-in duration-300">
-           <div className="bg-white w-full max-w-md rounded-md shadow-2xl p-10 relative border border-slate-100">
-              <div className="flex justify-between items-center mb-8">
-                <div>
-                   <h3 className="text-xl font-black text-slate-900 tracking-tight">{editingStandard ? 'Update Grade Config' : 'Define Standard'}</h3>
-                   <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] mt-1">Academic Control Center</p>
-                </div>
-                <button onClick={() => setShowAddForm(false)} className="p-2 text-slate-300 hover:text-slate-600 transition-colors"><X size={20} /></button>
+          <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl p-10 relative border border-slate-100">
+            <div className="flex justify-between items-center mb-8">
+              <div>
+                <h3 className="text-xl font-bold text-slate-900 tracking-tight">{editingStandard ? 'Update grade context' : 'Define standard'}</h3>
+                <p className="text-slate-400 text-xs font-medium mt-1">Institutional academic control center</p>
+              </div>
+              <button onClick={() => setShowAddForm(false)} className="p-2 text-slate-300 hover:text-slate-600 transition-colors"><X size={20} /></button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-slate-500 ml-1">Standard identity (e.g., 10th)</label>
+                <input type="text" required value={formData.standardName} onChange={e => setFormData({ ...formData, standardName: e.target.value })} className="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-emerald-500/5 focus:bg-white text-sm font-bold transition-all" placeholder="Enter Grade" />
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Standard Identity (e.g., 10th)</label>
-                  <input type="text" required value={formData.standardName} onChange={e => setFormData({ ...formData, standardName: e.target.value })} className="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-md outline-none focus:ring-4 focus:ring-emerald-500/5 focus:bg-white text-sm font-bold transition-all" placeholder="Enter Grade" />
-                </div>
-                
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Assigned Divisions (e.g., A, B, C)</label>
-                  <input type="text" value={formData.division} onChange={e => setFormData({ ...formData, division: e.target.value })} className="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-md outline-none focus:ring-4 focus:ring-emerald-500/5 focus:bg-white text-sm font-bold transition-all" placeholder="Separated by commas" />
-                </div>
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-slate-500 ml-1">Assigned divisions (e.g., A, B, C)</label>
+                <input type="text" value={formData.division} onChange={e => setFormData({ ...formData, division: e.target.value })} className="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-emerald-500/5 focus:bg-white text-sm font-bold transition-all" placeholder="Separated by commas" />
+              </div>
 
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tuition Fees (Annual)</label>
-                  <div className="relative group">
-                     <IndianRupee size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-emerald-500 transition-colors" />
-                     <input type="number" required value={formData.fees} onChange={e => setFormData({ ...formData, fees: e.target.value })} className="w-full pl-12 pr-5 py-3 bg-slate-50 border border-slate-200 rounded-md outline-none focus:ring-4 focus:ring-emerald-500/5 focus:bg-white text-sm font-black transition-all" placeholder="0.00" />
-                  </div>
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-slate-500 ml-1">Tuition fees (Annual)</label>
+                <div className="relative group">
+                  <IndianRupee size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-emerald-500 transition-colors" />
+                  <input type="number" required value={formData.fees} onChange={e => setFormData({ ...formData, fees: e.target.value })} className="w-full pl-12 pr-5 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-emerald-500/5 focus:bg-white text-sm font-bold transition-all" placeholder="0.00" />
                 </div>
+              </div>
 
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Academic Batch (e.g., 2024-25)</label>
-                  <input type="text" value={formData.batchYear} onChange={e => setFormData({ ...formData, batchYear: e.target.value })} className="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-md outline-none focus:ring-4 focus:ring-emerald-500/5 focus:bg-white text-sm font-bold transition-all" placeholder="Enter Batch Year" />
-                </div>
-                
-                <div className="flex space-x-3 pt-6">
-                   <button type="button" onClick={() => setShowAddForm(false)} className="flex-1 py-4 bg-slate-50 text-slate-400 rounded-md font-black text-[10px] uppercase tracking-widest hover:bg-slate-100 transition-all">Abort</button>
-                   <button type="submit" disabled={loading} className="flex-[2] py-4 bg-emerald-600 text-white rounded-md font-black text-[10px] uppercase tracking-widest shadow-xl shadow-emerald-100 hover:bg-emerald-700 transition-all active:scale-95">
-                     {loading ? <Loader2 className="animate-spin mx-auto" size={20} /> : <span>{editingStandard ? 'Rewrite Config' : 'Authorize Standard'}</span>}
-                   </button>
-                </div>
-              </form>
-           </div>
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-slate-500 ml-1">Academic batch (e.g., 2024-25)</label>
+                <select
+                  value={formData.batchYear}
+                  onChange={e => setFormData({ ...formData, batchYear: e.target.value })}
+                  className="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-emerald-500/5 focus:bg-white text-sm font-bold transition-all"
+                  required
+                >
+                  <option value="">Select an Academic Year</option>
+                  {academicYears.map(year => (
+                    <option key={year.id} value={year.label}>
+                      {year.label} {year.statusTag ? `(${year.statusTag})` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex space-x-3 pt-6">
+                <button type="button" onClick={() => setShowAddForm(false)} className="flex-1 py-4 bg-slate-50 text-slate-400 rounded-xl font-bold text-[11px] hover:bg-slate-100 transition-all">Abort</button>
+                <button type="submit" disabled={loading} className="flex-[2] py-4 bg-emerald-600 text-white rounded-xl font-bold text-[11px] shadow-xl shadow-emerald-500/10 hover:bg-emerald-700 transition-all active:scale-95">
+                  {loading ? <Loader2 className="animate-spin mx-auto" size={20} /> : <span>{editingStandard ? 'Update policy' : 'Authorize standard'}</span>}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 

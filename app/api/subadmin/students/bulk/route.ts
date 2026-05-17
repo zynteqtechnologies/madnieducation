@@ -25,8 +25,18 @@ export async function POST(request: Request) {
 
     await client.query('BEGIN');
 
+    // Fetch the active academic year for initial enrollment logging
+    const activeYearRes = await client.query(
+      `SELECT id FROM "AcademicYear" WHERE "isActive" = true LIMIT 1`
+    );
+    const activeYearId = activeYearRes.rows[0]?.id;
+
     try {
       for (const s of students) {
+        // Generate a new random UUID for the student first to link history cleanly
+        const studentIdRes = await client.query('SELECT gen_random_uuid() as id');
+        const newStudentId = studentIdRes.rows[0].id;
+
         // Map Excel keys to DB columns (using trimmed keys from import route)
         await client.query(
           `INSERT INTO "Student" (
@@ -38,7 +48,7 @@ export async function POST(request: Request) {
             "bankName", "ifscCode", "sponsorshipType", "isNeedy", "isUnderRTE", 
             "standardId", "schoolId", "createdAt", "updatedAt"
           ) VALUES (
-            gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 
+            $34, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 
             $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, 
             $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, NOW(), NOW()
           )`,
@@ -75,9 +85,21 @@ export async function POST(request: Request) {
             (s['Is Under RTE'] === 'Yes' || s['Is Under RTE'] === true) ? false : (s['Is Needy'] === 'Yes' || s['Is Needy'] === true),
             s['Is Under RTE'] === 'Yes' || s['Is Under RTE'] === true,
             standardId || null,
-            session.schoolId
+            session.schoolId,
+            newStudentId
           ]
         );
+
+        if (activeYearId && standardId) {
+          await client.query(
+            `INSERT INTO "StudentEnrollment" (
+              id, "studentId", "standardId", "academicYearId", status, "createdAt", "updatedAt"
+            ) VALUES (
+              gen_random_uuid(), $1, $2, $3, 'ACTIVE', NOW(), NOW()
+            )`,
+            [newStudentId, standardId, activeYearId]
+          );
+        }
       }
       await client.query('COMMIT');
       return NextResponse.json({ success: true, count: students.length });

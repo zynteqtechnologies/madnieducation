@@ -1,29 +1,18 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { 
-  User as UserIcon, 
-  Search, 
-  Plus, 
-  Trash2, 
-  Edit3, 
-  School as SchoolIcon, 
-  Phone, 
-  Mail, 
-  MapPin, 
-  ShieldCheck, 
-  Lock,
-  X,
-  Loader2,
-  ChevronRight,
-  Briefcase,
-  Activity
+import Link from 'next/link';
+import {
+  User as UserIcon,
+  Plus,
+  Trash2,
+  Edit3,
+  School as SchoolIcon,
+  Phone,
+  MapPin,
+  ShieldCheck,
+  Loader2
 } from 'lucide-react';
-
-interface School {
-  id: string;
-  schoolName: string;
-}
 
 interface SubAdmin {
   id: string;
@@ -38,22 +27,8 @@ interface SubAdmin {
 
 export default function SubAdminManagement() {
   const [subadmins, setSubadmins] = useState<SubAdmin[]>([]);
-  const [schools, setSchools] = useState<School[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [editingSubAdmin, setEditingSubAdmin] = useState<SubAdmin | null>(null);
-
-  // Form State
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    phoneNo: '',
-    address: '',
-    relation: '',
-    schoolId: '',
-  });
 
   useEffect(() => {
     fetchData();
@@ -61,46 +36,14 @@ export default function SubAdminManagement() {
 
   const fetchData = async () => {
     setLoading(true);
-    try {
-      const [subsRes, schoolsRes] = await Promise.all([
-        fetch('/api/admin/subadmins'),
-        fetch('/api/admin/schools')
-      ]);
-      const subsData = await subsRes.json();
-      const schoolsData = await schoolsRes.json();
-      
-      if (subsRes.ok) setSubadmins(subsData);
-      if (schoolsRes.ok) setSchools(schoolsData);
-    } catch (err) {
-      setError('Failed to sync officers.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
     setError('');
-
     try {
-      const res = await fetch('/api/admin/subadmins', {
-        method: editingSubAdmin ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          id: editingSubAdmin?.id
-        }),
-      });
-
+      const res = await fetch('/api/admin/subadmins');
+      const data = await res.json();
       if (res.ok) {
-        setShowAddForm(false);
-        setEditingSubAdmin(null);
-        resetForm();
-        fetchData();
+        setSubadmins(data);
       } else {
-        const data = await res.json();
-        setError(data.error);
+        setError(data.error || 'Failed to sync roster.');
       }
     } catch (err) {
       setError('Communication error.');
@@ -123,173 +66,109 @@ export default function SubAdminManagement() {
     }
   };
 
-  const handleEdit = (sub: SubAdmin) => {
-    setEditingSubAdmin(sub);
-    setFormData({
-      name: sub.name,
-      email: sub.email,
-      password: '', // Don't show password
-      phoneNo: sub.phoneNo || '',
-      address: sub.address || '',
-      relation: sub.relation || '',
-      schoolId: sub.schoolId || '',
-    });
-    setShowAddForm(true);
-  };
-
-  const resetForm = () => {
-    setFormData({
-      name: '',
-      email: '',
-      password: '',
-      phoneNo: '',
-      address: '',
-      relation: '',
-      schoolId: '',
-    });
-  };
-
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-slate-900 tracking-tight">Administrative Officers</h2>
-          <p className="text-sm text-slate-500 mt-1">Manage sub-admin access and unit assignments.</p>
-        </div>
-        <button 
-          onClick={() => { setShowAddForm(true); setEditingSubAdmin(null); resetForm(); }}
-          className="bg-indigo-600 text-white px-5 py-2.5 rounded-md hover:bg-indigo-700 transition font-semibold text-sm shadow-sm flex items-center"
+    <div className="space-y-4 animate-in fade-in duration-500">
+
+      {/* Page Actions */}
+      <div className="flex justify-end pt-2">
+        <Link
+          href="/superadmin/subadmin/new"
+          className="bg-[#1A3D63] text-white px-5 py-2.5 rounded-xl hover:bg-[#0A1931] transition font-semibold text-xs shadow-sm shadow-[#1A3D63]/10 flex items-center group"
         >
-          <Plus size={18} className="mr-2" />
-          <span>Provision Officer</span>
-        </button>
+          <div className="bg-white/10 p-1 rounded-lg mr-2 group-hover:scale-110 transition-transform">
+            <Plus size={16} strokeWidth={3} />
+          </div>
+          <span>Provision Sub-admin</span>
+        </Link>
       </div>
 
       {error && (
-        <div className="p-4 bg-rose-50 border border-rose-100 rounded-md flex items-center space-x-3 text-rose-700 text-sm">
-           <ShieldCheck size={18} />
-           <p>{error}</p>
+        <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl flex items-center space-x-3 text-rose-700 text-sm">
+          <ShieldCheck size={18} />
+          <p>{error}</p>
         </div>
       )}
 
-      {/* Officers Grid - Clean & Sober */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {loading && !subadmins.length ? (
-           <div className="col-span-full py-20 flex flex-col items-center justify-center space-y-3">
-              <Loader2 className="animate-spin text-slate-400" size={32} />
-              <p className="text-slate-400 text-xs font-medium">Loading officers...</p>
-           </div>
-        ) : subadmins.length === 0 ? (
-           <div className="col-span-full py-20 bg-white border border-slate-200 rounded-md text-center text-slate-400 font-medium text-sm">
-              No administrative officers provisioned.
-           </div>
-        ) : (
-          subadmins.map(sub => (
-            <div key={sub.id} className="bg-white rounded-md border border-slate-200 shadow-sm p-6 hover:border-indigo-200 transition-all group">
-               <div className="flex items-start justify-between mb-6">
-                  <div className="flex items-center space-x-4">
-                     <div className="w-12 h-12 rounded-md bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-500 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
-                        <UserIcon size={24} />
-                     </div>
-                     <div>
-                        <h4 className="text-base font-bold text-slate-900">{sub.name}</h4>
-                        <p className="text-xs text-slate-500 mt-0.5">{sub.email}</p>
-                     </div>
-                  </div>
-                  <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                     <button onClick={() => handleEdit(sub)} className="p-2 text-slate-400 hover:text-indigo-600 transition-colors"><Edit3 size={16} /></button>
-                     <button onClick={() => handleDelete(sub.id)} className="p-2 text-slate-400 hover:text-rose-600 transition-colors"><Trash2 size={16} /></button>
-                  </div>
-               </div>
-
-               <div className="space-y-4 bg-slate-50 p-4 rounded-md">
-                  <div className="flex justify-between items-center text-xs">
-                     <span className="text-slate-400 font-bold uppercase tracking-wider">Assigned Unit</span>
-                     <span className="text-slate-800 font-bold flex items-center truncate max-w-[150px]">
-                        <SchoolIcon size={14} className="mr-2 text-slate-300" /> {sub.schoolName || 'Floating'}
-                     </span>
-                  </div>
-                  <div className="flex justify-between items-center text-xs">
-                     <span className="text-slate-400 font-bold uppercase tracking-wider">Designation</span>
-                     <span className="text-slate-800 font-bold flex items-center">
-                        <Briefcase size={14} className="mr-2 text-slate-300" /> {sub.relation || 'Administrator'}
-                     </span>
-                  </div>
-               </div>
-
-               <div className="mt-6 flex items-center justify-between text-xs text-slate-500">
-                  <div className="flex items-center">
-                     <Phone size={14} className="mr-2 text-slate-300" /> {sub.phoneNo || 'SECURE'}
-                  </div>
-                  <button onClick={() => handleEdit(sub)} className="text-indigo-600 font-bold flex items-center hover:underline">
-                     Update Access <ChevronRight size={14} className="ml-1" />
-                  </button>
-               </div>
-            </div>
-          ))
-        )}
+      {/* Officers Table */}
+      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden mt-8">
+        <div className="overflow-x-auto">
+          <table className="w-full table-fixed min-w-[1000px]">
+            <thead>
+              <tr className="bg-slate-50/50 border-b border-slate-100">
+                <th className="px-6 py-4 text-[11px] font-semibold text-slate-400 text-left w-[35%]">Officer</th>
+                <th className="px-6 py-4 text-[11px] font-semibold text-slate-400 text-left w-[25%]">Assignment</th>
+                <th className="px-6 py-4 text-[11px] font-semibold text-slate-400 text-left w-[30%]">Contact Terminal</th>
+                <th className="px-6 py-4 text-[11px] font-semibold text-slate-400 text-right w-[10%] pr-8">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-50">
+              {loading && !subadmins.length ? (
+                <tr>
+                  <td colSpan={4} className="py-20 text-center">
+                    <Loader2 className="animate-spin text-slate-400 mx-auto mb-2" size={32} />
+                    <p className="text-slate-400 text-xs font-medium">Scanning roster...</p>
+                  </td>
+                </tr>
+              ) : subadmins.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="py-20 text-center text-slate-400 font-medium text-sm italic">
+                    No administrative officers provisioned.
+                  </td>
+                </tr>
+              ) : (
+                subadmins.map(sub => (
+                  <tr key={sub.id} className="hover:bg-slate-50/40 transition-all group align-middle">
+                    <td className="px-6 py-3.5">
+                      <div className="flex items-center space-x-3.5">
+                        <div className="w-10 h-10 rounded-xl bg-slate-100/50 border border-slate-200/60 flex items-center justify-center text-slate-400 group-hover:bg-[#1A3D63]/10 group-hover:text-[#1A3D63] transition-all">
+                          <UserIcon size={18} strokeWidth={1.5} />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[12px] font-semibold text-slate-700 leading-snug group-hover:text-[#1A3D63] transition-colors">{sub.name}</p>
+                          <p className="text-[9px] text-slate-400 mt-1 font-medium italic">{sub.email}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-3.5">
+                       <div className="space-y-1">
+                          <div className="flex items-center space-x-2 text-slate-600">
+                             <SchoolIcon size={12} className="text-slate-300" />
+                             <span className="text-[12px] font-semibold truncate max-w-[180px]">{sub.schoolName || 'Floating identity'}</span>
+                          </div>
+                          <p className="text-[10px] text-slate-400 font-semibold opacity-70 ml-5 uppercase tracking-tighter">{sub.relation || 'Officer'}</p>
+                       </div>
+                    </td>
+                    <td className="px-6 py-3.5">
+                       <div className="space-y-1.5 text-[11px] font-semibold text-slate-500">
+                          <div className="flex items-center space-x-2">
+                             <Phone size={12} className="text-slate-300" />
+                             <span className="tracking-tight">{sub.phoneNo || 'SECURE TERMINAL'}</span>
+                          </div>
+                          {sub.address && (
+                            <div className="flex items-center space-x-2 opacity-60">
+                               <MapPin size={12} className="text-slate-300 flex-shrink-0" />
+                               <span className="truncate max-w-[200px] font-medium italic">{sub.address}</span>
+                            </div>
+                          )}
+                       </div>
+                    </td>
+                    <td className="px-6 py-3.5 text-right pr-8 relative">
+                       <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col space-y-1 px-1 opacity-0 group-hover:opacity-100 transition-all scale-95 group-hover:scale-100">
+                        <Link href={`/superadmin/subadmin/${sub.id}/edit`} className="p-1.5 text-slate-400 hover:text-[#1A3D63] hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 rounded-lg transition-all" title="Modify Credentials">
+                           <Edit3 size={14} />
+                        </Link>
+                        <button onClick={(e) => { e.stopPropagation(); handleDelete(sub.id); }} className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-100 rounded-lg transition-all" title="De-provision Account">
+                           <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
-
-      {/* Simple Form Modal */}
-      {showAddForm && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-in fade-in duration-300">
-           <div className="bg-white w-full max-w-xl rounded-md shadow-2xl p-8 relative overflow-y-auto max-h-[90vh] no-scrollbar">
-              <div className="flex justify-between items-center mb-8">
-                <h3 className="text-lg font-bold text-slate-900">{editingSubAdmin ? 'Update Officer Credentials' : 'Provision New Officer'}</h3>
-                <button onClick={() => setShowAddForm(false)} className="text-slate-400 hover:text-slate-600 transition-colors"><X size={20} /></button>
-              </div>
-
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">Full Name</label>
-                    <input type="text" required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-md outline-none focus:ring-1 focus:ring-indigo-500 text-sm" />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">Official Email</label>
-                    <input type="email" required value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-md outline-none focus:ring-1 focus:ring-indigo-500 text-sm" />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">{editingSubAdmin ? 'New Password' : 'Password'}</label>
-                    <input type="password" required={!editingSubAdmin} value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-md outline-none focus:ring-1 focus:ring-indigo-500 text-sm" />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">Contact Number</label>
-                    <input type="text" value={formData.phoneNo} onChange={e => setFormData({ ...formData, phoneNo: e.target.value })} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-md outline-none text-sm" />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-slate-50 rounded-md border border-slate-100">
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-indigo-500 uppercase tracking-wider ml-1">Unit Assignment</label>
-                    <select required value={formData.schoolId} onChange={e => setFormData({ ...formData, schoolId: e.target.value })} className="w-full px-4 py-2 bg-white border border-slate-200 rounded-md text-xs font-bold text-indigo-600 outline-none">
-                      <option value="">Select Command School</option>
-                      {schools.map(s => <option key={s.id} value={s.id}>{s.schoolName}</option>)}
-                    </select>
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-indigo-500 uppercase tracking-wider ml-1">Designation</label>
-                    <input type="text" value={formData.relation} onChange={e => setFormData({ ...formData, relation: e.target.value })} className="w-full px-4 py-2 bg-white border border-slate-200 rounded-md text-xs font-bold" placeholder="Principal / Trustee" />
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">Residential/Office Address</label>
-                   <textarea value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-md text-sm resize-none h-20" />
-                </div>
-                
-                <div className="flex space-x-3 pt-6">
-                   <button type="button" onClick={() => setShowAddForm(false)} className="flex-1 py-3 bg-slate-100 text-slate-600 rounded-md font-bold text-sm hover:bg-slate-200 transition-all">Cancel</button>
-                   <button type="submit" disabled={loading} className="flex-[2] py-3 bg-indigo-600 text-white rounded-md font-bold text-sm tracking-tight shadow-md hover:bg-indigo-700 transition-all">
-                     {loading ? <Loader2 className="animate-spin mx-auto" size={18} /> : <span>{editingSubAdmin ? 'Update Officer' : 'Provision Officer'}</span>}
-                   </button>
-                </div>
-              </form>
-           </div>
-        </div>
-      )}
 
     </div>
   );

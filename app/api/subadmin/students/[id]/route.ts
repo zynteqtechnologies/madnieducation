@@ -2,6 +2,51 @@ import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { getSessionFromCookies } from '@/lib/auth';
 
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  try {
+    const session = await getSessionFromCookies('ADMIN');
+    if (!session || session.role !== 'SUB_ADMIN' || !session.schoolId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+
+    // 1. Get student profile details
+    const studentRes = await pool.query(
+      'SELECT s.*, std."standardName", std."division" FROM "Student" s LEFT JOIN "Standard" std ON s."standardId" = std."id" WHERE s.id = $1 AND s."schoolId" = $2',
+      [id, session.schoolId]
+    );
+
+    if (studentRes.rows.length === 0) {
+      return NextResponse.json({ error: 'Student not found or unauthorized' }, { status: 404 });
+    }
+
+    const student = studentRes.rows[0];
+
+    // 2. Fetch all academic history records
+    const historyRes = await pool.query(
+      `SELECT se.*, std."standardName", std."division", ay."label" as "academicYear"
+       FROM "StudentEnrollment" se
+       LEFT JOIN "Standard" std ON se."standardId" = std."id"
+       LEFT JOIN "AcademicYear" ay ON se."academicYearId" = ay."id"
+       WHERE se."studentId" = $1
+       ORDER BY ay."label" ASC`,
+      [id]
+    );
+
+    return NextResponse.json({
+      student,
+      history: historyRes.rows
+    });
+
+  } catch (error: any) {
+    console.error('Failed to retrieve student details and history:', error);
+    return NextResponse.json({ error: 'Failed to retrieve student details and history' }, { status: 500 });
+  }
+}
+
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }

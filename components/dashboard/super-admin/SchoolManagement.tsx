@@ -1,31 +1,19 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { 
-  School, 
-  Search, 
-  Plus, 
-  Trash2, 
-  Edit3, 
-  Building2, 
-  Users, 
-  MapPin, 
-  Phone, 
-  Mail, 
-  Hash, 
-  Calendar, 
+import Link from 'next/link';
+import Image from 'next/image';
+import {
+  School,
+  Plus,
+  Trash2,
+  Edit3,
+  Building2,
+  Users,
   Layers,
-  X,
-  Loader2,
   ShieldCheck,
-  ChevronRight,
-  MoreVertical
+  Loader2
 } from 'lucide-react';
-
-interface Trust {
-  id: string;
-  trustName: string;
-}
 
 interface SchoolData {
   id: string;
@@ -43,89 +31,33 @@ interface SchoolData {
   totalStandards: number | null;
   trustId: string;
   trustName?: string;
+  imageUrls?: string[] | null;
   createdAt: string;
   updatedAt: string;
 }
 
 export default function SchoolManagement() {
   const [schools, setSchools] = useState<SchoolData[]>([]);
-  const [trusts, setTrusts] = useState<Trust[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [editingSchool, setEditingSchool] = useState<SchoolData | null>(null);
-
-  // Form State
-  const [formData, setFormData] = useState({
-    schoolName: '',
-    currentStudentsNo: '',
-    address: '',
-    phoneNo: '',
-    email: '',
-    medium: 'English',
-    schoolDiseNo: '',
-    isHaveRTE: false,
-    sscIndexNo: '',
-    hscIndexNo: '',
-    establishYear: '',
-    totalStandards: '',
-    trustId: '',
-  });
 
   useEffect(() => {
-    fetchData();
+    fetchSchools();
   }, []);
 
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const [schoolsRes, trustsRes] = await Promise.all([
-        fetch('/api/admin/schools'),
-        fetch('/api/admin/trusts')
-      ]);
-      const schoolsData = await schoolsRes.json();
-      const trustsData = await trustsRes.json();
-      
-      if (schoolsRes.ok) setSchools(schoolsData);
-      if (trustsRes.ok) setTrusts(trustsData);
-    } catch (err) {
-      setError('Connection failure.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const fetchSchools = async () => {
     setLoading(true);
     setError('');
-
-    const payload = {
-      ...formData,
-      id: editingSchool?.id,
-      currentStudentsNo: parseInt(formData.currentStudentsNo) || 0,
-      establishYear: formData.establishYear ? parseInt(formData.establishYear) : null,
-      totalStandards: formData.totalStandards ? parseInt(formData.totalStandards) : null,
-    };
-
     try {
-      const res = await fetch('/api/admin/schools', {
-        method: editingSchool ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
+      const res = await fetch('/api/admin/schools');
+      const data = await res.json();
       if (res.ok) {
-        setShowAddForm(false);
-        setEditingSchool(null);
-        resetForm();
-        fetchData();
+        setSchools(data);
       } else {
-        const data = await res.json();
-        setError(data.error);
+        setError(data.error || 'Failed to fetch registry data.');
       }
     } catch (err) {
-      setError('Sync failed.');
+      setError('Connection failure.');
     } finally {
       setLoading(false);
     }
@@ -139,126 +71,116 @@ export default function SchoolManagement() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id }),
       });
-      if (res.ok) fetchData();
+      if (res.ok) fetchSchools();
     } catch (err) {
       alert('Action aborted.');
     }
   };
 
-  const handleEdit = (school: SchoolData) => {
-    setEditingSchool(school);
-    setFormData({
-      schoolName: school.schoolName,
-      currentStudentsNo: school.currentStudentsNo.toString(),
-      address: school.address || '',
-      phoneNo: school.phoneNo || '',
-      email: school.email || '',
-      medium: school.medium || 'English',
-      schoolDiseNo: school.schoolDiseNo || '',
-      isHaveRTE: school.isHaveRTE,
-      sscIndexNo: school.sscIndexNo || '',
-      hscIndexNo: school.hscIndexNo || '',
-      establishYear: school.establishYear?.toString() || '',
-      totalStandards: school.totalStandards?.toString() || '',
-      trustId: school.trustId,
-    });
-    setShowAddForm(true);
-  };
-
-  const resetForm = () => {
-    setFormData({
-      schoolName: '',
-      currentStudentsNo: '',
-      address: '',
-      phoneNo: '',
-      email: '',
-      medium: 'English',
-      schoolDiseNo: '',
-      isHaveRTE: false,
-      sscIndexNo: '',
-      hscIndexNo: '',
-      establishYear: '',
-      totalStandards: '',
-      trustId: trusts.length > 0 ? trusts[0].id : '',
-    });
-  };
-
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-slate-900 tracking-tight">Institutional Registry</h2>
-          <p className="text-sm text-slate-500 mt-1">Manage and audit institutional units.</p>
-        </div>
-        <button 
-          onClick={() => { setShowAddForm(true); setEditingSchool(null); resetForm(); }}
-          className="bg-indigo-600 text-white px-5 py-2.5 rounded-md hover:bg-indigo-700 transition font-semibold text-sm shadow-sm flex items-center"
+    <div className="space-y-4 animate-in fade-in duration-500">
+
+      <div className="flex justify-end pt-2">
+        <Link
+          href="/superadmin/school/new"
+          className="bg-[#1A3D63] text-white px-5 py-2.5 rounded-xl hover:bg-[#0A1931] transition font-semibold text-xs shadow-sm shadow-[#1A3D63]/10 flex items-center group"
         >
-          <Plus size={18} className="mr-2" />
-          <span>Register School</span>
-        </button>
+          <div className="bg-white/10 p-1 rounded-lg mr-2 group-hover:scale-110 transition-transform">
+            <Plus size={16} strokeWidth={3} />
+          </div>
+          <span>New school</span>
+        </Link>
       </div>
 
       {error && (
-        <div className="p-4 bg-rose-50 border border-rose-100 rounded-lg flex items-center space-x-3 text-rose-700 text-sm">
-           <ShieldCheck size={18} />
-           <p>{error}</p>
+        <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl flex items-center space-x-3 text-rose-700 text-sm">
+          <ShieldCheck size={18} />
+          <p>{error}</p>
         </div>
       )}
 
-      {/* Simple List View */}
-      <div className="bg-white rounded-md border border-slate-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden mt-8">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead className="bg-slate-50 border-b border-slate-200">
-              <tr>
-                <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest">School Name</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest">Governed By</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest">Resource Stats</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest text-right">Actions</th>
+          <table className="w-full table-fixed min-w-[1000px]">
+            <thead>
+              <tr className="bg-slate-50/50 border-b border-slate-100">
+                <th className="px-6 py-4 text-[11px] font-semibold text-slate-400 text-left w-[40%]">School</th>
+                <th className="px-6 py-4 text-[11px] font-semibold text-slate-400 text-left w-[25%]">Trust</th>
+                <th className="px-6 py-4 text-[11px] font-semibold text-slate-400 text-left w-[25%]">Details</th>
+                <th className="px-6 py-4 text-[11px] font-semibold text-slate-400 text-right w-[10%] pr-8">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-50">
               {loading && !schools.length ? (
-                <tr><td colSpan={4} className="px-6 py-12 text-center text-slate-400 text-xs font-medium uppercase tracking-widest animate-pulse">Scanning Registry...</td></tr>
+                <tr>
+                  <td colSpan={4} className="py-20 text-center">
+                    <Loader2 className="animate-spin text-slate-400 mx-auto mb-2" size={32} />
+                    <p className="text-slate-400 text-xs font-medium">Scanning registry...</p>
+                  </td>
+                </tr>
               ) : schools.length === 0 ? (
-                <tr><td colSpan={4} className="px-6 py-12 text-center text-slate-400 text-sm font-medium">No units localized.</td></tr>
+                <tr>
+                  <td colSpan={4} className="py-20 text-center text-slate-400 font-medium text-sm">
+                    No units localized.
+                  </td>
+                </tr>
               ) : (
                 schools.map(school => (
-                  <tr key={school.id} className="hover:bg-slate-50/50 transition-colors group">
-                    <td className="px-6 py-5">
-                       <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 rounded-md bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-400 group-hover:text-indigo-600 group-hover:bg-indigo-50 transition-colors">
-                             <School size={20} />
-                          </div>
-                          <div>
-                             <p className="text-sm font-bold text-slate-900 leading-tight">{school.schoolName}</p>
-                             <p className="text-[10px] text-slate-500 mt-0.5 tracking-tight uppercase">DISE: {school.schoolDiseNo || 'NO-REF'}</p>
-                          </div>
-                       </div>
+                <tr key={school.id} className="hover:bg-slate-50/40 transition-all group align-middle">
+                    <td className="px-6 py-3.5">
+                      <div className="flex items-center space-x-3.5">
+                        <div className="w-10 h-10 rounded-xl bg-slate-100/50 border border-slate-200/60 flex flex-shrink-0 items-center justify-center text-slate-400 group-hover:bg-[#1A3D63]/10 group-hover:text-[#1A3D63] transition-all overflow-hidden relative">
+                          {school.imageUrls && school.imageUrls[0] ? (
+                            <Image src={school.imageUrls[0]} alt="" fill className="object-cover" />
+                          ) : (
+                            <School size={18} strokeWidth={1.5} />
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[12px] font-semibold text-slate-700 leading-snug group-hover:text-[#1A3D63] transition-colors">{school.schoolName}</p>
+                          <p className="text-[9px] text-slate-400 mt-0.5 font-medium italic">Dise: {school.schoolDiseNo || 'No record'}</p>
+                        </div>
+                      </div>
                     </td>
-                    <td className="px-6 py-5">
-                       <span className="text-xs font-semibold text-slate-600 flex items-center">
-                          <Building2 size={14} className="mr-2 text-slate-300" /> {school.trustName || 'Floating'}
-                       </span>
+                    <td className="px-6 py-3.5">
+                      <div className="flex items-center space-x-2">
+                        <Building2 size={14} className="text-slate-300" />
+                        <span className="text-[12px] font-semibold text-slate-600 truncate max-w-[200px]">
+                          {school.trustName || 'Floating identity'}
+                        </span>
+                      </div>
                     </td>
-                    <td className="px-6 py-5">
-                       <div className="flex items-center space-x-4">
-                          <div className="text-[10px] font-bold text-slate-400 flex items-center">
-                             <Users size={14} className="mr-1.5" /> {school.currentStudentsNo} Students
-                          </div>
-                          <div className="text-[10px] font-bold text-slate-400 flex items-center">
-                             <Layers size={14} className="mr-1.5" /> {school.totalStandards} Standards
-                          </div>
-                       </div>
+                    <td className="px-6 py-3.5">
+                      <div className="flex items-center space-x-4">
+                        <div className="flex flex-col">
+                          <span className="text-[12px] font-semibold text-slate-700">{school.currentStudentsNo}</span>
+                          <span className="text-[8px] text-slate-400 font-medium tracking-tight">Active students</span>
+                        </div>
+                        <div className="w-px h-5 bg-slate-100"></div>
+                        <div className="flex flex-col">
+                          <span className="text-[12px] font-semibold text-slate-700">{school.totalStandards}</span>
+                          <span className="text-[8px] text-slate-400 font-medium tracking-tight">Standards</span>
+                        </div>
+                         {school.imageUrls && school.imageUrls.length > 0 && (
+                          <>
+                            <div className="w-px h-6 bg-slate-100"></div>
+                            <div className="flex flex-col">
+                              <span className="text-[13px] font-semibold text-[#1A3D63]">{school.imageUrls.length}</span>
+                              <span className="text-[9px] text-[#1A3D63]/60 font-medium tracking-tight">Archive</span>
+                            </div>
+                          </>
+                        )}
+                      </div>
                     </td>
-                    <td className="px-6 py-5 text-right">
-                       <div className="flex items-center justify-end space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button onClick={() => handleEdit(school)} className="p-2 text-slate-400 hover:text-indigo-600 transition-colors"><Edit3 size={16} /></button>
-                          <button onClick={() => handleDelete(school.id)} className="p-2 text-slate-400 hover:text-rose-600 transition-colors"><Trash2 size={16} /></button>
-                       </div>
+                    <td className="px-6 py-3.5 text-right pr-8 relative">
+                      <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col space-y-1 px-1 opacity-0 group-hover:opacity-100 transition-all scale-95 group-hover:scale-100">
+                        <Link href={`/superadmin/school/${school.id}/edit`} className="p-1.5 text-slate-400 hover:text-[#1A3D63] hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 rounded-lg transition-all" title="Edit Institutional Record">
+                          <Edit3 size={14} />
+                        </Link>
+                        <button onClick={(e) => { e.stopPropagation(); handleDelete(school.id); }} className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-100 rounded-lg transition-all" title="Delete Permanent">
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -267,106 +189,6 @@ export default function SchoolManagement() {
           </table>
         </div>
       </div>
-
-      {/* Simple Form Modal */}
-      {showAddForm && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-in fade-in duration-300">
-           <div className="bg-white w-full max-w-2xl rounded-md shadow-2xl p-8 relative overflow-y-auto max-h-[90vh]">
-              <div className="flex justify-between items-center mb-8">
-                <h3 className="text-lg font-bold text-slate-900">{editingSchool ? 'Update School Profile' : 'Register New School'}</h3>
-                <button onClick={() => setShowAddForm(false)} className="text-slate-400 hover:text-slate-600 transition-colors"><X size={20} /></button>
-              </div>
-
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">Governing Trust</label>
-                    <select required value={formData.trustId} onChange={e => setFormData({ ...formData, trustId: e.target.value })} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-md outline-none text-sm font-semibold text-indigo-600">
-                      <option value="">Select Trust</option>
-                      {trusts.map(t => <option key={t.id} value={t.id}>{t.trustName}</option>)}
-                    </select>
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">School Name</label>
-                    <input type="text" required value={formData.schoolName} onChange={e => setFormData({ ...formData, schoolName: e.target.value })} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-md outline-none focus:ring-1 focus:ring-indigo-500 text-sm transition-all" />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">DISE No</label>
-                    <input type="text" value={formData.schoolDiseNo} onChange={e => setFormData({ ...formData, schoolDiseNo: e.target.value })} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-md text-sm" />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">Medium</label>
-                    <select value={formData.medium} onChange={e => setFormData({ ...formData, medium: e.target.value })} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-md text-sm outline-none">
-                      <option value="English">English</option>
-                      <option value="Hindi">Hindi</option>
-                      <option value="Urdu">Urdu</option>
-                      <option value="Marathi">Marathi</option>
-                      <option value="Gujarati">Gujarati</option>
-                    </select>
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">Est. Year</label>
-                    <input type="number" value={formData.establishYear} onChange={e => setFormData({ ...formData, establishYear: e.target.value })} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-md text-sm" />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-slate-50 rounded-md border border-slate-100">
-                   <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">SSC Index</label>
-                      <input type="text" value={formData.sscIndexNo} onChange={e => setFormData({ ...formData, sscIndexNo: e.target.value })} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-md text-xs font-semibold" />
-                   </div>
-                   <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">HSC Index</label>
-                      <input type="text" value={formData.hscIndexNo} onChange={e => setFormData({ ...formData, hscIndexNo: e.target.value })} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-md text-xs font-semibold" />
-                   </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">Strength (Students)</label>
-                    <input type="number" value={formData.currentStudentsNo} onChange={e => setFormData({ ...formData, currentStudentsNo: e.target.value })} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-md text-sm font-bold text-indigo-600" />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">Total Standards</label>
-                    <input type="number" value={formData.totalStandards} onChange={e => setFormData({ ...formData, totalStandards: e.target.value })} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-md text-sm" />
-                  </div>
-                  <div className="flex items-center pt-6 px-2">
-                    <label className="flex items-center space-x-3 cursor-pointer">
-                      <input type="checkbox" checked={formData.isHaveRTE} onChange={e => setFormData({ ...formData, isHaveRTE: e.target.checked })} className="w-4 h-4 rounded text-indigo-600 accent-indigo-600" />
-                      <span className="text-xs font-bold text-slate-500 uppercase tracking-tight">RTE Active</span>
-                    </label>
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">Address</label>
-                    <textarea value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-md text-sm resize-none h-20" />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">Phone</label>
-                    <input type="text" value={formData.phoneNo} onChange={e => setFormData({ ...formData, phoneNo: e.target.value })} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-md text-sm" />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">Email</label>
-                    <input type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-md text-sm" />
-                  </div>
-                </div>
-
-                <div className="flex space-x-3 pt-6">
-                   <button type="button" onClick={() => setShowAddForm(false)} className="flex-1 py-3 bg-slate-100 text-slate-600 rounded-md font-bold text-sm hover:bg-slate-200 transition-all">Cancel</button>
-                   <button type="submit" disabled={loading} className="flex-[2] py-3 bg-indigo-600 text-white rounded-md font-bold text-sm tracking-tight shadow-md hover:bg-indigo-700 transition-all">
-                     {loading ? <Loader2 className="animate-spin mx-auto" size={18} /> : <span>{editingSchool ? 'Apply Changes' : 'Complete Registration'}</span>}
-                   </button>
-                </div>
-              </form>
-           </div>
-        </div>
-      )}
 
     </div>
   );

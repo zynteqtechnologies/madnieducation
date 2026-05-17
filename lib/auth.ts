@@ -2,12 +2,18 @@ import { SignJWT, jwtVerify } from 'jose';
 import bcrypt from 'bcryptjs';
 import { cookies } from 'next/headers';
 
-const SESSION_SECRET = new TextEncoder().encode(
-  process.env.SESSION_SECRET || 'default-session-secret-at-least-32-chars-long'
-);
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'default-jwt-secret-at-least-32-chars-long'
-);
+const SESSION_SECRET_STR = process.env.SESSION_SECRET;
+const JWT_SECRET_STR = process.env.JWT_SECRET;
+
+if (!SESSION_SECRET_STR || SESSION_SECRET_STR.length < 32) {
+  throw new Error('SESSION_SECRET must be at least 32 characters long and set in environment variables.');
+}
+if (!JWT_SECRET_STR || JWT_SECRET_STR.length < 32) {
+  throw new Error('JWT_SECRET must be at least 32 characters long and set in environment variables.');
+}
+
+const SESSION_SECRET = new TextEncoder().encode(SESSION_SECRET_STR);
+const JWT_SECRET = new TextEncoder().encode(JWT_SECRET_STR);
 
 export type UserRole = 'SUPER_ADMIN' | 'SUB_ADMIN' | 'ALUMNI';
 
@@ -67,10 +73,25 @@ export async function verifyAlumniToken(token: string) {
   }
 }
 
+const COOKIE_NAMES: Record<UserRole, string> = {
+  SUPER_ADMIN: 'superadmin-session',
+  SUB_ADMIN: 'subadmin-session',
+  ALUMNI: 'alumni-token'
+};
+
 // Cookie helpers
-export async function setSessionCookie(token: string, role: string) {
+export async function setSessionCookie(token: string, role: UserRole) {
     const cookieStore = await cookies();
-    const cookieName = role === 'ALUMNI' ? 'alumni-token' : 'admin-session';
+
+    // Clear other session cookies to prevent multi-session conflicts (shadowing)
+    Object.keys(COOKIE_NAMES).forEach((key) => {
+        const r = key as UserRole;
+        if (r !== role) {
+            cookieStore.delete(COOKIE_NAMES[r]);
+        }
+    });
+
+    const cookieName = COOKIE_NAMES[role];
     cookieStore.set(cookieName, token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
@@ -80,16 +101,38 @@ export async function setSessionCookie(token: string, role: string) {
     });
 }
 
-export async function getSessionFromCookies(role: 'ADMIN' | 'ALUMNI') {
+export async function getSessionFromCookies(role: UserRole | 'ADMIN') {
     const cookieStore = await cookies();
-    const cookieName = role === 'ALUMNI' ? 'alumni-token' : 'admin-session';
+    
+    if (role === 'ADMIN') {
+        // Prioritize SUPER_ADMIN check over SUB_ADMIN to avoid privilege shadowing issues
+        const superadminToken = cookieStore.get(COOKIE_NAMES.SUPER_ADMIN)?.value;
+        if (superadminToken) {
+            const session = await decryptSession(superadminToken);
+            if (session) return session;
+        }
+        const subadminToken = cookieStore.get(COOKIE_NAMES.SUB_ADMIN)?.value;
+        if (subadminToken) {
+            const session = await decryptSession(subadminToken);
+            if (session) return session;
+        }
+        return null;
+    }
+
+    const cookieName = COOKIE_NAMES[role];
     const token = cookieStore.get(cookieName)?.value;
     if (!token) return null;
-    return role === 'ALUMNI' ? await verifyAlumniToken(token) : await decryptSession(token);
+
+    if (role === 'ALUMNI') {
+        return await verifyAlumniToken(token);
+    } else {
+        return await decryptSession(token);
+    }
 }
 
 export async function logout() {
     const cookieStore = await cookies();
-    cookieStore.delete('admin-session');
-    cookieStore.delete('alumni-token');
+    cookieStore.delete(COOKIE_NAMES.SUPER_ADMIN);
+    cookieStore.delete(COOKIE_NAMES.SUB_ADMIN);
+    cookieStore.delete(COOKIE_NAMES.ALUMNI);
 }

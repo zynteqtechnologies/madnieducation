@@ -62,11 +62,11 @@ export default function AlumniDashboard() {
               </div>
             </div>
 
-            {/* Quick Actions for Alumni */}
+             {/* Quick Actions for Alumni */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-               <button onClick={() => setActiveTab('Career Hub')} className="bg-white p-6 rounded-md border border-slate-200 hover:border-amber-500 transition-all text-left group">
+               <button onClick={() => setActiveTab('Careers')} className="bg-white p-6 rounded-md border border-slate-200 hover:border-amber-500 transition-all text-left group">
                   <Briefcase className="text-amber-500 mb-4 group-hover:scale-110 transition-transform" size={24} />
-                  <h4 className="font-bold text-slate-900">Career Hub</h4>
+                  <h4 className="font-bold text-slate-900">Careers</h4>
                   <p className="text-xs text-slate-500 mt-1">Post jobs and referrals for students.</p>
                </button>
                <button onClick={() => setActiveTab('Mentorship')} className="bg-white p-6 rounded-md border border-slate-200 hover:border-amber-500 transition-all text-left group">
@@ -74,17 +74,17 @@ export default function AlumniDashboard() {
                   <h4 className="font-bold text-slate-900">Mentorship</h4>
                   <p className="text-xs text-slate-500 mt-1">Offer guidance to the next generation.</p>
                </button>
-               <button onClick={() => setActiveTab('Support Schools')} className="bg-white p-6 rounded-md border border-slate-200 hover:border-amber-500 transition-all text-left group">
+               <button onClick={() => setActiveTab('Schools')} className="bg-white p-6 rounded-md border border-slate-200 hover:border-amber-500 transition-all text-left group">
                   <Globe className="text-amber-500 mb-4 group-hover:scale-110 transition-transform" size={24} />
-                  <h4 className="font-bold text-slate-900">Support Schools</h4>
+                  <h4 className="font-bold text-slate-900">Schools</h4>
                   <p className="text-xs text-slate-500 mt-1">Contribute to school infrastructure.</p>
                </button>
             </div>
           </div>
         );
-      case 'Support Schools':
+      case 'Schools':
         return <AlumniContributions />;
-      case 'Career Hub':
+      case 'Careers':
         return <AlumniCareerHub />;
       case 'Mentorship':
         return <AlumniMentorshipHub />;
@@ -97,7 +97,7 @@ export default function AlumniDashboard() {
 
   return (
     <DashboardLayout 
-      title="Madni Education Alumni Portal" 
+      title="Alumni portal" 
       role="ALUMNI"
       activeItem={activeTab}
       onNavigate={setActiveTab}

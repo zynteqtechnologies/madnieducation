@@ -6,7 +6,7 @@ import bcrypt from 'bcryptjs';
 // GET all subadmins (with School info)
 export async function GET() {
   try {
-    const session = await getSessionFromCookies('ADMIN');
+    const session = await getSessionFromCookies('SUPER_ADMIN');
     if (!session || session.role !== 'SUPER_ADMIN') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
@@ -28,7 +28,7 @@ export async function GET() {
 // POST create new subadmin
 export async function POST(request: Request) {
   try {
-    const session = await getSessionFromCookies('ADMIN');
+    const session = await getSessionFromCookies('SUPER_ADMIN');
     if (!session || session.role !== 'SUPER_ADMIN') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
@@ -71,7 +71,7 @@ export async function POST(request: Request) {
 // PUT update subadmin
 export async function PUT(request: Request) {
   try {
-    const session = await getSessionFromCookies('ADMIN');
+    const session = await getSessionFromCookies('SUPER_ADMIN');
     if (!session || session.role !== 'SUPER_ADMIN') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
@@ -129,7 +129,7 @@ export async function PUT(request: Request) {
 // DELETE subadmin
 export async function DELETE(request: Request) {
   try {
-    const session = await getSessionFromCookies('ADMIN');
+    const session = await getSessionFromCookies('SUPER_ADMIN');
     if (!session || session.role !== 'SUPER_ADMIN') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }

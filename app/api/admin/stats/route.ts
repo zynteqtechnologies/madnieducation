@@ -4,7 +4,7 @@ import { getSessionFromCookies } from '@/lib/auth';
 
 export async function GET() {
   try {
-    const session = await getSessionFromCookies('ADMIN');
+    const session = await getSessionFromCookies('SUPER_ADMIN');
     if (!session || session.role !== 'SUPER_ADMIN') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }

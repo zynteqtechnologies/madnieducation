@@ -72,13 +72,13 @@ export default function AlumniInteractionManager() {
   const currentList = activeTab === 'job' ? data.jobs : data.mentorships;
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700">
+    <div className="space-y-6 animate-in fade-in duration-500">
       
       {/* Header section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="space-y-1">
-          <h2 className="text-3xl font-black text-slate-900 tracking-tight">Institutional Moderation</h2>
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Review alumni contributions and mentorship offers</p>
+          <h2 className="text-xl font-bold text-slate-900 tracking-tight text-center md:text-left">Alumni Interactions</h2>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-center md:text-left">Review alumni contributions and mentorship offers</p>
         </div>
         
         <div className="flex bg-slate-100 p-1 rounded-md w-full md:w-auto">

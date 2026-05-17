@@ -1,18 +1,27 @@
 import { NextResponse } from 'next/server';
-import pool from '@/lib/db';
+import { db } from '@/lib/db';
+import { mentorshipOffers, alumni } from '@/lib/db/schema';
 import { getSessionFromCookies } from '@/lib/auth';
+import { desc, eq } from 'drizzle-orm';
 
 export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '10');
+    const offset = (page - 1) * limit;
+
     const session = await getSessionFromCookies('ALUMNI');
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const result = await pool.query(
-      'SELECT * FROM "MentorshipOffer" WHERE "alumniId" = $1 ORDER BY "createdAt" DESC',
-      [session.userId]
-    );
+    const result = await db.query.mentorshipOffers.findMany({
+      where: eq(mentorshipOffers.alumniId, session.userId),
+      orderBy: [desc(mentorshipOffers.createdAt)],
+      limit: limit,
+      offset: offset,
+    });
 
-    return NextResponse.json(result.rows);
+    return NextResponse.json(result);
   } catch (error) {
     console.error('Mentorship fetch error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
@@ -30,22 +39,29 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Get alumni's schoolId to associate with the post
-    const alumniRes = await pool.query('SELECT "schoolId" FROM "Alumni" WHERE id = $1', [session.userId]);
-    const schoolId = alumniRes.rows[0]?.schoolId;
+    // Get alumni's schoolId using Drizzle
+    const alumniRecord = await db.query.alumni.findFirst({
+      where: eq(alumni.id, session.userId),
+      columns: { schoolId: true }
+    });
+    
+    const schoolId = alumniRecord?.schoolId;
 
     if (!schoolId) {
       return NextResponse.json({ error: 'Institutional record not found' }, { status: 404 });
     }
 
-    const result = await pool.query(`
-      INSERT INTO "MentorshipOffer" (
-        "alumniId", "schoolId", "title", "description", "targetStudent", "availability", "status"
-      ) VALUES ($1, $2, $3, $4, $5, $6, 'PENDING')
-      RETURNING *
-    `, [session.userId, schoolId, title, description, targetStudent, availability]);
+    const [newOffer] = await db.insert(mentorshipOffers).values({
+      alumniId: session.userId,
+      schoolId,
+      title,
+      description,
+      targetStudent,
+      availability,
+      status: 'PENDING'
+    }).returning();
 
-    return NextResponse.json(result.rows[0]);
+    return NextResponse.json(newOffer);
   } catch (error) {
     console.error('Mentorship creation error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

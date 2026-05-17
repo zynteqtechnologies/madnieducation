@@ -22,13 +22,14 @@ import {
   Shield,
   Activity,
   Layers,
-  FileUp,
-  Heart,
-  Construction,
   History,
   Globe,
   Briefcase,
-  UserCheck
+  UserCheck,
+  Sparkles,
+  Wallet,
+  Calendar,
+  ArrowUpCircle
 } from 'lucide-react';
 
 interface DashboardLayoutProps {
@@ -67,30 +68,30 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
   const menuItems = [
     { name: 'Dashboard', icon: <LayoutDashboard size={18} />, role: ['SUPER_ADMIN', 'SUB_ADMIN', 'ALUMNI'] },
     { name: 'Profile', icon: <User size={18} />, role: ['ALUMNI'] },
-    { name: 'Support Schools', icon: <Globe size={18} />, role: ['ALUMNI'] },
+    { name: 'Schools', icon: <Globe size={18} />, role: ['ALUMNI'] },
     { name: 'Trusts', icon: <Building2 size={18} />, role: ['SUPER_ADMIN'] },
     { name: 'Schools', icon: <School size={18} />, role: ['SUPER_ADMIN'] },
-    { name: 'Standards', icon: <Layers size={18} />, role: ['SUB_ADMIN'] },
-    { name: 'Admissions', icon: <FileUp size={18} />, role: ['SUB_ADMIN'] },
-    { name: 'Costs', icon: <Construction size={18} />, role: ['SUB_ADMIN'] },
-    { name: 'Students', icon: <Users size={18} />, role: ['SUB_ADMIN'] },
-    { name: 'Financial Aid', icon: <Heart size={18} />, role: ['SUB_ADMIN'] },
+    { name: 'Class Setup', icon: <Sparkles size={18} />, role: ['SUB_ADMIN'] },
+    { name: 'Academic', icon: <Layers size={18} />, role: ['SUB_ADMIN'] },
+    { name: 'Accounts', icon: <Wallet size={18} />, role: ['SUB_ADMIN'] },
     { name: 'Donations', icon: <History size={18} />, role: ['SUB_ADMIN'] },
-    { name: 'Career Hub', icon: <Briefcase size={18} />, role: ['ALUMNI'] },
+    { name: 'Students', icon: <Users size={18} />, role: ['SUB_ADMIN'] },
+    { name: 'Careers', icon: <Briefcase size={18} />, role: ['ALUMNI'] },
     { name: 'Mentorship', icon: <UserCheck size={18} />, role: ['ALUMNI'] },
-    { name: 'Alumni Requests', icon: <GraduationCap size={18} />, role: ['SUB_ADMIN'] },
+    { name: 'Alumni', icon: <GraduationCap size={18} />, role: ['SUB_ADMIN'] },
     { name: 'Subadmins', icon: <Users size={18} />, role: ['SUPER_ADMIN'] },
-    { name: 'Alumnis', icon: <GraduationCap size={18} />, role: ['SUPER_ADMIN', 'SUB_ADMIN'] },
+    { name: 'Academic Years', icon: <Calendar size={18} />, role: ['SUPER_ADMIN'] },
+    { name: 'Promotion', icon: <ArrowUpCircle size={18} />, role: ['SUB_ADMIN'] },
     { name: 'Activity', icon: <Activity size={18} />, role: ['SUPER_ADMIN', 'SUB_ADMIN'] },
   ].filter(item => item.role.includes(role));
 
   const getLayoutColors = () => {
     switch (role) {
       case 'SUB_ADMIN': return {
-        sidebar: 'bg-gradient-to-br from-emerald-800 via-teal-900 to-slate-900',
-        active: 'bg-emerald-500 text-white shadow-lg shadow-emerald-900/20',
-        hover: 'hover:bg-white/10 text-emerald-100',
-        logoBg: 'bg-emerald-600/20'
+        sidebar: 'bg-gradient-to-br from-[#215B63] via-[#1b4d54] to-[#124170] text-white border-r border-[#215B63]/25 shadow-xl',
+        active: 'bg-[#67C090] text-white shadow-lg shadow-[#67C090]/25',
+        hover: 'hover:bg-white/10 text-[#AAFFC7]',
+        logoBg: 'bg-[#AAFFC7]/20'
       };
       case 'ALUMNI': return {
         sidebar: 'bg-gradient-to-br from-amber-700 via-orange-800 to-slate-900',
@@ -110,11 +111,11 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
   const colors = getLayoutColors();
 
   return (
-    <div className="min-h-screen bg-[#F1F5F9] text-slate-900 font-inter antialiased overflow-x-hidden">
+    <div className={`min-h-screen ${role === 'SUB_ADMIN' ? 'bg-[#F4F6F5]' : 'bg-[#F1F5F9]'} text-slate-900 font-inter antialiased overflow-x-hidden`}>
 
       {/* Mobile Backdrop */}
       {isMobileMenuOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[55] lg:hidden animate-in fade-in duration-300"
           onClick={() => setIsMobileMenuOpen(false)}
         />
@@ -143,16 +144,24 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
             <button
               key={item.name}
               onClick={() => handleNavigate(item.name)}
-              className={`w-full flex items-center px-4 py-3 rounded-md transition-all duration-200 ${activeItem === item.name
-                  ? colors.active
-                  : `${colors.hover} hover:text-white`
+              className={`w-full flex items-center px-4 py-3 rounded-md transition-all duration-200 relative ${activeItem === item.name
+                ? colors.active
+                : `${colors.hover} hover:text-white`
                 }`}
             >
-              <div className="flex-shrink-0">
+              {role === 'SUB_ADMIN' && activeItem === item.name && (
+                <>
+                  {/* Outer Water Wave Layer 1 */}
+                  <span className="absolute -inset-[3px] border-2 border-[#AAFFC7]/60 animate-wave-1 pointer-events-none z-0"></span>
+                  {/* Outer Water Wave Layer 2 */}
+                  <span className="absolute -inset-[5px] border border-[#67C090]/40 animate-wave-2 pointer-events-none z-0"></span>
+                </>
+              )}
+              <div className="flex-shrink-0 relative z-10">
                 {item.icon}
               </div>
               {isSidebarOpen && (
-                <span className="ml-3 text-[13px] font-medium tracking-tight whitespace-nowrap">{item.name}</span>
+                <span className="ml-3 text-[13px] font-medium tracking-tight whitespace-nowrap relative z-10">{item.name}</span>
               )}
             </button>
           ))}
@@ -175,14 +184,14 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
         {/* Topbar - Simple & Sober */}
         <header className="sticky top-0 z-40 bg-white border-b border-slate-200 h-16 flex items-center px-4 md:px-6 justify-between shadow-sm">
           <div className="flex items-center space-x-2 md:space-x-4">
-            <button 
-              onClick={() => setIsMobileMenuOpen(true)} 
+            <button
+              onClick={() => setIsMobileMenuOpen(true)}
               className="p-2 text-slate-400 hover:text-slate-600 transition-colors lg:hidden"
             >
               <Menu size={20} />
             </button>
-            <button 
-              onClick={() => setIsSidebarOpen(!isSidebarOpen)} 
+            <button
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
               className="p-2 text-slate-400 hover:text-slate-600 transition-colors hidden lg:block"
             >
               {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
@@ -193,19 +202,28 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
           <div className="flex items-center space-x-4">
             <div className="relative group hidden md:block">
               <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input type="text" placeholder="Search..." className="bg-slate-100 border border-slate-200 rounded-md pl-10 pr-4 py-1.5 text-sm outline-none focus:bg-white focus:ring-1 focus:ring-indigo-500 transition-all" />
+              <input
+                type="text"
+                placeholder="Search..."
+                className={`bg-slate-100 border border-slate-200 rounded-md pl-10 pr-4 py-1.5 text-sm outline-none focus:bg-white focus:ring-1 transition-all ${role === 'SUB_ADMIN'
+                    ? 'focus:ring-[#67C090] focus:border-[#67C090]'
+                    : 'focus:ring-indigo-500'
+                  }`}
+              />
             </div>
 
             <button className="relative p-2 text-slate-400 hover:text-slate-600 transition-colors">
               <Bell size={20} />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-indigo-500 rounded-full border-2 border-white"></span>
+              <span className={`absolute top-1.5 right-1.5 w-2 h-2 rounded-full border-2 border-white ${role === 'SUB_ADMIN' ? 'bg-[#67C090]' : 'bg-indigo-500'
+                }`}></span>
             </button>
 
             <div className="h-6 w-px bg-slate-200 mx-1"></div>
 
             {/* Simple Profile */}
             <div className="flex items-center space-x-3 cursor-pointer group px-3 py-1.5 rounded-lg hover:bg-slate-50 transition-all border border-transparent hover:border-slate-100">
-              <div className={`w-9 h-9 rounded-lg flex items-center justify-center font-black text-xs shadow-sm transition-all ${role === 'SUB_ADMIN' ? 'bg-emerald-600 text-white' : role === 'ALUMNI' ? 'bg-orange-600 text-white' : 'bg-indigo-600 text-white'}`}>
+              <div className={`w-9 h-9 rounded-lg flex items-center justify-center font-black text-xs shadow-sm transition-all ${role === 'SUB_ADMIN' ? 'bg-[#215B63] text-white' : role === 'ALUMNI' ? 'bg-orange-600 text-white' : 'bg-indigo-600 text-white'
+                }`}>
                 {userData?.name ? userData.name[0] : role[0]}
               </div>
               <div className="hidden lg:block">
@@ -214,7 +232,10 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
                     {userData?.name || 'Administrator'}
                   </p>
                   {userData?.schoolName && (
-                    <span className="bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter border border-emerald-100">
+                    <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter border ${role === 'SUB_ADMIN'
+                        ? 'bg-[#AAFFC7]/30 text-[#215B63] border-[#67C090]/20'
+                        : 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                      }`}>
                       {userData.schoolName}
                     </span>
                   )}
@@ -223,7 +244,6 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
                   {userData?.role?.replace('_', ' ') || role.replace('_', ' ')}
                 </p>
               </div>
-              <ChevronDown size={14} className="text-slate-300 group-hover:text-slate-400 transition-colors" />
             </div>
           </div>
         </header>
@@ -239,6 +259,48 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         .font-inter { font-family: 'Inter', sans-serif; }
+
+        @keyframes water-wave-1 {
+          0% {
+            border-radius: 8px;
+            transform: scale(1) rotate(0deg);
+          }
+          33% {
+            border-radius: 14px 6px 14px 8px / 12px 8px 14px 6px;
+            transform: scale(1.02) rotate(1deg);
+          }
+          66% {
+            border-radius: 6px 14px 8px 12px / 8px 14px 6px 12px;
+            transform: scale(0.98) rotate(-1deg);
+          }
+          100% {
+            border-radius: 8px;
+            transform: scale(1) rotate(0deg);
+          }
+        }
+
+        @keyframes water-wave-2 {
+          0% {
+            border-radius: 8px;
+            transform: scale(1) rotate(0deg);
+          }
+          50% {
+            border-radius: 14px 8px 6px 12px / 10px 6px 14px 10px;
+            transform: scale(1.03) rotate(-2deg);
+          }
+          100% {
+            border-radius: 8px;
+            transform: scale(1) rotate(0deg);
+          }
+        }
+
+        .animate-wave-1 {
+          animation: water-wave-1 4s infinite ease-in-out;
+        }
+
+        .animate-wave-2 {
+          animation: water-wave-2 6s infinite ease-in-out;
+        }
       `}</style>
     </div>
   );

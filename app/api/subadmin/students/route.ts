@@ -13,7 +13,7 @@ export async function GET(request: Request) {
     const standardId = searchParams.get('standardId');
 
     let queryText = `
-      SELECT s.*, std."standardName", std."division"
+      SELECT s.*, std."standardName", std."division", std."batchYear"
       FROM "Student" s
       LEFT JOIN "Standard" std ON s."standardId" = std."id"
       WHERE s."schoolId" = $1

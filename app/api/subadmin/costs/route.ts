@@ -1,21 +1,30 @@
 import { NextResponse } from 'next/server';
-import pool from '@/lib/db';
+import { db } from '@/lib/db';
+import { expenses, schools } from '@/lib/db/schema';
 import { getSessionFromCookies } from '@/lib/auth';
-import { uploadMedia } from '@/lib/cloudinary';
+import { uploadMedia } from '@/lib/imagekit';
+import { desc, eq, and } from 'drizzle-orm';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const session = await getSessionFromCookies('ADMIN');
-    if (!session || session.role !== 'SUB_ADMIN' || !session.schoolId) {
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '10');
+    const offset = (page - 1) * limit;
+
+    const session = await getSessionFromCookies('SUB_ADMIN');
+    if (!session || !session.schoolId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
-    const result = await pool.query(
-      'SELECT * FROM "Expense" WHERE "schoolId" = $1 ORDER BY "createdAt" DESC',
-      [session.schoolId]
-    );
+    const result = await db.query.expenses.findMany({
+      where: eq(expenses.schoolId, session.schoolId),
+      orderBy: [desc(expenses.createdAt)],
+      limit: limit,
+      offset: offset,
+    });
 
-    return NextResponse.json(result.rows);
+    return NextResponse.json(result);
   } catch (error: any) {
     console.error('Failed to fetch expenses:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
@@ -24,8 +33,8 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const session = await getSessionFromCookies('ADMIN');
-    if (!session || session.role !== 'SUB_ADMIN' || !session.schoolId) {
+    const session = await getSessionFromCookies('SUB_ADMIN');
+    if (!session || !session.schoolId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
@@ -41,9 +50,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Title and Type are required' }, { status: 400 });
     }
 
-    // Fetch school name for folder structure
-    const schoolRes = await pool.query('SELECT "schoolName" FROM "School" WHERE id = $1', [session.schoolId]);
-    const schoolName = schoolRes.rows[0]?.schoolName || 'UnknownSchool';
+    // Fetch school name for folder structure using Drizzle
+    const school = await db.query.schools.findFirst({
+      where: eq(schools.id, session.schoolId),
+      columns: { schoolName: true }
+    });
+    
+    const schoolName = school?.schoolName || 'UnknownSchool';
     const folderPath = `${schoolName}/construction-event-cost`;
 
     let mediaUrl = null;
@@ -59,23 +72,18 @@ export async function POST(request: Request) {
       mediaType = isImage ? 'IMAGE' : 'VIDEO';
     }
 
-    const result = await pool.query(
-      `INSERT INTO "Expense" (
-        title, description, type, "startDate", "estimatedCost", "mediaUrl", "mediaType", "schoolId"
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
-      [
-        title, 
-        description || null, 
-        type, 
-        startDate ? new Date(startDate) : null, 
-        parseFloat(estimatedCost) || 0, 
-        mediaUrl, 
-        mediaType, 
-        session.schoolId
-      ]
-    );
+    const [newExpense] = await db.insert(expenses).values({
+      title,
+      description: description || null,
+      type,
+      startDate: startDate ? startDate : null, // Drizzle date column usually takes string 'YYYY-MM-DD'
+      estimatedCost: estimatedCost || '0',
+      mediaUrl,
+      mediaType,
+      schoolId: session.schoolId
+    }).returning();
 
-    return NextResponse.json(result.rows[0]);
+    return NextResponse.json(newExpense);
 
   } catch (error: any) {
     console.error('Failed to create expense:', error);

@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import StandardManagement from '@/components/dashboard/sub-admin/StandardManagement';
+import SetupWizard from '@/components/dashboard/sub-admin/SetupWizard';
 import StudentImport from '@/components/dashboard/sub-admin/StudentImport';
 import StudentList from '@/components/dashboard/sub-admin/StudentList';
 import NeedyAnalytics from '@/components/dashboard/sub-admin/NeedyAnalytics';
@@ -10,6 +11,7 @@ import CostManagement from '@/components/dashboard/sub-admin/CostManagement';
 import AlumniManagement from '@/components/dashboard/super-admin/AlumniManagement';
 import TransactionHistory from '@/components/dashboard/sub-admin/TransactionHistory';
 import AlumniInteractionManager from '@/components/dashboard/sub-admin/AlumniInteractionManager';
+import PromotionHub from '@/components/dashboard/super-admin/PromotionHub';
 import {
   Users,
   GraduationCap,
@@ -18,7 +20,8 @@ import {
   Activity,
   Calendar,
   CheckCircle2,
-  Clock
+  Clock,
+  ArrowUpRight
 } from 'lucide-react';
 
 export default function SubAdminDashboard() {
@@ -41,22 +44,20 @@ export default function SubAdminDashboard() {
     switch (activeItem) {
       case 'Dashboard':
         return <OverviewTab stats={stats} />;
-      case 'Standards':
-        return <StandardManagement />;
-      case 'Admissions':
-        return <StudentImport />;
-      case 'Costs':
-        return <CostManagement />;
+      case 'Class Setup':
+        return <SetupWizard />;
+      case 'Academic':
+        return <AcademicRegistrySection />;
       case 'Students':
         return <StudentList />;
-      case 'Financial Aid':
-        return <NeedyAnalytics />;
+      case 'Accounts':
+        return <AccountsHubSection />;
       case 'Donations':
         return <TransactionHistory />;
-      case 'Alumni Requests':
-        return <AlumniInteractionManager />;
-      case 'Alumnis':
-        return <AlumniManagement />;
+      case 'Alumni':
+        return <AlumniHubSection />;
+      case 'Promotion':
+        return <PromotionHub />;
       case 'Activity':
         return (
           <div className="py-20 text-center bg-white rounded-md border border-slate-100 shadow-sm">
@@ -72,7 +73,7 @@ export default function SubAdminDashboard() {
 
   return (
     <DashboardLayout
-      title="School Administration"
+      title="School administration"
       role="SUB_ADMIN"
       activeItem={activeItem}
       onNavigate={setActiveItem}
@@ -98,14 +99,14 @@ function OverviewTab({ stats }: { stats: any }) {
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
 
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div className="space-y-1">
-          <h1 className="text-4xl font-black text-slate-900 tracking-tight">Dashboard Overview</h1>
-          <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em]">Institutional Command Center</p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-6 rounded-md border border-slate-200 shadow-sm">
+        <div>
+          <h2 className="text-xl font-bold text-slate-900 tracking-tight">Dashboard Overview</h2>
+          <p className="text-xs text-slate-400 font-medium uppercase tracking-widest mt-1">Institutional Command Center</p>
         </div>
-        <div className="flex items-center space-x-3 bg-white px-5 py-3 rounded-md shadow-sm border border-slate-100">
-          <Calendar size={16} className="text-emerald-600" />
-          <span className="text-xs font-black text-slate-700 uppercase tracking-tighter">Academic Session 2026-27</span>
+        <div className="flex items-center space-x-2.5 bg-slate-100 px-4 py-2 rounded-md border border-slate-200/50">
+          <Calendar size={14} className="text-[#67C090]" />
+          <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Academic Session 2026-27</span>
         </div>
       </div>
 
@@ -165,6 +166,105 @@ function OverviewTab({ stats }: { stats: any }) {
         </div>
       </div>
 
+    </div>
+  );
+}
+
+function AccountsHubSection() {
+  const [activeTab, setActiveTab] = useState<'sponsorships' | 'projects'>('sponsorships');
+
+  return (
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-6 rounded-md border border-slate-200 shadow-sm">
+        <div>
+          <h2 className="text-xl font-bold text-slate-900 tracking-tight">Accounts Hub</h2>
+          <p className="text-xs text-slate-400 font-medium uppercase tracking-widest">Trust Fund & Project Management</p>
+        </div>
+        <div className="flex bg-slate-100 p-1 rounded-md">
+          <button 
+            onClick={() => setActiveTab('sponsorships')}
+            className={`px-4 py-2 text-xs font-bold rounded-md transition-all ${activeTab === 'sponsorships' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+          >
+            Sponsorships
+          </button>
+          <button 
+            onClick={() => setActiveTab('projects')}
+            className={`px-4 py-2 text-xs font-bold rounded-md transition-all ${activeTab === 'projects' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+          >
+            Projects
+          </button>
+        </div>
+      </div>
+
+      <div className="min-h-[600px]">
+        {activeTab === 'sponsorships' ? <NeedyAnalytics /> : <CostManagement />}
+      </div>
+    </div>
+  );
+}
+
+function AlumniHubSection() {
+  const [activeTab, setActiveTab] = useState<'profiles' | 'interactions'>('profiles');
+
+  return (
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-6 rounded-md border border-slate-200 shadow-sm">
+        <div>
+          <h2 className="text-xl font-bold text-slate-900 tracking-tight">Alumni Hub</h2>
+          <p className="text-xs text-slate-400 font-medium uppercase tracking-widest">Unified Network Management</p>
+        </div>
+        <div className="flex bg-slate-100 p-1 rounded-md">
+          <button 
+            onClick={() => setActiveTab('profiles')}
+            className={`px-4 py-2 text-xs font-bold rounded-md transition-all ${activeTab === 'profiles' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+          >
+            Profiles
+          </button>
+          <button 
+            onClick={() => setActiveTab('interactions')}
+            className={`px-4 py-2 text-xs font-bold rounded-md transition-all ${activeTab === 'interactions' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+          >
+            Interactions
+          </button>
+        </div>
+      </div>
+
+      <div className="min-h-[600px]">
+        {activeTab === 'profiles' ? <AlumniManagement /> : <AlumniInteractionManager />}
+      </div>
+    </div>
+  );
+}
+
+function AcademicRegistrySection() {
+  const [activeTab, setActiveTab] = useState<'standards' | 'admissions'>('standards');
+
+  return (
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-6 rounded-md border border-slate-200 shadow-sm">
+        <div>
+          <h2 className="text-xl font-bold text-slate-900 tracking-tight">Academic Registry</h2>
+          <p className="text-xs text-slate-400 font-medium uppercase tracking-widest">Grade Structures & Student Intake</p>
+        </div>
+        <div className="flex bg-slate-100 p-1 rounded-md overflow-x-auto custom-scrollbar">
+          <button 
+            onClick={() => setActiveTab('standards')}
+            className={`px-4 py-2 text-xs font-bold rounded-md transition-all whitespace-nowrap ${activeTab === 'standards' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+          >
+            Grade Configurations
+          </button>
+          <button 
+            onClick={() => setActiveTab('admissions')}
+            className={`px-4 py-2 text-xs font-bold rounded-md transition-all whitespace-nowrap ${activeTab === 'admissions' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+          >
+            Student Admissions
+          </button>
+        </div>
+      </div>
+
+      <div className="min-h-[600px]">
+        {activeTab === 'standards' ? <StandardManagement /> : <StudentImport />}
+      </div>
     </div>
   );
 }

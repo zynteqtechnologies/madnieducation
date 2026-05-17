@@ -8,7 +8,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono);
 }
 
@@ -22,5 +22,57 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* ==========================================================================
+   SUB ADMIN PORTAL TYPOGRAPHY SYSTEM
+   (Light, Normal, Semibold weights only, Inter font-family, Sentence-case only)
+   ========================================================================== */
+.subadmin-portal {
+  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+}
+
+/* Force elegant Inter font-family on all elements */
+.subadmin-portal,
+.subadmin-portal * {
+  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+}
+
+/* Disable aggressive uppercase transforms globally to preserve clean Sentence/Title Case */
+.subadmin-portal *,
+.subadmin-portal .uppercase,
+.subadmin-portal span.uppercase,
+.subadmin-portal th,
+.subadmin-portal label,
+.subadmin-portal button {
+  text-transform: none !important;
+}
+
+/* Override aggressive font weight black, extra-bold, or bold to clean light, normal, or medium/semibold styles */
+.subadmin-portal .font-bold,
+.subadmin-portal .font-extrabold,
+.subadmin-portal .font-black,
+.subadmin-portal h1,
+.subadmin-portal h2,
+.subadmin-portal h3,
+.subadmin-portal h4,
+.subadmin-portal h5,
+.subadmin-portal h6,
+.subadmin-portal strong,
+.subadmin-portal th {
+  font-weight: 500 !important; /* Maps beautifully to elegant medium/semibold weights */
+}
+
+/* Ensure clean font size scales */
+.subadmin-portal input,
+.subadmin-portal select,
+.subadmin-portal textarea,
+.subadmin-portal button,
+.subadmin-portal label {
+  font-size: 13px !important;
+}
+
+.subadmin-portal label {
+  font-weight: 500 !important;
+  color: #64748b !important; /* Elegant slate-500 styling */
 }

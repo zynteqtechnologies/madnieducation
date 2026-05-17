@@ -5,7 +5,7 @@ import { getSessionFromCookies } from '@/lib/auth';
 // GET all trusts
 export async function GET() {
   try {
-    const session = await getSessionFromCookies('ADMIN');
+    const session = await getSessionFromCookies('SUPER_ADMIN');
     if (!session || session.role !== 'SUPER_ADMIN') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
@@ -21,7 +21,7 @@ export async function GET() {
 // POST create new trust
 export async function POST(request: Request) {
   try {
-    const session = await getSessionFromCookies('ADMIN');
+    const session = await getSessionFromCookies('SUPER_ADMIN');
     if (!session || session.role !== 'SUPER_ADMIN') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
@@ -70,7 +70,7 @@ export async function POST(request: Request) {
 // PUT update trust
 export async function PUT(request: Request) {
     try {
-      const session = await getSessionFromCookies('ADMIN');
+      const session = await getSessionFromCookies('SUPER_ADMIN');
       if (!session || session.role !== 'SUPER_ADMIN') {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
       }
@@ -128,7 +128,7 @@ export async function PUT(request: Request) {
 // DELETE trust
 export async function DELETE(request: Request) {
     try {
-      const session = await getSessionFromCookies('ADMIN');
+      const session = await getSessionFromCookies('SUPER_ADMIN');
       if (!session || session.role !== 'SUPER_ADMIN') {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
       }

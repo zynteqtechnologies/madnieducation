@@ -65,10 +65,10 @@ export default function NeedyAnalytics() {
   }), { needy: 0, zakat: 0, lillah: 0, rte: 0, amount: 0 });
 
   return (
-    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="space-y-6 animate-in fade-in duration-500">
       
       {/* Header & Global Stats */}
-      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8">
+      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
         <div className="space-y-1">
           <h2 className="text-3xl font-black text-slate-900 tracking-tight">Financial Aid Analytics</h2>
           <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Institutional Support & Sponsorship Summary</p>
@@ -109,110 +109,124 @@ export default function NeedyAnalytics() {
            <p className="text-slate-400 font-bold uppercase text-xs tracking-widest">No active standards for analysis.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-           {data.map((std) => (
-              <div key={std.id} className="bg-white rounded-md border border-slate-100 shadow-sm hover:shadow-2xl hover:shadow-emerald-500/5 transition-all duration-500 group overflow-hidden">
-                 {/* Card Header */}
-                 <div className="p-8 border-b border-slate-50 relative">
-                    <div className="flex items-center justify-between mb-2">
-                       <div className="w-12 h-12 rounded-md bg-emerald-50 flex items-center justify-center text-emerald-600 group-hover:scale-110 transition-transform">
-                          <School size={24} />
-                       </div>
-                       <div className="text-right">
-                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Standard Fee</p>
-                          <p className="text-sm font-black text-slate-900">₹{parseFloat(std.fees as string).toLocaleString('en-IN')}</p>
-                       </div>
-                    </div>
-                    <h3 className="text-xl font-black text-slate-900 tracking-tight">{std.standardName} {std.division ? `(${std.division})` : ''}</h3>
-                 </div>
-
-                 {/* Metrics Section: High Impact Financial Data */}
-                 <div className="p-8 space-y-6">
-                    
-                    {/* Aid Categories Breakdown */}
-                     <div className="space-y-6">
-                        {[
-                          { label: 'Zakat Fund', count: std.zakat_count, amount: std.zakat_amount, paid: std.zakat_paid, color: 'text-amber-600', barColor: 'bg-amber-500', bg: 'bg-amber-50/50', border: 'border-amber-100' },
-                          { label: 'Lillah Fund', count: std.lillah_count, amount: std.lillah_amount, paid: std.lillah_paid, color: 'text-teal-600', barColor: 'bg-teal-500', bg: 'bg-teal-50/50', border: 'border-teal-100' }
-                        ].map((spons, i) => {
-                          const fees = parseFloat(std.fees as string) || 0;
-                          const totalRequired = Number(spons.count) * fees;
-                          const paidAmount = parseFloat(spons.paid as string) || 0;
-                          const percentage = totalRequired > 0 ? Math.round((paidAmount / totalRequired) * 100) : 0;
-                          
-                          return (
-                            <div key={i} className={`${spons.bg} ${spons.border} border rounded-md p-6 space-y-4 group/item hover:bg-white hover:shadow-xl hover:shadow-slate-200 transition-all duration-300`}>
-                               <div className="flex items-center justify-between">
-                                  <div className="space-y-0.5">
-                                     <p className={`text-[9px] font-black uppercase tracking-[0.2em] ${spons.color}`}>{spons.label}</p>
-                                     <p className="text-xl font-black text-slate-900 tracking-tight">₹{paidAmount.toLocaleString('en-IN')}</p>
-                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Already Collected</p>
+        <div className="bg-white rounded-md border border-slate-200 shadow-sm overflow-hidden">
+           <div className="overflow-x-auto w-full custom-scrollbar">
+              <table className="w-full text-left border-collapse min-w-[1000px]">
+                 <thead className="bg-slate-50 border-b border-slate-200">
+                    <tr>
+                       <th className="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest bg-slate-50/80 sticky left-0 z-20 border-r border-slate-200 backdrop-blur-sm">Grade Level</th>
+                       <th className="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest text-right">Tuition Fee</th>
+                       <th className="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest border-l border-slate-200 bg-amber-50/50 text-center" colSpan={3}>Zakat Fund Focus</th>
+                       <th className="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest border-l border-slate-200 bg-teal-50/50 text-center" colSpan={3}>Lillah Fund Focus</th>
+                       <th className="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest border-l border-slate-200 bg-rose-50/50 text-center">Other Metrics</th>
+                       <th className="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest border-l border-slate-800 text-right bg-slate-900 text-slate-300">Total Deficit</th>
+                    </tr>
+                    <tr className="bg-slate-50/30 border-b border-slate-200">
+                       <th className="px-6 py-2 sticky left-0 z-20 bg-slate-50/80 border-r border-slate-200 backdrop-blur-sm"></th>
+                       <th className="px-6 py-2"></th>
+                       <th className="px-4 py-2 text-[9px] font-bold text-slate-400 uppercase tracking-wider border-l border-slate-200 bg-amber-50/50 text-center">Recipients</th>
+                       <th className="px-4 py-2 text-[9px] font-bold text-emerald-600 uppercase tracking-wider bg-amber-50/50 text-right">Collected</th>
+                       <th className="px-4 py-2 text-[9px] font-bold text-rose-500 uppercase tracking-wider bg-amber-50/50 text-right">Remaining</th>
+                       
+                       <th className="px-4 py-2 text-[9px] font-bold text-slate-400 uppercase tracking-wider border-l border-slate-200 bg-teal-50/50 text-center">Recipients</th>
+                       <th className="px-4 py-2 text-[9px] font-bold text-emerald-600 uppercase tracking-wider bg-teal-50/50 text-right">Collected</th>
+                       <th className="px-4 py-2 text-[9px] font-bold text-rose-500 uppercase tracking-wider bg-teal-50/50 text-right">Remaining</th>
+                       
+                       <th className="px-6 py-2 border-l border-slate-200 bg-rose-50/50"></th>
+                       <th className="px-6 py-2 border-l border-slate-800 bg-slate-900"></th>
+                    </tr>
+                 </thead>
+                 <tbody className="divide-y divide-slate-100">
+                    {data.map((std) => {
+                       const fees = parseFloat(std.fees as string) || 0;
+                       const zakatPaid = parseFloat(std.zakat_paid as string) || 0;
+                       const lillahPaid = parseFloat(std.lillah_paid as string) || 0;
+                       return (
+                         <tr key={std.id} className="hover:bg-slate-50/50 transition-colors group">
+                            <td className="px-6 py-4 sticky left-0 z-10 bg-white group-hover:bg-slate-50 transition-colors border-r border-slate-100">
+                               <div className="flex items-center space-x-3">
+                                  <div className="w-8 h-8 rounded bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                                     <School size={16} />
                                   </div>
-                                  <div className="text-right">
-                                     <p className="text-lg font-black text-slate-900 leading-none">{spons.count}</p>
-                                     <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter mt-1">Recipients</p>
-                                  </div>
-                               </div>
-
-                               <div className="space-y-2">
-                                  <div className="flex justify-between items-center text-[8px] font-black uppercase tracking-widest">
-                                     <span className="text-slate-400">Sync Progress</span>
-                                     <span className={spons.color}>{percentage}%</span>
-                                  </div>
-                                  <div className="h-1 w-full bg-slate-100 rounded-full overflow-hidden">
-                                     <div 
-                                       className={`h-full ${spons.barColor} transition-all duration-1000`} 
-                                       style={{ width: `${Math.min(100, percentage)}%` }}
-                                     />
+                                  <div className="whitespace-nowrap">
+                                     <p className="text-sm font-black text-slate-900">{std.standardName}</p>
+                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{std.division || 'MAIN'} DIVISION</p>
                                   </div>
                                </div>
+                            </td>
+                            <td className="px-6 py-4 text-right">
+                               <p className="text-sm font-black text-slate-700 tracking-tight">₹{fees.toLocaleString('en-IN')}</p>
+                            </td>
+                            
+                            {/* Zakat Data */}
+                            <td className="px-4 py-4 text-center border-l border-slate-100 bg-amber-50/20">
+                               <span className="text-sm font-black text-slate-600">{std.zakat_count}</span>
+                            </td>
+                            <td className="px-4 py-4 text-right bg-amber-50/20">
+                               <span className="text-xs font-bold text-emerald-600 tracking-tight">₹{zakatPaid.toLocaleString('en-IN')}</span>
+                            </td>
+                            <td className="px-4 py-4 text-right bg-amber-50/20">
+                               <span className="text-sm font-black text-rose-500 tracking-tight">₹{std.zakat_amount.toLocaleString('en-IN')}</span>
+                            </td>
 
-                               <div className="flex items-center justify-between pt-2 border-t border-slate-100/50">
-                                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Remaining Balance</span>
-                                  <span className="text-sm font-black text-rose-600 tracking-tighter">₹{spons.amount.toLocaleString('en-IN')}</span>
+                            {/* Lillah Data */}
+                            <td className="px-4 py-4 text-center border-l border-slate-100 bg-teal-50/20">
+                               <span className="text-sm font-black text-slate-600">{std.lillah_count}</span>
+                            </td>
+                            <td className="px-4 py-4 text-right bg-teal-50/20">
+                               <span className="text-xs font-bold text-emerald-600 tracking-tight">₹{lillahPaid.toLocaleString('en-IN')}</span>
+                            </td>
+                            <td className="px-4 py-4 text-right bg-teal-50/20">
+                               <span className="text-sm font-black text-rose-500 tracking-tight">₹{std.lillah_amount.toLocaleString('en-IN')}</span>
+                            </td>
+
+                            {/* Other Metrics */}
+                            <td className="px-6 py-4 border-l border-slate-100 text-center bg-rose-50/20">
+                               <div className="flex items-center justify-center space-x-4">
+                                  <div className="flex flex-col items-center" title="Total Needy Profiles">
+                                     <Heart size={14} className="text-rose-400 mb-1" />
+                                     <span className="text-[10px] font-black text-slate-600">{std.total_needy}</span>
+                                  </div>
+                                  <div className="flex flex-col items-center" title="RTE Profiles">
+                                     <ShieldCheck size={14} className="text-emerald-400 mb-1" />
+                                     <span className="text-[10px] font-black text-slate-600">{std.rte_count}</span>
+                                  </div>
                                </div>
-                            </div>
-                          );
-                        })}
-                     </div>
+                            </td>
 
-                    {/* Secondary Metrics */}
-                    <div className="grid grid-cols-2 gap-4">
-                       <div className="bg-slate-50 rounded-2xl p-5 flex items-center justify-between border border-slate-100">
-                          <div className="space-y-0.5">
-                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">Needy</p>
-                             <p className="text-lg font-black text-rose-600">{std.total_needy}</p>
-                          </div>
-                          <Heart size={18} className="text-rose-200" />
-                       </div>
-                       <div className="bg-slate-50 rounded-2xl p-5 flex items-center justify-between border border-slate-100">
-                          <div className="space-y-0.5">
-                             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none">RTE</p>
-                             <p className="text-lg font-black text-emerald-600">{std.rte_count}</p>
-                          </div>
-                          <ShieldCheck size={18} className="text-emerald-200" />
-                       </div>
-                    </div>
-                 </div>
-
-                 {/* Card Footer: Absolute Total */}
-                 <div className="px-8 py-8 bg-slate-950 text-white relative">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 blur-3xl rounded-full"></div>
-                    <div className="flex items-center justify-between relative z-10">
-                       <div>
-                          <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.25em] mb-1">Standard Budget Allocation</p>
-                          <div className="flex items-baseline space-x-2">
-                             <span className="text-3xl font-black text-emerald-400 tracking-tighter italic">₹{std.total_needy_amount.toLocaleString('en-IN')}</span>
-                             <span className="text-[10px] font-black text-white/20 uppercase">Remaining Required</span>
-                          </div>
-                       </div>
-                       <div className="w-12 h-12 rounded-full border border-white/5 flex items-center justify-center bg-white/5">
-                          <Banknote size={24} className="text-emerald-400" />
-                       </div>
-                    </div>
-                 </div>
-              </div>
-           ))}
+                            {/* Standard Budget Required */}
+                            <td className="px-6 py-4 border-l border-slate-800 text-right bg-slate-950 text-white relative overflow-hidden group-hover:bg-slate-900 transition-colors">
+                               <div className="absolute inset-0 bg-emerald-500/5"></div>
+                               <span className="relative z-10 text-base font-black text-emerald-400 tracking-tighter w-full block">₹{std.total_needy_amount.toLocaleString('en-IN')}</span>
+                            </td>
+                         </tr>
+                       );
+                    })}
+                 </tbody>
+                 {/* Aggregates Footer */}
+                 <tfoot className="bg-slate-50 border-t-4 border-slate-200">
+                    <tr>
+                       <td className="px-6 py-4 font-black text-slate-900 sticky left-0 z-20 bg-slate-50 border-r border-slate-200 uppercase tracking-widest text-[10px] whitespace-nowrap">Total Aggregates</td>
+                       <td className="px-6 py-4 text-right"></td>
+                       <td className="px-4 py-4 text-center font-black text-slate-700 bg-amber-50/50 border-l border-slate-200">{totals.zakat}</td>
+                       <td className="px-4 py-4 text-right text-emerald-600 font-bold bg-amber-50/50">₹{data.reduce((acc, curr) => acc + (parseFloat(curr.zakat_paid as string)||0), 0).toLocaleString('en-IN')}</td>
+                       <td className="px-4 py-4 text-right text-rose-600 font-black tracking-tight bg-amber-50/50">₹{data.reduce((acc, curr) => acc + curr.zakat_amount, 0).toLocaleString('en-IN')}</td>
+                       
+                       <td className="px-4 py-4 text-center font-black text-slate-700 border-l border-slate-200 bg-teal-50/50">{totals.lillah}</td>
+                       <td className="px-4 py-4 text-right text-emerald-600 font-bold bg-teal-50/50">₹{data.reduce((acc, curr) => acc + (parseFloat(curr.lillah_paid as string)||0), 0).toLocaleString('en-IN')}</td>
+                       <td className="px-4 py-4 text-right text-rose-600 font-black tracking-tight bg-teal-50/50">₹{data.reduce((acc, curr) => acc + curr.lillah_amount, 0).toLocaleString('en-IN')}</td>
+                       
+                       <td className="px-6 py-4 text-center font-black text-slate-500 border-l border-slate-200 bg-rose-50/50 text-[10px]">
+                          <span className="mr-3">N: <b className="text-slate-800">{totals.needy}</b></span>
+                          <span>RTE: <b className="text-slate-800">{totals.rte}</b></span>
+                       </td>
+                       <td className="px-6 py-4 text-right border-l border-slate-800 bg-slate-950">
+                          <span className="text-xl font-black text-emerald-400 tracking-tighter">₹{totals.amount.toLocaleString('en-IN')}</span>
+                       </td>
+                    </tr>
+                 </tfoot>
+              </table>
+           </div>
         </div>
       )}
 
