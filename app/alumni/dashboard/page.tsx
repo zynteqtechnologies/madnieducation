@@ -29,54 +29,69 @@ export default function AlumniDashboard() {
       case 'Dashboard':
         return (
           <div className="space-y-8 animate-in fade-in duration-500">
-            <div className="bg-gradient-to-r from-amber-50 to-orange-50 p-8 rounded-xl shadow-md border border-amber-100">
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">Welcome back, {data?.alumni?.name || 'Alumni'}!</h2>
-              <p className="text-gray-600 mb-8 font-medium">Keep your legacy alive and stay connected with your institutional network.</p>
+            <div className="bg-gradient-to-br from-amber-50/60 via-orange-50/50 to-amber-100/40 p-8 rounded-[2rem] shadow-xl shadow-amber-950/5 border border-amber-100/80 backdrop-blur-sm">
+              <h2 className="text-2xl font-bold text-slate-800 mb-2">Welcome back, {data?.alumni?.name || 'Alumni'}!</h2>
+              <p className="text-slate-600 mb-8 font-medium">Keep your legacy alive and stay connected with your institutional network.</p>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                   <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-4">Institutional Presence</h3>
                   <div className="space-y-4">
                     <div className="flex items-center justify-between py-2 border-b border-slate-50">
-                       <span className="text-sm font-bold text-slate-600">Alumni Identity</span>
-                       <span className="text-sm font-black text-slate-900">{data?.alumni?.name}</span>
+                       <span className="text-sm font-semibold text-slate-500">Alumni Identity</span>
+                       <span className="text-sm font-bold text-slate-800">{data?.alumni?.name}</span>
                     </div>
                     <div className="flex items-center justify-between py-2 border-b border-slate-50">
-                       <span className="text-sm font-bold text-slate-600">Graduation Year</span>
-                       <span className="text-sm font-black text-amber-600 bg-amber-50 px-3 py-1 rounded-full">{data?.alumni?.batchYear}</span>
+                       <span className="text-sm font-semibold text-slate-500">Graduation Year</span>
+                       <span className="text-sm font-bold text-amber-600 bg-amber-50 px-3 py-1 rounded-full">Class of {data?.alumni?.batchYear}</span>
                     </div>
                     <div className="flex items-center justify-between py-2">
-                       <span className="text-sm font-bold text-slate-600">Interaction Stats</span>
-                       <span className="text-sm font-black text-slate-900">{data?.stats?.totalPosts || 0} Contributions</span>
+                       <span className="text-sm font-semibold text-slate-500">Interaction Stats</span>
+                       <span className="text-sm font-bold text-slate-800">{data?.stats?.totalPosts || 0} Contributions</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-100 flex flex-col justify-center items-center text-center">
-                  <div className="w-24 h-24 bg-amber-50 text-amber-600 rounded-md border border-amber-100 flex items-center justify-center mb-6 shadow-xl shadow-amber-500/5">
+                <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-center items-center text-center">
+                  <div className="w-24 h-24 bg-gradient-to-br from-amber-500 to-orange-600 text-white rounded-2xl flex items-center justify-center mb-6 shadow-xl shadow-orange-500/20">
                       <GraduationCap size={48} />
                   </div>
-                  <h3 className="text-lg font-black text-gray-800 mb-1">Proud Graduate</h3>
-                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Class of {data?.alumni?.batchYear}</p>
+                  <h3 className="text-lg font-bold text-slate-800 mb-1">Proud Graduate</h3>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Class of {data?.alumni?.batchYear}</p>
                 </div>
               </div>
             </div>
 
              {/* Quick Actions for Alumni */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-               <button onClick={() => setActiveTab('Careers')} className="bg-white p-6 rounded-md border border-slate-200 hover:border-amber-500 transition-all text-left group">
-                  <Briefcase className="text-amber-500 mb-4 group-hover:scale-110 transition-transform" size={24} />
-                  <h4 className="font-bold text-slate-900">Careers</h4>
+               <button 
+                 onClick={() => setActiveTab('Careers')} 
+                 className="bg-white p-6 rounded-2xl border border-slate-200 hover:border-amber-500 hover:scale-[1.02] hover:shadow-xl hover:shadow-amber-900/5 transition-all duration-300 text-left group"
+               >
+                  <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center mb-4 group-hover:bg-amber-500 group-hover:text-white transition-all duration-300">
+                    <Briefcase className="group-hover:scale-110 transition-transform" size={22} />
+                  </div>
+                  <h4 className="font-bold text-slate-900 text-base">Careers</h4>
                   <p className="text-xs text-slate-500 mt-1">Post jobs and referrals for students.</p>
                </button>
-               <button onClick={() => setActiveTab('Mentorship')} className="bg-white p-6 rounded-md border border-slate-200 hover:border-amber-500 transition-all text-left group">
-                  <UserCheck className="text-amber-500 mb-4 group-hover:scale-110 transition-transform" size={24} />
-                  <h4 className="font-bold text-slate-900">Mentorship</h4>
+               <button 
+                 onClick={() => setActiveTab('Mentorship')} 
+                 className="bg-white p-6 rounded-2xl border border-slate-200 hover:border-amber-500 hover:scale-[1.02] hover:shadow-xl hover:shadow-amber-900/5 transition-all duration-300 text-left group"
+               >
+                  <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center mb-4 group-hover:bg-amber-500 group-hover:text-white transition-all duration-300">
+                    <UserCheck className="group-hover:scale-110 transition-transform" size={22} />
+                  </div>
+                  <h4 className="font-bold text-slate-900 text-base">Mentorship</h4>
                   <p className="text-xs text-slate-500 mt-1">Offer guidance to the next generation.</p>
                </button>
-               <button onClick={() => setActiveTab('Schools')} className="bg-white p-6 rounded-md border border-slate-200 hover:border-amber-500 transition-all text-left group">
-                  <Globe className="text-amber-500 mb-4 group-hover:scale-110 transition-transform" size={24} />
-                  <h4 className="font-bold text-slate-900">Schools</h4>
+               <button 
+                 onClick={() => setActiveTab('Schools')} 
+                 className="bg-white p-6 rounded-2xl border border-slate-200 hover:border-amber-500 hover:scale-[1.02] hover:shadow-xl hover:shadow-amber-900/5 transition-all duration-300 text-left group"
+               >
+                  <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center mb-4 group-hover:bg-amber-500 group-hover:text-white transition-all duration-300">
+                    <Globe className="group-hover:scale-110 transition-transform" size={22} />
+                  </div>
+                  <h4 className="font-bold text-slate-900 text-base">Schools</h4>
                   <p className="text-xs text-slate-500 mt-1">Contribute to school infrastructure.</p>
                </button>
             </div>

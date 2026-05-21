@@ -77,11 +77,9 @@ export default function TrustManagement() {
       <div className="flex justify-end pt-2">
         <Link
           href="/superadmin/trust/new"
-          className="bg-[#1A3D63] text-white px-5 py-2.5 rounded-xl hover:bg-[#0A1931] transition font-semibold text-xs shadow-sm shadow-[#1A3D63]/10 flex items-center group"
+          className="bg-[#0b1525] text-white px-5 py-3 rounded-xl hover:bg-[#162a45] transition-all font-semibold text-xs shadow-sm flex items-center group gap-2"
         >
-          <div className="bg-white/10 p-1 rounded-lg mr-2 group-hover:scale-110 transition-transform">
-            <Plus size={16} strokeWidth={3} />
-          </div>
+          <Plus size={15} strokeWidth={2.5} className="group-hover:scale-115 transition-transform" />
           <span>New trust</span>
         </Link>
       </div>
