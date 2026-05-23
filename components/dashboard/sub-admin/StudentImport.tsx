@@ -130,25 +130,25 @@ export default function StudentImport() {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
+    <div className="lg:h-full lg:overflow-hidden flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-4 duration-700">
       
       {/* Step 1: Upload Section */}
       {!previewData.length && !success && (
-        <div className="max-w-xl mx-auto py-12">
-          <div className="bg-white p-10 rounded-md border border-slate-200 shadow-sm text-center">
-             <div className="w-20 h-20 bg-emerald-50 text-emerald-600 rounded-md flex items-center justify-center mx-auto mb-6">
-                <FileUp size={40} />
+        <div className="flex-1 flex flex-col items-center justify-center py-6">
+          <div className="bg-[#FAF7F0] p-8 rounded-md border border-[#E6DFD3] shadow-sm text-center w-full max-w-lg">
+             <div className="w-16 h-16 bg-[#dac48b]/10 text-[#dac48b] rounded-md flex items-center justify-center mx-auto mb-4">
+                <FileUp size={32} />
              </div>
-             <h3 className="text-2xl font-black text-slate-900 mb-2">Student Registry Import</h3>
-             <p className="text-slate-500 text-sm font-medium mb-8">Select a standard and upload the corresponding Excel template.</p>
+             <h3 className="text-xl font-bold text-slate-900 mb-1">Student Registry Import</h3>
+             <p className="text-slate-500 text-xs font-medium uppercase tracking-wide mb-8">Select a standard and upload the corresponding Excel template.</p>
              
              <div className="space-y-4">
                 <div className="text-left space-y-1 mb-4">
-                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Target Academic Standard</label>
+                   <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide ml-1">Target Academic Standard</label>
                    <select 
                      value={selectedStandardId} 
                      onChange={(e) => setSelectedStandardId(e.target.value)}
-                     className="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-md outline-none focus:ring-4 focus:ring-emerald-500/5 focus:bg-white text-sm font-bold transition-all appearance-none cursor-pointer"
+                     className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-md outline-none focus:ring-2 focus:ring-[#dac48b]/20 text-sm transition-all appearance-none cursor-pointer"
                    >
                      <option value="">Select Standard...</option>
                      {standards.map(std => (
@@ -166,9 +166,9 @@ export default function StudentImport() {
                 />
                 <button 
                   onClick={() => fileInputRef.current?.click()}
-                  className="w-full py-4 px-6 border-2 border-dashed border-slate-200 rounded-md hover:border-emerald-400 hover:bg-slate-50 transition-all flex flex-col items-center group"
+                  className="w-full py-4 px-6 border-2 border-dashed border-slate-200 rounded-md hover:border-[#dac48b] hover:bg-white transition-all flex flex-col items-center group"
                 >
-                   <span className="text-xs font-black text-slate-400 uppercase tracking-widest group-hover:text-emerald-600">
+                   <span className="text-xs font-bold text-slate-400 uppercase tracking-widest group-hover:text-[#dac48b]">
                       {file ? file.name : 'Select Excel Document'}
                    </span>
                 </button>
@@ -177,9 +177,9 @@ export default function StudentImport() {
                    <button 
                     onClick={handleUpload}
                     disabled={loading}
-                    className="w-full py-4 bg-emerald-600 text-white rounded-md font-black text-xs uppercase tracking-widest shadow-xl shadow-emerald-100 hover:bg-emerald-700 transition-all flex items-center justify-center space-x-2"
+                    className="w-full py-3 bg-[#18181b] text-white rounded-md font-bold text-xs uppercase tracking-widest shadow-sm hover:bg-black transition-all flex items-center justify-center space-x-2"
                    >
-                     {loading ? <Loader2 className="animate-spin" size={18} /> : <><span>Analyze Registry</span><Table size={18}/></>}
+                     {loading ? <Loader2 className="animate-spin" size={16} /> : <><span>Analyze Registry</span><Table size={16}/></>}
                    </button>
                 )}
              </div>
@@ -189,56 +189,56 @@ export default function StudentImport() {
 
       {/* Step 2: Preview & Edit Section */}
       {previewData.length > 0 && (
-        <div className="space-y-6">
-           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 py-2 border-b border-slate-100">
+        <div className="flex-1 flex flex-col gap-3 min-h-0 lg:overflow-hidden">
+           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white px-5 py-3 rounded-md border border-slate-200 shadow-sm shrink-0">
               <div>
-                 <h2 className="text-xl font-bold text-slate-900">Registry Snapshot</h2>
-                 <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-1">Found {previewData.length} records in template</p>
+                 <h2 className="text-lg font-bold text-slate-900">Registry Snapshot</h2>
+                 <p className="text-xs text-slate-500 font-medium uppercase tracking-wide">Found {previewData.length} records in template</p>
               </div>
-              <div className="flex space-x-3">
-                 <button onClick={() => setPreviewData([])} className="px-6 py-3 bg-slate-100 text-slate-500 rounded-md font-bold text-xs uppercase tracking-tight hover:bg-slate-200 transition-all">Abort</button>
+              <div className="flex space-x-2">
+                 <button onClick={() => setPreviewData([])} className="px-4 py-2 bg-slate-100 text-slate-500 rounded-md font-bold text-[10px] uppercase tracking-wider hover:bg-slate-200 transition-all">Abort</button>
                  <button 
                   onClick={handleSave} 
                   disabled={importing}
-                  className="px-8 py-3 bg-emerald-600 text-white rounded-md font-black text-xs uppercase tracking-widest shadow-lg shadow-emerald-100 hover:bg-emerald-700 transition-all flex items-center"
+                  className="px-6 py-2 bg-[#18181b] text-white rounded-md font-bold text-[10px] uppercase tracking-wider shadow-sm hover:bg-black transition-all flex items-center"
                  >
-                    {importing ? <Loader2 className="animate-spin mr-2" size={16} /> : <Save className="mr-2" size={16} />}
+                    {importing ? <Loader2 className="animate-spin mr-2" size={14} /> : <Save className="mr-2" size={14} />}
                     Finalize Import
                  </button>
               </div>
            </div>
 
            {error && (
-             <div className="p-4 bg-rose-50 border border-rose-100 rounded-md flex items-center space-x-3 text-rose-700 text-xs font-bold">
-                <AlertCircle size={16} />
+             <div className="p-3 bg-rose-50 border border-rose-100 rounded-md flex items-center space-x-3 text-rose-700 text-xs font-bold shrink-0">
+                <AlertCircle size={14} />
                 <p>{error}</p>
              </div>
            )}
 
-           <div className="bg-white rounded-md border border-slate-200 shadow-sm overflow-hidden">
-              <div className="overflow-x-auto max-h-[600px] no-scrollbar">
-                 <table className="w-full text-left border-collapse text-[11px]">
-                    <thead className="bg-slate-50 sticky top-0 z-10">
+           <div className="bg-white rounded-md border border-slate-100 shadow-sm overflow-hidden flex-1 min-h-0 flex flex-col">
+              <div className="overflow-auto custom-scrollbar flex-1">
+                 <table className="w-full text-left border-collapse text-[11px] min-w-[1000px]">
+                    <thead className="bg-slate-50 sticky top-0 z-10 border-b border-slate-200">
                        <tr>
-                          <th className="px-4 py-3 border-b border-slate-200 text-slate-400 font-black uppercase tracking-wider sticky left-0 bg-slate-50 z-20">Tools</th>
+                          <th className="px-4 py-3 text-[#dac48b] font-bold uppercase tracking-wider sticky left-0 bg-slate-50 z-20">Tools</th>
                           {headers.map((h, i) => (
-                             <th key={i} className="px-4 py-3 border-b border-slate-200 text-slate-500 font-black uppercase tracking-wider min-w-[150px]">{h}</th>
+                             <th key={i} className="px-4 py-3 text-[#dac48b] font-bold uppercase tracking-wider min-w-[150px]">{h}</th>
                           ))}
                        </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                        {previewData.map((row, rowIndex) => (
-                          <tr key={rowIndex} className="hover:bg-slate-50/50 transition-colors">
-                             <td className="px-4 py-3 sticky left-0 bg-white group-hover:bg-slate-50 transition-colors z-10 border-r border-slate-100">
+                          <tr key={rowIndex} className="hover:bg-slate-50/40 transition-colors group">
+                             <td className="px-4 py-2 sticky left-0 bg-white group-hover:bg-slate-50 transition-colors z-10 border-r border-slate-100">
                                 <button onClick={() => handleRemoveRow(rowIndex)} className="p-1.5 text-slate-300 hover:text-rose-600 transition-colors"><Trash2 size={14}/></button>
                              </td>
                              {headers.map((h, i) => (
-                                <td key={i} className="px-4 py-2">
+                                <td key={i} className="px-4 py-1.5">
                                    <input 
                                      type="text" 
                                      value={row[h] || ''} 
                                      onChange={(e) => handleCellChange(rowIndex, h, e.target.value)}
-                                     className="w-full bg-transparent border-none focus:ring-1 focus:ring-indigo-300 rounded-md py-1 px-2 font-semibold text-slate-700 outline-none hover:bg-slate-100 transition-all"
+                                     className="w-full bg-transparent border-none focus:ring-1 focus:ring-[#dac48b]/30 rounded-md py-1 px-2 font-medium text-slate-800 outline-none hover:bg-slate-50 transition-all"
                                    />
                                 </td>
                              ))}
@@ -253,13 +253,14 @@ export default function StudentImport() {
 
       {/* Success State */}
       {success && (
-         <div className="max-w-md mx-auto py-20 text-center animate-in zoom-in duration-500">
-            <div className="w-24 h-24 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner">
-               <CheckCircle2 size={56} />
+         <div className="flex-1 flex flex-col items-center justify-center py-20 text-center animate-in zoom-in duration-500">
+            <div className="w-24 h-24 bg-[#dac48b]/10 text-[#dac48b] rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner relative">
+               <div className="absolute inset-0 bg-[#dac48b]/20 rounded-full animate-ping opacity-20"></div>
+               <CheckCircle2 size={48} className="relative z-10" />
             </div>
-            <h3 className="text-3xl font-black text-slate-900 mb-2">Sync Complete</h3>
-            <p className="text-slate-500 font-medium mb-10">All records have been successfully synchronized with the institutional registry.</p>
-            <button onClick={() => setSuccess(false)} className="px-8 py-4 bg-emerald-600 text-white rounded-md font-black text-xs uppercase tracking-widest shadow-xl shadow-emerald-100">Return to Module</button>
+            <h3 className="text-3xl font-bold text-slate-900 mb-2">Sync Complete</h3>
+            <p className="text-slate-500 font-medium mb-10 max-w-sm">All records have been successfully synchronized with the institutional registry.</p>
+            <button onClick={() => setSuccess(false)} className="px-8 py-3 bg-[#18181b] text-white rounded-md font-bold text-xs uppercase tracking-widest shadow-sm hover:bg-black transition-all">Return to Module</button>
          </div>
       )}
 

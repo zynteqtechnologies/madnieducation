@@ -167,35 +167,35 @@ export default function PromotionHub({ schoolId: propSchoolId, isAdmin = false }
   );
 
   return (
-    <div className="space-y-6">
-      {/* Premium Header Card */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-6 rounded-md border border-slate-200 shadow-sm">
+    <div className="lg:h-full lg:overflow-hidden flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      {/* Header Row */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white px-5 py-3 rounded-md border border-slate-200 shadow-sm shrink-0">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 tracking-tight">Promotion Hub</h2>
-          <p className="text-xs text-slate-400 font-medium uppercase tracking-widest mt-1">Academic promotions & grades rollover</p>
+          <h2 className="text-lg font-bold text-slate-900 tracking-tight">Promotion Hub</h2>
+          <p className="text-xs text-slate-500 font-medium uppercase tracking-wide">Academic promotions & grades rollover</p>
         </div>
-        <div className="flex items-center space-x-2.5 bg-slate-100 px-4 py-2 rounded-md border border-slate-200/50">
-          <Sparkles size={14} className="text-[#67C090]" />
-          <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Promotion Registry Active</span>
+        <div className="flex items-center space-x-2 bg-slate-100 px-3 py-1.5 rounded-md border border-slate-200/50">
+          <Sparkles size={13} className="text-[#dac48b]" />
+          <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Promotion Registry Active</span>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="flex-1 min-h-0 flex flex-col lg:flex-row gap-3">
         {/* Filters Panel */}
-        <div className="lg:col-span-1 space-y-6">
-          <div className="bg-white rounded-3xl border border-slate-200 p-8 space-y-6 shadow-sm">
-            <h3 className="text-xs font-bold text-[#1A3D63] flex items-center">
-              <Filter size={14} className="mr-2" /> Source context
+        <div className="lg:w-72 flex flex-col gap-3 shrink-0 overflow-y-auto custom-scrollbar">
+          <div className="bg-white rounded-md border border-slate-200 p-6 space-y-4 shadow-sm">
+            <h3 className="text-xs font-bold text-slate-900 flex items-center uppercase tracking-wide">
+              <Filter size={14} className="mr-2 text-[#dac48b]" /> Source context
             </h3>
 
-            <div className="space-y-5">
+            <div className="space-y-4">
               {isAdmin && !propSchoolId && (
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-bold text-slate-400 ml-1">Select school</label>
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide ml-1">Select school</label>
                   <select
                     value={selectedSchool}
                     onChange={(e) => setSelectedSchool(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold outline-none focus:ring-2 focus:ring-[#1A3D63]/10 transition-all bg-slate-50 focus:bg-white"
+                    className="w-full px-3 py-2 rounded-md border border-slate-200 text-xs font-bold outline-none focus:ring-2 focus:ring-[#dac48b]/20 transition-all bg-slate-50 focus:bg-white"
                   >
                     <option value="">Choose school...</option>
                     {schools.map(s => <option key={s.id} value={s.id}>{s.schoolName}</option>)}
@@ -203,12 +203,12 @@ export default function PromotionHub({ schoolId: propSchoolId, isAdmin = false }
                 </div>
               )}
 
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-slate-400 ml-1">Source standard</label>
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide ml-1">Source standard</label>
                 <select
                   value={selectedStandard}
                   onChange={(e) => setSelectedStandard(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold outline-none focus:ring-2 focus:ring-[#1A3D63]/10 transition-all bg-slate-50 focus:bg-white"
+                  className="w-full px-3 py-2 rounded-md border border-slate-200 text-xs font-bold outline-none focus:ring-2 focus:ring-[#dac48b]/20 transition-all bg-slate-50 focus:bg-white"
                   disabled={!selectedSchool}
                 >
                   <option value="">Choose standard...</option>
@@ -219,169 +219,147 @@ export default function PromotionHub({ schoolId: propSchoolId, isAdmin = false }
               <button
                 onClick={loadStudents}
                 disabled={!selectedStandard || isLoading}
-                className="w-full bg-[#1A3D63] text-white font-bold text-[11px] py-3.5 rounded-2xl hover:bg-[#0A1931] transition-all disabled:opacity-50 shadow-lg shadow-[#1A3D63]/10"
+                className="w-full bg-[#18181b] text-white font-bold text-[11px] py-2.5 rounded-md hover:bg-black transition-all disabled:opacity-50 shadow-sm uppercase tracking-wider"
               >
                 {isLoading ? <Loader2 className="animate-spin mx-auto" size={16} /> : 'Load students'}
               </button>
             </div>
           </div>
 
-          <div className="bg-white rounded-3xl border border-slate-200 p-8 space-y-6 shadow-sm">
-            <h3 className="text-xs font-bold text-emerald-600 flex items-center">
-              <ArrowRightCircle size={14} className="mr-2" /> Target context
+          <div className="bg-white rounded-md border border-slate-200 p-6 space-y-4 shadow-sm">
+            <h3 className="text-xs font-bold text-slate-900 flex items-center uppercase tracking-wide">
+              <ArrowRightCircle size={14} className="mr-2 text-[#dac48b]" /> Target context
             </h3>
 
-            <div className="space-y-5">
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-slate-400 ml-1">Target standard</label>
+            <div className="space-y-4">
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide ml-1">Target standard</label>
                 <select
                   value={targetStandard}
                   onChange={(e) => setTargetStandard(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold outline-none focus:ring-2 focus:ring-emerald-500/10 transition-all bg-emerald-50/10 focus:bg-white"
+                  className="w-full px-3 py-2 rounded-md border border-slate-200 text-xs font-bold outline-none focus:ring-2 focus:ring-[#dac48b]/20 transition-all bg-amber-50/10 focus:bg-white"
                 >
                   <option value="">Next standard...</option>
                   {standards.map(s => <option key={s.id} value={s.id}>{s.standardName} - {s.division}</option>)}
                 </select>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-slate-400 ml-1">Next academic year</label>
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide ml-1">Next academic year</label>
                 <select
                   value={targetYear}
                   onChange={(e) => setTargetYear(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold outline-none focus:ring-2 focus:ring-emerald-500/10 transition-all bg-emerald-50/10 focus:bg-white"
+                  className="w-full px-3 py-2 rounded-md border border-slate-200 text-xs font-bold outline-none focus:ring-2 focus:ring-[#dac48b]/20 transition-all bg-amber-50/10 focus:bg-white"
                 >
-                  <option value="">Next year...</option>
-                  {academicYears.map(y => <option key={y.id} value={y.id}>{y.label}</option>)}
+                  <option value="">Target year...</option>
+                  {academicYears.map(y => <option key={y.id} value={y.id}>{y.label} {y.isActive ? '(Active)' : ''}</option>)}
                 </select>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="lg:col-span-3 space-y-6">
-          <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-slate-100 bg-slate-50/30 flex flex-col md:flex-row md:items-center justify-between gap-6">
-              <div className="relative flex-1 group">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-[#1A3D63] transition-colors" size={16} />
-                <input
-                  type="text"
-                  placeholder="Search students by name or code..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-[#1A3D63]/5 focus:bg-white outline-none transition-all text-[13px] font-bold text-slate-700"
-                />
+        {/* Students Registry Table */}
+        <div className="flex-1 min-w-0 bg-white rounded-md border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+          {students.length > 0 ? (
+            <>
+              <div className="p-4 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-50/30">
+                <div className="relative group w-full md:w-64">
+                  <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#dac48b]" />
+                  <input
+                    type="text"
+                    placeholder="Filter registry..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-9 pr-4 py-1.5 rounded-md border border-slate-200 text-xs font-bold outline-none focus:ring-2 focus:ring-[#dac48b]/20 transition-all bg-white"
+                  />
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => handlePromote('PROMOTED')}
+                    disabled={isPromoting || selectedStudents.length === 0}
+                    className="flex items-center px-4 py-1.5 bg-[#18181b] text-white rounded-md text-[10px] font-bold uppercase tracking-wider hover:bg-black transition-all disabled:opacity-50"
+                  >
+                    {isPromoting ? <Loader2 size={14} className="animate-spin mr-2" /> : <CheckCircle2 size={14} className="mr-2" />}
+                    Promote ({selectedStudents.length})
+                  </button>
+                  <button
+                    onClick={() => handlePromote('REPEATING')}
+                    disabled={isPromoting || selectedStudents.length === 0}
+                    className="flex items-center px-4 py-1.5 bg-slate-100 text-slate-600 rounded-md text-[10px] font-bold uppercase tracking-wider hover:bg-slate-200 transition-all disabled:opacity-50 border border-slate-200"
+                  >
+                    <RotateCcw size={14} className="mr-2" /> Repeat
+                  </button>
+                  <button
+                    onClick={() => handlePromote('DROPPED')}
+                    disabled={isPromoting || selectedStudents.length === 0}
+                    className="flex items-center px-4 py-1.5 bg-rose-50 text-rose-600 rounded-md text-[10px] font-bold uppercase tracking-wider hover:bg-rose-100 transition-all disabled:opacity-50 border border-rose-100"
+                  >
+                    <XCircle size={14} className="mr-2" /> Drop
+                  </button>
+                </div>
               </div>
 
-              <div className="flex items-center space-x-3">
-                <button
-                  onClick={toggleSelectAll}
-                  className="px-5 py-3 text-[11px] font-bold text-slate-600 hover:bg-white rounded-xl border border-transparent hover:border-slate-200 transition-all flex items-center shadow-sm"
-                >
-                  {selectedStudents.length === students.length && students.length > 0 ? (
-                    <CheckSquare size={16} className="mr-2 text-[#1A3D63]" />
-                  ) : (
-                    <Square size={16} className="mr-2 text-slate-300" />
-                  )}
-                  Select all
-                </button>
-                <div className="h-6 w-px bg-slate-200 mx-1 hidden md:block"></div>
-                <span className="text-[10px] font-bold text-[#1A3D63] bg-[#1A3D63]/5 border border-[#1A3D63]/10 px-4 py-2 rounded-full">
-                  {selectedStudents.length} selected
-                </span>
-              </div>
-            </div>
-
-            <div className="max-h-[500px] overflow-y-auto custom-scrollbar">
-              <table className="w-full table-fixed">
-                <thead className="sticky top-0 bg-white border-b border-slate-100 z-10 shadow-sm shadow-slate-100/50">
-                  <tr className="bg-slate-50/50">
-                    <th className="px-6 py-4 w-16"></th>
-                    <th className="px-6 py-4 text-[11px] font-semibold text-slate-400 text-left">Student name</th>
-                    <th className="px-6 py-4 text-[11px] font-semibold text-slate-400 text-left">Identifier</th>
-                    <th className="px-6 py-4 text-[11px] font-semibold text-slate-400 text-left">Current class</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-50">
-                  {filteredStudents.length === 0 ? (
+              <div className="flex-1 overflow-auto custom-scrollbar">
+                <table className="w-full text-left border-collapse text-[11px]">
+                  <thead className="bg-slate-50 sticky top-0 z-10 border-b border-slate-100">
                     <tr>
-                      <td colSpan={4} className="px-6 py-12 text-center text-slate-400 italic">
-                        No students loaded. Select a source context and click "Load Students".
-                      </td>
+                      <th className="px-6 py-4 w-12">
+                        <button onClick={toggleSelectAll} className="text-[#dac48b] hover:scale-110 transition-transform">
+                          {selectedStudents.length === students.length ? <CheckSquare size={16} /> : <Square size={16} />}
+                        </button>
+                      </th>
+                      <th className="px-6 py-4 text-[#dac48b] font-bold uppercase tracking-wider">Student Name</th>
+                      <th className="px-6 py-4 text-[#dac48b] font-bold uppercase tracking-wider">Identity Code</th>
+                      <th className="px-6 py-4 text-[#dac48b] font-bold uppercase tracking-wider text-right">Selection</th>
                     </tr>
-                  ) : (
-                    filteredStudents.map((student) => (
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {filteredStudents.map((s) => (
                       <tr
-                        key={student.id}
-                        className={`group hover:bg-slate-50 transition-all cursor-pointer align-middle ${selectedStudents.includes(student.id) ? 'bg-[#1A3D63]/5' : ''}`}
-                        onClick={() => toggleStudent(student.id)}
+                        key={s.id}
+                        onClick={() => toggleStudent(s.id)}
+                        className={`hover:bg-slate-50/50 transition-colors cursor-pointer group ${selectedStudents.includes(s.id) ? 'bg-[#dac48b]/5' : ''}`}
                       >
                         <td className="px-6 py-4">
-                          <div className={`w-6 h-6 rounded-lg flex items-center justify-center border transition-all ${
-                            selectedStudents.includes(student.id) 
-                              ? 'bg-[#1A3D63] border-[#1A3D63] text-white' 
-                              : 'bg-white border-slate-200 group-hover:border-slate-300'
-                          }`}>
-                            {selectedStudents.includes(student.id) && <CheckSquare size={14} />}
+                          <div className={`${selectedStudents.includes(s.id) ? 'text-[#dac48b]' : 'text-slate-300'} group-hover:scale-110 transition-transform`}>
+                            {selectedStudents.includes(s.id) ? <CheckSquare size={16} /> : <Square size={16} />}
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <div className="text-[13px] font-bold text-slate-700 group-hover:text-[#1A3D63] transition-colors">{student.name}</div>
+                          <div className="flex items-center space-x-3">
+                            <div className={`w-8 h-8 rounded-md flex items-center justify-center font-bold text-xs transition-colors ${selectedStudents.includes(s.id) ? 'bg-[#dac48b] text-white' : 'bg-slate-100 text-slate-400 group-hover:bg-[#dac48b]/10 group-hover:text-[#dac48b]'}`}>
+                              {s.name[0]}
+                            </div>
+                            <span className="font-bold text-slate-700 group-hover:text-black transition-colors">{s.name}</span>
+                          </div>
                         </td>
                         <td className="px-6 py-4">
-                          <span className="text-[11px] font-bold text-slate-400 font-mono tracking-tight">{student.studentCode}</span>
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{s.studentCode}</span>
                         </td>
-                        <td className="px-6 py-4">
-                          <span className="px-2 py-1 bg-white text-slate-500 border border-slate-200 text-[9px] font-bold rounded-lg shadow-sm">
-                            {student.currentClass}
-                          </span>
+                        <td className="px-6 py-4 text-right">
+                          {selectedStudents.includes(s.id) ? (
+                            <span className="text-[9px] font-bold bg-[#dac48b] text-white px-2 py-0.5 rounded-md uppercase tracking-wider">Queued</span>
+                          ) : (
+                            <span className="text-[9px] font-bold bg-slate-100 text-slate-400 px-2 py-0.5 rounded-md uppercase tracking-wider group-hover:bg-slate-200">Pending</span>
+                          )}
                         </td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          ) : (
+            <div className="flex-1 flex flex-col items-center justify-center p-12 text-center">
+              <div className="w-16 h-16 bg-slate-50 text-slate-200 rounded-full flex items-center justify-center mb-4">
+                <Users size={32} />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 mb-1 uppercase tracking-tight">Registry Standby</h3>
+              <p className="text-slate-400 text-xs font-medium max-w-xs mx-auto">Select a source standard and year to initialize the promotion sequence.</p>
             </div>
-
-            <div className="p-8 border-t border-slate-100 bg-slate-50/50 flex flex-wrap items-center justify-end gap-4 shadow-inner">
-              <button
-                onClick={() => handlePromote('DROPPED')}
-                disabled={selectedStudents.length === 0 || isPromoting}
-                className="px-6 py-3 bg-white text-slate-600 border border-slate-200 font-bold text-[11px] rounded-2xl hover:bg-rose-50 hover:text-rose-600 hover:border-rose-100 transition-all flex items-center shadow-sm"
-              >
-                <XCircle size={16} className="mr-2" /> Mark Dropped
-              </button>
-
-              <button
-                onClick={() => handlePromote('REPEATING')}
-                disabled={selectedStudents.length === 0 || isPromoting}
-                className="px-6 py-3 bg-white text-slate-600 border border-slate-200 font-bold text-[11px] rounded-2xl hover:bg-amber-50 hover:text-amber-600 hover:border-amber-100 transition-all flex items-center shadow-sm"
-              >
-                <RotateCcw size={16} className="mr-2" /> Repeat Class
-              </button>
-
-              <button
-                onClick={() => handlePromote('PROMOTED')}
-                disabled={selectedStudents.length === 0 || isPromoting}
-                className="px-8 py-3 bg-emerald-600 text-white font-bold text-[11px] rounded-2xl hover:bg-emerald-700 transition-all flex items-center shadow-lg shadow-emerald-100 active:scale-95 disabled:opacity-50"
-              >
-                {isPromoting ? <Loader2 className="animate-spin mr-2" size={16} /> : <CheckCircle2 size={16} className="mr-2" />}
-                Promote Selected
-              </button>
-            </div>
-          </div>
-
-          <div className="bg-amber-50/50 rounded-[2rem] border border-amber-100 p-8 flex items-start space-x-5 shadow-sm">
-            <div className="p-4 bg-white rounded-2xl shadow-sm border border-amber-100">
-              <AlertTriangle className="text-amber-600" size={24} strokeWidth={1.5} />
-            </div>
-            <div>
-              <h4 className="font-bold text-amber-900 mb-1">Safety check</h4>
-              <p className="text-[13px] text-amber-800/70 leading-relaxed font-medium">
-                Promoting students will create a <span className="font-bold text-amber-900">Historical Enrollment Record</span> for the current year. Ensure accuracy of data before processing.
-              </p>
-            </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

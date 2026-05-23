@@ -212,26 +212,26 @@ export default function StudentDetailsModal({ student, standards, onClose, onUpd
 
   return createPortal(
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-300">
-      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={onClose}></div>
+      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose}></div>
       
-      <div className="bg-white w-full max-w-6xl max-h-[90vh] overflow-hidden rounded-none shadow-2xl relative z-10 flex flex-col md:flex-row border border-slate-100 animate-in zoom-in-95 duration-300">
+      <div className="bg-white w-full max-w-6xl max-h-[90vh] overflow-hidden rounded-md shadow-2xl relative z-10 flex flex-col md:flex-row border border-slate-100 animate-in zoom-in-95 duration-300">
         
         {/* Left Panel: Profile Summary */}
-        <div className="w-full md:w-80 bg-slate-50 p-10 border-r border-slate-100 flex flex-col items-center shrink-0">
-           <div className="w-32 h-32 bg-emerald-600 rounded-[2.5rem] flex items-center justify-center text-white text-4xl font-black mb-6 shadow-xl shadow-emerald-200">
+        <div className="w-full md:w-80 bg-slate-50 p-8 border-r border-slate-100 flex flex-col items-center shrink-0">
+           <div className="w-24 h-24 bg-white border border-slate-200 rounded-md flex items-center justify-center text-[#dac48b] text-4xl font-bold mb-6 shadow-sm">
               {formData.name?.[0]}
            </div>
-           <h3 className="text-xl font-black text-slate-900 text-center leading-tight mb-2">{formData.name}</h3>
-           <p className="text-[11px] font-bold text-emerald-600 mb-6 font-mono tracking-tight">Institutional registry</p>
+           <h3 className="text-lg font-bold text-slate-900 text-center leading-tight mb-1">{formData.name}</h3>
+           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-6">Institutional Registry</p>
            
            <div className="w-full space-y-3 mt-4">
-              <div className="px-5 py-4 bg-white rounded-2xl border border-slate-200 shadow-sm">
-                 <p className="text-[10px] font-bold text-slate-400 mb-1">Student code</p>
-                 <p className="text-sm font-bold text-slate-700">{formData.studentCode || 'UNASSIGNED'}</p>
+              <div className="px-4 py-3 bg-white rounded-md border border-slate-200 shadow-sm">
+                 <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wide mb-1">Student code</p>
+                 <p className="text-xs font-bold text-slate-700">{formData.studentCode || 'UNASSIGNED'}</p>
               </div>
-              <div className="px-5 py-4 bg-white rounded-2xl border border-slate-200 shadow-sm">
-                 <p className="text-[10px] font-bold text-slate-400 mb-1">Current grade</p>
-                 <p className="text-sm font-bold text-slate-700">{formData.standardName || 'GENERAL'}</p>
+              <div className="px-4 py-3 bg-white rounded-md border border-slate-200 shadow-sm">
+                 <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wide mb-1">Current grade</p>
+                 <p className="text-xs font-bold text-slate-700">{formData.standardName || 'GENERAL'}</p>
               </div>
            </div>
 
@@ -239,7 +239,7 @@ export default function StudentDetailsModal({ student, standards, onClose, onUpd
               <button
                 type="button"
                 onClick={() => setActiveView('profile')}
-                className={`w-full py-3 px-4 rounded-xl text-xs font-bold transition-all text-left flex items-center space-x-2.5 ${activeView === 'profile' ? 'bg-[#215B63] text-white shadow-sm' : 'bg-slate-100 hover:bg-slate-200 text-slate-600'}`}
+                className={`w-full py-2.5 px-4 rounded-md text-xs font-bold transition-all text-left flex items-center space-x-2.5 ${activeView === 'profile' ? 'bg-[#18181b] text-white shadow-sm' : 'bg-slate-100 hover:bg-slate-200 text-slate-500'}`}
               >
                  <User size={14} />
                  <span>Profile Details</span>
@@ -247,7 +247,7 @@ export default function StudentDetailsModal({ student, standards, onClose, onUpd
               <button
                 type="button"
                 onClick={() => setActiveView('timeline')}
-                className={`w-full py-3 px-4 rounded-xl text-xs font-bold transition-all text-left flex items-center space-x-2.5 ${activeView === 'timeline' ? 'bg-[#215B63] text-white shadow-sm' : 'bg-slate-100 hover:bg-slate-200 text-slate-600'}`}
+                className={`w-full py-2.5 px-4 rounded-md text-xs font-bold transition-all text-left flex items-center space-x-2.5 ${activeView === 'timeline' ? 'bg-[#18181b] text-white shadow-sm' : 'bg-slate-100 hover:bg-slate-200 text-slate-500'}`}
               >
                  <BookOpen size={14} />
                  <span>Academic Timeline</span>
@@ -256,67 +256,67 @@ export default function StudentDetailsModal({ student, standards, onClose, onUpd
 
            <button 
              onClick={onClose}
-             className="mt-auto w-full py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold text-xs hover:bg-slate-200 transition-all flex items-center justify-center border border-slate-200/50"
+             className="mt-auto w-full py-3 bg-white text-slate-500 rounded-md font-bold text-xs hover:bg-slate-100 transition-all flex items-center justify-center border border-slate-200 shadow-sm"
            >
-              <X size={16} className="mr-2" /> Cancel
+              <X size={14} className="mr-2" /> Cancel
            </button>
         </div>
 
         {/* Right Panel: Scrollable Content */}
         <div className="flex-1 flex flex-col overflow-hidden bg-white">
-           <div className="p-8 border-b border-slate-100 flex items-center justify-between">
-              <h4 className="text-lg font-bold text-slate-900 tracking-tight">
-                 {activeView === 'profile' ? 'Modify student profile' : 'Academic Journey Timeline'}
+           <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/30">
+              <h4 className="text-base font-bold text-slate-900 tracking-tight">
+                 {activeView === 'profile' ? 'Modify Student Profile' : 'Academic Journey Timeline'}
               </h4>
               
               {activeView === 'profile' && (
                 <button 
                   onClick={handleSubmit} 
-                  className="px-8 py-3 bg-[#215B63] hover:bg-[#124170] text-white rounded-xl font-bold text-xs shadow-lg shadow-[#215B63]/10 transition-all disabled:opacity-50 flex items-center"
+                  className="px-6 py-2 bg-[#18181b] hover:bg-black text-white rounded-md font-bold text-xs uppercase tracking-wider shadow-sm transition-all disabled:opacity-50 flex items-center"
                   disabled={saving || success}
                 >
-                   {saving ? <Loader2 size={16} className="animate-spin mr-2" /> : <Save size={16} className="mr-2" />}
+                   {saving ? <Loader2 size={14} className="animate-spin mr-2" /> : <Save size={14} className="mr-2" />}
                    Save Changes
                 </button>
               )}
            </div>
 
            {activeView === 'profile' ? (
-             <form className="flex-1 overflow-y-auto p-10 space-y-12 no-scrollbar scroll-smooth">
+             <form className="flex-1 overflow-y-auto p-8 space-y-10 custom-scrollbar scroll-smooth">
                 {success && (
-                  <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center space-x-3 text-emerald-600 font-bold text-sm animate-in zoom-in duration-300">
-                     <CheckCircle2 size={20} />
+                  <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-md flex items-center space-x-3 text-emerald-600 font-bold text-xs animate-in zoom-in duration-300">
+                     <CheckCircle2 size={16} />
                      <p>Registry record synchronized successfully.</p>
                   </div>
                 )}
 
                 {error && (
-                  <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl flex items-center space-x-3 text-rose-600 font-bold text-sm animate-in zoom-in duration-300">
-                     <AlertCircle size={20} />
+                  <div className="p-3 bg-rose-50 border border-rose-100 rounded-md flex items-center space-x-3 text-rose-600 font-bold text-xs animate-in zoom-in duration-300">
+                     <AlertCircle size={16} />
                      <p>{error}</p>
                   </div>
                 )}
 
                 {sections.map((section, idx) => (
-                  <div key={idx} className="space-y-6">
-                     <div className="flex items-center space-x-3 py-2 border-b-2 border-slate-50">
-                        <div className="p-2 bg-slate-50 text-slate-400 rounded-lg">
+                  <div key={idx} className="space-y-5">
+                     <div className="flex items-center space-x-3 py-1 border-b border-slate-100">
+                        <div className="text-[#dac48b]">
                            {section.icon}
                         </div>
-                        <h5 className="text-[10px] font-bold text-slate-400 tracking-wider transition-colors">{section.title}</h5>
+                        <h5 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{section.title}</h5>
                      </div>
 
-                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {section.fields.map((field) => (
-                           <div key={field.name} className={`space-y-2 ${field.type === 'textarea' ? 'md:col-span-2' : ''}`}>
-                              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{field.label}</label>
+                           <div key={field.name} className={`space-y-1 ${field.type === 'textarea' ? 'md:col-span-2' : ''}`}>
+                              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide ml-1">{field.label}</label>
                               
                               {field.type === 'select' ? (
                                  <select 
                                    name={field.name}
                                    value={formData[field.name] || ''}
                                    onChange={handleChange}
-                                   className="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-[#AAFFC7]/30 focus:bg-white text-sm font-bold transition-all outline-none"
+                                   className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-md focus:ring-2 focus:ring-[#dac48b]/20 focus:bg-white text-sm font-medium text-slate-700 transition-all outline-none"
                                  >
                                     <option value="">Select...</option>
                                     {field.options && Array.isArray(field.options) ? (
@@ -335,18 +335,18 @@ export default function StudentDetailsModal({ student, standards, onClose, onUpd
                                    value={formData[field.name] || ''}
                                    onChange={handleChange}
                                    rows={3}
-                                   className="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-[#AAFFC7]/30 focus:bg-white text-sm font-bold transition-all outline-none resize-none"
+                                   className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-md focus:ring-2 focus:ring-[#dac48b]/20 focus:bg-white text-sm font-medium text-slate-700 transition-all outline-none resize-none"
                                  />
                               ) : field.type === 'checkbox' ? (
-                                 <div className="flex items-center space-x-3 p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                                 <div className="flex items-center space-x-3 p-3 bg-slate-50 border border-slate-200 rounded-md">
                                     <input 
                                       type="checkbox"
                                       name={field.name}
                                       checked={formData[field.name] || false}
                                       onChange={handleChange}
-                                      className="w-5 h-5 rounded-md border-slate-300 text-[#215B63] focus:ring-[#215B63]"
+                                      className="w-4 h-4 rounded border-slate-300 text-[#dac48b] focus:ring-[#dac48b]"
                                     />
-                                    <span className="text-sm font-bold text-slate-700">Yes, verified</span>
+                                    <span className="text-xs font-bold text-slate-600">Yes, verified</span>
                                  </div>
                               ) : (
                                  <input 
@@ -354,7 +354,7 @@ export default function StudentDetailsModal({ student, standards, onClose, onUpd
                                    name={field.name}
                                    value={field.type === 'date' ? formatDateForInput(formData[field.name]) : (formData[field.name] || '')}
                                    onChange={handleChange}
-                                   className="w-full px-5 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-[#AAFFC7]/30 focus:bg-white text-sm font-bold transition-all outline-none"
+                                   className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-md focus:ring-2 focus:ring-[#dac48b]/20 focus:bg-white text-sm font-medium text-slate-700 transition-all outline-none"
                                  />
                               )}
                            </div>
@@ -364,37 +364,37 @@ export default function StudentDetailsModal({ student, standards, onClose, onUpd
                 ))}
              </form>
            ) : (
-             <div className="flex-1 overflow-y-auto p-10 space-y-8 no-scrollbar scroll-smooth animate-in slide-in-from-right duration-300">
+             <div className="flex-1 overflow-y-auto p-8 space-y-6 custom-scrollbar scroll-smooth animate-in slide-in-from-right duration-300">
                 {loadingHistory ? (
                    <div className="py-20 flex flex-col items-center justify-center">
-                      <Loader2 className="animate-spin text-[#215B63] mb-4" size={32} />
-                      <p className="text-xs font-bold text-slate-400">Accessing Historical Records...</p>
+                      <Loader2 className="animate-spin text-[#dac48b] mb-4" size={32} />
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Accessing Records...</p>
                    </div>
                 ) : history.length === 0 ? (
                    <div className="py-20 text-center text-slate-400">
                       <BookOpen size={32} className="mx-auto text-slate-200 mb-3" />
-                      <p className="text-xs font-bold">No academic enrollment logs found for this student.</p>
+                      <p className="text-xs font-bold uppercase tracking-wide">No enrollment logs found.</p>
                    </div>
                 ) : (
-                   <div className="relative border-l-2 border-slate-100 ml-4 pl-8 space-y-10">
+                   <div className="relative border-l border-slate-100 ml-4 pl-8 space-y-8">
                       {history.map((h) => (
                          <div key={h.id} className="relative">
                             {/* Pulse Timeline Point */}
-                            <div className="absolute -left-[42px] top-1.5 w-6 h-6 rounded-full bg-white border-4 border-[#67C090] flex items-center justify-center shadow-sm">
-                               <div className="w-1.5 h-1.5 rounded-full bg-[#215B63]" />
+                            <div className="absolute -left-[37px] top-1 w-4 h-4 rounded-full bg-white border-2 border-[#dac48b] flex items-center justify-center shadow-sm">
+                               <div className="w-1.5 h-1.5 rounded-full bg-[#dac48b]" />
                             </div>
                             
                             {/* Journey Card */}
-                            <div className="bg-slate-50/50 p-6 rounded-xl border border-slate-200/60 shadow-sm hover:border-[#67C090]/50 transition-all">
-                               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div className="bg-white p-5 rounded-md border border-slate-200 shadow-sm hover:border-[#dac48b]/50 transition-all">
+                               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                   <div>
-                                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Academic Session</span>
-                                     <h5 className="text-sm font-black text-[#124170] mt-0.5">{h.academicYear}</h5>
+                                     <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Academic Session</span>
+                                     <h5 className="text-sm font-bold text-slate-900 mt-0.5">{h.academicYear}</h5>
                                   </div>
                                   <div className="flex flex-wrap items-center gap-2">
-                                     <span className={`text-[10px] font-bold px-2.5 py-1 rounded-md border ${
+                                     <span className={`text-[9px] font-bold px-2 py-0.5 rounded-md border uppercase tracking-wider ${
                                         h.status === 'PROMOTED' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                                        h.status === 'ACTIVE' ? 'bg-[#AAFFC7]/40 text-[#215B63] border-[#67C090]/30' :
+                                        h.status === 'ACTIVE' ? 'bg-amber-50 text-[#a98f4a] border-amber-100/50' :
                                         h.status === 'REPEATING' ? 'bg-amber-50 text-amber-600 border-amber-100' :
                                         'bg-rose-50 text-rose-600 border-rose-100'
                                      }`}>
@@ -403,22 +403,22 @@ export default function StudentDetailsModal({ student, standards, onClose, onUpd
                                   </div>
                                </div>
                                
-                               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6 pt-4 border-t border-slate-100">
+                               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-4 pt-4 border-t border-slate-50">
                                   <div>
-                                     <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Class / Grade</p>
-                                     <p className="text-xs font-bold text-slate-700 mt-1">{h.standardName || 'General'}</p>
+                                     <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider leading-none mb-1">Class / Grade</p>
+                                     <p className="text-xs font-bold text-slate-700">{h.standardName || 'General'}</p>
                                   </div>
                                   <div>
-                                     <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Division</p>
-                                     <p className="text-xs font-bold text-slate-700 mt-1">{h.division || 'N/A'}</p>
+                                     <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider leading-none mb-1">Division</p>
+                                     <p className="text-xs font-bold text-slate-700">{h.division || 'N/A'}</p>
                                   </div>
                                   <div>
-                                     <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Status Tag</p>
-                                     <p className="text-xs font-bold text-slate-700 mt-1">{h.status}</p>
+                                     <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider leading-none mb-1">Status Tag</p>
+                                     <p className="text-xs font-bold text-slate-700">{h.status}</p>
                                   </div>
                                   <div>
-                                     <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Registration Log</p>
-                                     <p className="text-[10px] font-bold text-slate-500 mt-1 font-mono">{new Date(h.createdAt).toLocaleDateString()}</p>
+                                     <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider leading-none mb-1">Registration Log</p>
+                                     <p className="text-[10px] font-bold text-slate-500 font-mono">{new Date(h.createdAt).toLocaleDateString()}</p>
                                   </div>
                                 </div>
                             </div>

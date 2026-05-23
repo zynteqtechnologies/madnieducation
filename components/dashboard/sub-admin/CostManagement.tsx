@@ -148,106 +148,110 @@ export default function CostManagement() {
   const totalPaid = expenses.reduce((sum, exp) => sum + parseFloat(exp.paidAmount as string || '0'), 0);
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      {/* Header Area */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-         <div className="md:col-span-1 bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm flex flex-col justify-center">
-            <div className="w-12 h-12 bg-emerald-600/10 rounded-2xl flex items-center justify-center text-emerald-600 mb-4 transition-transform group-hover:scale-110">
-               <PartyPopper size={24} />
+    <div className="lg:h-full lg:overflow-hidden flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      {/* Stats Row */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3 shrink-0">
+         <div className="bg-white px-4 py-3 rounded-md border border-slate-100 shadow-sm flex items-center space-x-3">
+            <div className="w-10 h-10 bg-amber-50 rounded-md flex items-center justify-center text-[#dac48b] shrink-0">
+               <PartyPopper size={18} />
             </div>
              <div>
-                <p className="text-[11px] font-bold text-slate-500 tracking-tight">Expense registry</p>
-                <p className="text-[10px] text-slate-400 mt-1 italic font-medium">Institutional audit flow</p>
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wide leading-none mb-1">Expense Registry</p>
+                <p className="text-[10px] text-slate-400 font-medium italic">Institutional audit flow</p>
              </div>
          </div>
 
-         <div className="bg-[#1A3D63] p-8 rounded-[2rem] shadow-xl shadow-[#1A3D63]/20 space-y-3 relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-700"></div>
-            <p className="text-[11px] font-bold text-white/60 tracking-tight">Calculated exposure</p>
-            <p className="text-3xl font-bold text-white tracking-tight">₹{totalEstimated.toLocaleString('en-IN')}</p>
-            <div className="flex items-center space-x-2 pt-2 text-[10px] font-bold text-emerald-400 tracking-tight">
-               <ArrowUpRight size={12} />
-               <span>{expenses.length} logs active</span>
+         <div className="bg-white px-4 py-3 rounded-md border border-slate-100 shadow-sm flex items-center space-x-3 group relative overflow-hidden">
+            <div className="w-10 h-10 bg-slate-900 rounded-md flex items-center justify-center text-white shrink-0">
+               <ArrowUpRight size={18} />
+            </div>
+            <div className="min-w-0">
+               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wide leading-none mb-1">Calculated Exposure</p>
+               <p className="text-sm font-bold text-slate-900 tracking-tight">₹{totalEstimated.toLocaleString('en-IN')}</p>
             </div>
          </div>
 
-         <div className="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm space-y-3">
-            <p className="text-[11px] font-bold text-slate-500 tracking-tight">Settled amount</p>
-            <p className="text-3xl font-bold text-slate-900 tracking-tight">₹{totalPaid.toLocaleString('en-IN')}</p>
-            <div className="h-1.5 w-full bg-slate-100 rounded-full mt-4 overflow-hidden">
-               <div className="h-full bg-emerald-500 rounded-full" style={{ width: totalEstimated > 0 ? `${(totalPaid / totalEstimated) * 100}%` : '0%' }}></div>
+         <div className="bg-white px-4 py-3 rounded-md border border-slate-100 shadow-sm flex items-center space-x-3">
+            <div className="w-10 h-10 bg-emerald-50 rounded-md flex items-center justify-center text-emerald-600 shrink-0">
+               <IndianRupee size={18} />
+            </div>
+            <div className="flex-1 min-w-0">
+               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wide leading-none mb-1">Settled Amount</p>
+               <p className="text-sm font-bold text-slate-900 tracking-tight">₹{totalPaid.toLocaleString('en-IN')}</p>
             </div>
          </div>
 
-         <div className="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm space-y-3">
-            <p className="text-[11px] font-bold text-slate-500 tracking-tight">Remaining liquidity</p>
-            <p className="text-3xl font-bold text-slate-900 tracking-tight">₹{(totalEstimated - totalPaid).toLocaleString('en-IN')}</p>
-            <div className="h-1.5 w-full bg-slate-100 rounded-full mt-4 overflow-hidden">
-               <div className="h-full bg-indigo-500 rounded-full" style={{ width: totalEstimated > 0 ? `${((totalEstimated - totalPaid) / totalEstimated) * 100}%` : '0%' }}></div>
+         <div className="bg-white px-4 py-3 rounded-md border border-slate-100 shadow-sm flex items-center space-x-3">
+            <div className="w-10 h-10 bg-rose-50 rounded-md flex items-center justify-center text-rose-500 shrink-0">
+               <Construction size={18} />
+            </div>
+            <div className="flex-1 min-w-0">
+               <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wide leading-none mb-1">Remaining Liquidity</p>
+               <p className="text-sm font-bold text-slate-900 tracking-tight">₹{(totalEstimated - totalPaid).toLocaleString('en-IN')}</p>
             </div>
          </div>
       </div>
 
       {/* Action Bar */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-6 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
-         <div className="relative group w-full md:w-96">
-            <Search size={18} className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white px-5 py-3 rounded-md border border-slate-200 shadow-sm shrink-0">
+         <div className="relative group w-full sm:w-80">
+            <Search size={13} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#dac48b] transition-colors" />
             <input 
               type="text" 
               placeholder="Search expenses..."
-              className="w-full pl-14 pr-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold outline-none focus:bg-white focus:ring-4 focus:ring-emerald-500/5 transition-all"
+              className="w-full pl-9 pr-4 py-1.5 bg-slate-100/80 border border-slate-200/60 rounded-md outline-none focus:ring-2 focus:ring-[#dac48b]/20 focus:bg-white text-xs transition-all"
             />
          </div>
          <button 
            onClick={() => setIsModalOpen(true)}
-           className="flex items-center space-x-3 bg-emerald-600 text-white px-8 py-4 rounded-2xl font-bold text-sm shadow-xl shadow-emerald-500/20 hover:bg-emerald-700 transition-all active:scale-[0.98]"
+           className="flex items-center space-x-2 bg-[#18181b] text-white px-4 py-2 rounded-md font-bold text-xs uppercase tracking-wider shadow-sm hover:bg-black transition-all active:scale-[0.98] shrink-0"
          >
-           <Plus size={20} />
-           <span>Post new sync</span>
+           <Plus size={16} />
+           <span>Post New Sync</span>
          </button>
       </div>
 
       {loading ? (
-        <div className="py-32 flex flex-col items-center justify-center space-y-4">
-           <Loader2 className="animate-spin text-emerald-600" size={48} />
-           <p className="text-[10px] font-medium text-slate-400 italic tracking-[0.3em]">Syncing Institutional Data...</p>
+        <div className="flex-1 flex flex-col items-center justify-center space-y-4 bg-white rounded-md border border-slate-100 shadow-sm">
+           <Loader2 className="animate-spin text-[#dac48b]" size={32} />
+           <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Syncing Institutional Data...</p>
         </div>
       ) : (
-      /* Expenses Table - Transitioned to Professional Grid */
-      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden mt-8">
-        <div className="overflow-x-auto">
-          <table className="w-full table-fixed min-w-[1000px]">
-            <thead>
-              <tr className="bg-slate-50/50 border-b border-slate-100">
-                <th className="px-6 py-4 text-[11px] font-semibold text-slate-400 text-left w-[35%]">Expense</th>
-                <th className="px-6 py-4 text-[11px] font-semibold text-slate-400 text-left w-[15%]">Type</th>
-                <th className="px-6 py-4 text-[11px] font-semibold text-slate-400 text-left w-[35%]">Costs</th>
-                <th className="px-6 py-4 text-[11px] font-semibold text-slate-400 text-right w-[15%] pr-8">Actions</th>
+      /* Expenses Table Container */
+      <div className="bg-white rounded-md border border-slate-100 shadow-sm overflow-hidden flex-1 min-h-0 flex flex-col">
+        <div className="overflow-auto custom-scrollbar flex-1">
+          <table className="w-full text-left border-collapse text-[11px] min-w-[800px]">
+            <thead className="bg-slate-50 sticky top-0 z-20 border-b border-slate-100">
+              <tr>
+                <th className="px-6 py-4 text-[#dac48b] font-bold uppercase tracking-wider">Expense Details</th>
+                <th className="px-6 py-4 text-[#dac48b] font-bold uppercase tracking-wider text-center">Type</th>
+                <th className="px-6 py-4 text-[#dac48b] font-bold uppercase tracking-wider">Financial Status</th>
+                <th className="px-6 py-4 text-[#dac48b] font-bold uppercase tracking-wider text-right pr-8">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-50">
+            <tbody className="divide-y divide-slate-100">
               {expenses.map((exp) => (
                 <tr key={exp.id} className="hover:bg-slate-50/40 transition-all group align-middle">
-                  <td className="px-6 py-6">
+                  <td className="px-6 py-4">
                     <div className="flex items-center space-x-4">
-                      <div className="w-16 h-10 rounded-lg bg-slate-100 overflow-hidden relative border border-slate-200/50 flex-shrink-0">
+                      <div className="w-12 h-8 rounded bg-slate-100 overflow-hidden relative border border-slate-200/50 flex-shrink-0">
                         {exp.mediaUrl ? (
                           exp.mediaType === 'IMAGE' ? (
                             <img src={exp.mediaUrl} alt={exp.title} className="w-full h-full object-cover" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center bg-slate-900">
                                <video src={exp.mediaUrl} className="w-full h-full object-cover opacity-60" muted playsInline />
-                               <PlayCircle size={14} className="text-white absolute" />
+                               <PlayCircle size={12} className="text-white absolute" />
                             </div>
                           )
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-slate-300">
-                             {exp.type === 'CONSTRUCTION' ? <Construction size={18} /> : <PartyPopper size={18} />}
+                             {exp.type === 'CONSTRUCTION' ? <Construction size={16} /> : <PartyPopper size={16} />}
                           </div>
                         )}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-[14px] font-bold text-slate-700 leading-snug group-hover:text-emerald-600 transition-colors truncate">{exp.title}</p>
+                        <p className="text-[13px] font-bold text-slate-700 leading-snug group-hover:text-black transition-colors truncate">{exp.title}</p>
                         <p className="text-[10px] text-slate-400 mt-1 font-medium flex items-center italic">
                           <Calendar size={12} className="mr-1.5 opacity-50" />
                           {exp.startDate ? new Date(exp.startDate).toLocaleDateString() : 'Unscheduled'}
@@ -326,7 +330,7 @@ export default function CostManagement() {
                           value={formData.title}
                           onChange={(e) => setFormData({...formData, title: e.target.value})}
                           placeholder="e.g., Computer Lab Extension"
-                          className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/5 focus:bg-white text-sm font-bold transition-all outline-none"
+                          className="w-full px-6 py-4 rounded-xl focus:ring-2 focus:ring-[#dac48b]/20 focus:bg-white text-sm font-bold transition-all outline-none"
                         />
                      </div>
                      <div className="space-y-1">
@@ -334,7 +338,7 @@ export default function CostManagement() {
                         <select 
                           value={formData.type}
                           onChange={(e) => setFormData({...formData, type: e.target.value as any})}
-                          className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/5 focus:bg-white text-sm font-bold transition-all outline-none appearance-none"
+                          className="w-full px-6 py-4 rounded-xl focus:ring-2 focus:ring-[#dac48b]/20 focus:bg-white text-sm font-bold transition-all outline-none appearance-none"
                         >
                            <option value="CONSTRUCTION">Construction</option>
                            <option value="EVENT">Event/Function</option>
@@ -348,7 +352,7 @@ export default function CostManagement() {
                           type="date" 
                           value={formData.startDate}
                           onChange={(e) => setFormData({...formData, startDate: e.target.value})}
-                          className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/5 focus:bg-white text-sm font-bold transition-all outline-none"
+                          className="w-full px-6 py-4 rounded-xl focus:ring-2 focus:ring-[#dac48b]/20 focus:bg-white text-sm font-bold transition-all outline-none"
                         />
                      </div>
                      <div className="space-y-1">
@@ -359,7 +363,7 @@ export default function CostManagement() {
                           value={formData.estimatedCost}
                           onChange={(e) => setFormData({...formData, estimatedCost: e.target.value})}
                           placeholder="Enter institutional budget"
-                          className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/5 focus:bg-white text-sm font-bold transition-all outline-none"
+                          className="w-full px-6 py-4 rounded-xl focus:ring-2 focus:ring-[#dac48b]/20 focus:bg-white text-sm font-bold transition-all outline-none"
                         />
                      </div>
 
@@ -400,7 +404,7 @@ export default function CostManagement() {
                           value={formData.description}
                           onChange={(e) => setFormData({...formData, description: e.target.value})}
                           placeholder="Institutional notes..."
-                          className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/5 focus:bg-white text-sm font-bold transition-all outline-none resize-none"
+                          className="w-full px-6 py-4 rounded-xl focus:ring-2 focus:ring-[#dac48b]/20 focus:bg-white text-sm font-bold transition-all outline-none resize-none"
                         />
                      </div>
                   </div>
@@ -408,7 +412,7 @@ export default function CostManagement() {
                   <button 
                     disabled={submitting}
                     type="submit"
-                    className="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold text-[12px] shadow-xl shadow-emerald-500/10 hover:bg-emerald-700 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center space-x-3"
+                    className="w-full bg-[#18181b] text-white py-4 rounded-xl font-bold text-[12px] shadow-sm hover:bg-black transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center space-x-3 uppercase tracking-widest"
                   >
                      {submitting ? (
                        <Loader2 className="animate-spin" size={18} />

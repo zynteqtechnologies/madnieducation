@@ -47,11 +47,17 @@ export default function AlumniManagement() {
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [successData, setSuccessData] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const rowsPerPage = 10;
 
   useEffect(() => {
     if (activeTab === 'eligibility') fetchEligible();
     else fetchAlumni();
   }, [activeTab]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, activeTab]);
 
   const fetchEligible = async () => {
     setLoading(true);
@@ -116,60 +122,71 @@ export default function AlumniManagement() {
     a.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const totalPages = Math.ceil(filteredAlumni.length / rowsPerPage) || 1;
+  const currentAlumniData = filteredAlumni.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
+
+  const totalEligiblePages = Math.ceil(eligibleStudents.length / rowsPerPage) || 1;
+  const currentEligibleData = eligibleStudents.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
+
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
+    <div className="lg:h-full lg:overflow-hidden flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-4 duration-700">
 
-
-
-      <div className="flex bg-slate-100/50 p-1 rounded-xl w-full md:w-auto">
-        <button
-          onClick={() => setActiveTab('eligibility')}
-          className={`flex-1 md:flex-none px-6 py-2.5 rounded-lg text-xs font-bold transition-all ${activeTab === 'eligibility' ? 'bg-white text-[#1A3D63] shadow-sm border border-slate-200/50' : 'text-slate-400 hover:text-slate-600'}`}
-        >
-          Eligibility
-        </button>
-        <button
-          onClick={() => setActiveTab('directory')}
-          className={`flex-1 md:flex-none px-6 py-2.5 rounded-lg text-xs font-bold transition-all ${activeTab === 'directory' ? 'bg-white text-[#1A3D63] shadow-sm border border-slate-200/50' : 'text-slate-400 hover:text-slate-600'}`}
-        >
-          Directory
-        </button>
+      {/* Tab Controls */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white px-5 py-3 rounded-md border border-slate-200 shadow-sm shrink-0">
+        <div>
+          <h2 className="text-lg font-bold text-slate-900 tracking-tight">Alumni Registry</h2>
+          <p className="text-xs text-slate-500 font-medium uppercase tracking-wide">Graduation Management & Directory</p>
+        </div>
+        <div className="flex bg-slate-100 p-1 rounded-md">
+          <button
+            onClick={() => setActiveTab('eligibility')}
+            className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${activeTab === 'eligibility' ? 'bg-[#18181b] text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+          >
+            Eligibility
+          </button>
+          <button
+            onClick={() => setActiveTab('directory')}
+            className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${activeTab === 'directory' ? 'bg-[#18181b] text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+          >
+            Directory
+          </button>
+        </div>
       </div>
 
       {loading ? (
-        <div className="py-24 flex flex-col items-center justify-center space-y-4">
-          <Loader2 className="animate-spin text-emerald-600" size={32} strokeWidth={1.5} />
-          <p className="text-[11px] font-bold text-slate-400">Analyzing cohort records...</p>
+        <div className="flex-1 flex flex-col items-center justify-center bg-white rounded-md border border-slate-100 shadow-sm">
+          <Loader2 className="animate-spin text-[#dac48b] mb-4" size={32} />
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Analyzing cohort records...</p>
         </div>
       ) : activeTab === 'eligibility' ? (
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden mt-2">
-          <div className="overflow-x-auto">
-            <table className="w-full table-fixed min-w-[1000px]">
-              <thead>
-                <tr className="bg-slate-50/50 border-b border-slate-100">
-                  <th className="px-6 py-4 text-[11px] font-semibold text-slate-400 text-left w-[30%]">Student</th>
-                  <th className="px-6 py-4 text-[11px] font-semibold text-slate-400 text-left w-[20%] text-center">Gmail ID</th>
-                  <th className="px-6 py-4 text-[11px] font-semibold text-slate-400 text-left w-[25%]">Profile link</th>
-                  <th className="px-6 py-4 text-[11px] font-semibold text-slate-400 text-right w-[25%] pr-8">Actions</th>
+        <div className="bg-white rounded-md border border-slate-100 shadow-sm overflow-hidden flex-1 min-h-0 flex flex-col">
+          <div className="overflow-auto custom-scrollbar flex-1">
+            <table className="w-full text-left border-collapse text-[11px] min-w-[1000px]">
+              <thead className="bg-slate-50 sticky top-0 z-20 border-b border-slate-100">
+                <tr>
+                  <th className="px-6 py-4 text-[#dac48b] font-bold uppercase tracking-wider">Student identity</th>
+                  <th className="px-6 py-4 text-[#dac48b] font-bold uppercase tracking-wider text-center">Authorization Gmail</th>
+                  <th className="px-6 py-4 text-[#dac48b] font-bold uppercase tracking-wider">Professional Link</th>
+                  <th className="px-6 py-4 text-[#dac48b] font-bold uppercase tracking-wider text-right pr-8">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-50">
+              <tbody className="divide-y divide-slate-100">
                 {eligibleStudents.length === 0 ? (
                   <tr>
                     <td colSpan={4} className="px-6 py-12 text-center text-slate-400">
                       <CheckCircle2 size={32} className="mx-auto text-slate-200 mb-3" />
-                      <p className="text-xs font-bold">No students identified for graduating transition.</p>
+                      <p className="text-xs font-bold uppercase tracking-wide">No students identified for graduating transition.</p>
                     </td>
                   </tr>
-                ) : eligibleStudents.map((std, idx) => (
+                ) : currentEligibleData.map((std, idx) => (
                   <tr key={std.id} className="hover:bg-slate-50/40 transition-all group align-middle">
-                    <td className="px-6 py-6">
+                    <td className="px-6 py-4">
                       <div className="flex items-center space-x-3.5">
-                        <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-sm border border-emerald-100">
+                        <div className="w-9 h-9 rounded-md bg-slate-100 text-[#dac48b] flex items-center justify-center font-bold text-sm border border-slate-200 group-hover:bg-white transition-all shrink-0">
                           {std.name[0]}
                         </div>
                         <div className="min-w-0">
-                          <p className="text-[13px] font-bold text-slate-700 leading-snug">{std.name}</p>
+                          <p className="text-[13px] font-bold text-slate-700 leading-snug group-hover:text-black transition-colors">{std.name}</p>
                           <div className="flex items-center space-x-2 mt-0.5">
                             <span className="text-[10px] font-bold text-slate-400">{std.studentCode}</span>
                             <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">Batch {std.batchYear || 'TBD'}</span>
@@ -177,58 +194,86 @@ export default function AlumniManagement() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-6 text-sm">
+                    <td className="px-6 py-4">
                       <input
                         type="email"
                         placeholder="Gmail username"
                         value={std.gmailId}
                         onChange={(e) => {
+                          const absoluteIdx = (currentPage - 1) * rowsPerPage + idx;
                           const newList = [...eligibleStudents];
-                          newList[idx].gmailId = e.target.value;
+                          newList[absoluteIdx].gmailId = e.target.value;
                           setEligibleStudents(newList);
                         }}
-                        className="w-full px-3 py-2 bg-slate-100/50 border border-slate-200/60 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:bg-white text-[12px] font-bold transition-all outline-none"
+                        className="w-full px-3 py-2 rounded-md focus:ring-2 focus:ring-[#dac48b]/20 focus:bg-white text-xs font-bold transition-all outline-none"
                       />
                     </td>
-                    <td className="px-6 py-6">
+                    <td className="px-6 py-4">
                       <div className="relative">
                         <Link2 size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300" />
                         <input
                           type="url"
-                          placeholder="LinkedIn profile profile url"
+                          placeholder="LinkedIn URL"
                           value={std.linkedIn}
                           onChange={(e) => {
+                            const absoluteIdx = (currentPage - 1) * rowsPerPage + idx;
                             const newList = [...eligibleStudents];
-                            newList[idx].linkedIn = e.target.value;
+                            newList[absoluteIdx].linkedIn = e.target.value;
                             setEligibleStudents(newList);
                           }}
-                          className="w-full pl-9 pr-3 py-2 bg-slate-100/50 border border-slate-200/60 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:bg-white text-[12px] font-bold transition-all outline-none"
+                          className="w-full pl-9 pr-3 py-2 rounded-md focus:ring-2 focus:ring-[#dac48b]/20 focus:bg-white text-xs font-bold transition-all outline-none"
                         />
                       </div>
                     </td>
-                    <td className="px-6 py-6 text-right pr-8 relative">
-                      <div className="flex items-center justify-end">
-                        <button
-                          onClick={() => handleConvert(std)}
-                          disabled={processingId === std.id}
-                          className="inline-flex items-center space-x-2 px-4 py-2 bg-[#1A3D63] hover:bg-[#0A1931] text-white rounded-xl text-[11px] font-bold transition-all active:scale-95 disabled:opacity-50 shadow-sm"
-                        >
-                          {processingId === std.id ? <Loader2 size={14} className="animate-spin" /> : <GraduationCap size={14} />}
-                          <span>Authorize</span>
-                        </button>
-                      </div>
+                    <td className="px-6 py-4 text-right pr-8 relative">
+                      <button
+                        onClick={() => handleConvert(std)}
+                        disabled={processingId === std.id}
+                        className="inline-flex items-center space-x-2 px-4 py-2 bg-[#18181b] hover:bg-black text-white rounded-md text-[10px] font-bold uppercase tracking-wider transition-all active:scale-95 disabled:opacity-50 shadow-sm"
+                      >
+                        {processingId === std.id ? <Loader2 size={14} className="animate-spin" /> : <GraduationCap size={14} />}
+                        <span>Authorize</span>
+                      </button>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+          
+          {/* Pagination Controls */}
+          {eligibleStudents.length > 0 && (
+            <div className="bg-slate-50 px-6 py-3 border-t border-slate-100 flex items-center justify-between shrink-0">
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                Showing {(currentPage - 1) * rowsPerPage + 1} - {Math.min(currentPage * rowsPerPage, eligibleStudents.length)} of {eligibleStudents.length}
+              </span>
+              <div className="flex items-center space-x-2">
+                <button 
+                  disabled={currentPage === 1} 
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  className="px-3 py-1.5 rounded-md bg-white border border-slate-200 text-[10px] font-bold uppercase tracking-wider text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                >
+                  Prev
+                </button>
+                <span className="text-[10px] font-bold text-slate-900 bg-white px-3 py-1.5 rounded-md border border-slate-200">
+                  {currentPage} / {totalEligiblePages}
+                </span>
+                <button 
+                  disabled={currentPage === totalEligiblePages} 
+                  onClick={() => setCurrentPage(prev => Math.min(totalEligiblePages, prev + 1))}
+                  className="px-3 py-1.5 rounded-md bg-[#18181b] text-white border border-transparent text-[10px] font-bold uppercase tracking-wider hover:bg-black disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       ) : (
-        <div className="space-y-6 animate-in slide-in-from-right-4 duration-500">
+        <div className="flex-1 min-h-0 flex flex-col gap-3 animate-in slide-in-from-right-4 duration-500">
           {/* Directory Search */}
-          <div className="bg-white px-5 py-3 rounded-2xl border border-slate-200 shadow-sm flex items-center space-x-4 max-w-xl">
-            <Search className="text-slate-300" size={18} />
+          <div className="bg-white px-5 py-3 rounded-md border border-slate-200 shadow-sm flex items-center space-x-4 shrink-0">
+            <Search className="text-slate-300" size={16} />
             <input
               type="text"
               placeholder="Search by name, year, or email..."
@@ -239,63 +284,61 @@ export default function AlumniManagement() {
           </div>
 
           {/* Directory Table */}
-          <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full table-fixed min-w-[1000px]">
-                <thead>
-                  <tr className="bg-slate-50/50 border-b border-slate-100">
-                    <th className="px-6 py-4 text-[11px] font-semibold text-slate-400 text-left w-[35%]">Alumni identity</th>
-                    <th className="px-6 py-4 text-[11px] font-semibold text-slate-400 text-center w-[15%] text-center">Batch</th>
-                    <th className="px-6 py-4 text-[11px] font-semibold text-slate-400 text-left w-[25%]">Secured access</th>
-                    <th className="px-6 py-4 text-[11px] font-semibold text-slate-400 text-right w-[25%] pr-8">Actions</th>
+          <div className="bg-white rounded-md border border-slate-100 shadow-sm overflow-hidden flex-1 min-h-0 flex flex-col">
+            <div className="overflow-auto custom-scrollbar flex-1">
+              <table className="w-full text-left border-collapse text-[11px] min-w-[1000px]">
+                <thead className="bg-slate-50 sticky top-0 z-10 border-b border-slate-100">
+                  <tr>
+                    <th className="px-6 py-4 text-[#dac48b] font-bold uppercase tracking-wider">Alumni identity</th>
+                    <th className="px-6 py-4 text-[#dac48b] font-bold uppercase tracking-wider text-center">Batch</th>
+                    <th className="px-6 py-4 text-[#dac48b] font-bold uppercase tracking-wider">Secured access</th>
+                    <th className="px-6 py-4 text-[#dac48b] font-bold uppercase tracking-wider text-right pr-8">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-50">
-                  {filteredAlumni.length === 0 ? (
-                    <tr>
-                      <td colSpan={4} className="px-6 py-12 text-center text-slate-400 text-sm italic">
-                        No alumni records found for this cohort.
-                      </td>
-                    </tr>
-                  ) : filteredAlumni.map((a) => (
+                <tbody className="divide-y divide-slate-100">
+                  {currentAlumniData.map((a) => (
                     <tr key={a.id} className="hover:bg-slate-50/40 transition-all group align-middle">
-                      <td className="px-6 py-5">
+                      <td className="px-6 py-4">
                         <div className="flex items-center space-x-3.5">
-                          <div className="w-10 h-10 rounded-xl bg-slate-100/50 border border-slate-200/60 flex items-center justify-center text-slate-400 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-all overflow-hidden relative shadow-sm">
-                            <GraduationCap size={18} strokeWidth={1.5} />
+                          <div className="w-9 h-9 rounded-md bg-slate-100 text-[#dac48b] border border-slate-200 flex items-center justify-center font-bold text-sm group-hover:bg-white transition-all shrink-0">
+                            {a.name[0]}
                           </div>
                           <div className="min-w-0">
-                            <p className="text-[13px] font-bold text-slate-700 leading-tight group-hover:text-emerald-600 transition-colors">{a.name}</p>
-                            <p className="text-[10px] text-slate-400 mt-1 font-medium italic">{a.email}</p>
+                            <p className="text-[13px] font-bold text-slate-700 leading-snug group-hover:text-black transition-colors">{a.name}</p>
+                            <div className="flex items-center space-x-2 mt-0.5">
+                              {a.linkedIn && (
+                                <a href={a.linkedIn} target="_blank" rel="noopener noreferrer" className="text-[10px] text-[#dac48b] hover:underline flex items-center font-medium">
+                                  <Link2 size={10} className="mr-1" /> Profile Link
+                                </a>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-5 text-center">
-                        <span className="text-[13px] font-bold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200/50">
+                      <td className="px-6 py-4 text-center">
+                        <span className="px-2 py-0.5 bg-amber-50 text-[#a98f4a] text-[10px] font-bold rounded-md border border-amber-100/50">
                           {a.batchYear}
                         </span>
                       </td>
-                      <td className="px-6 py-5">
-                        <div className="flex items-center space-x-2 text-slate-500">
-                          <Key size={12} className="opacity-40" />
-                          <span className="text-[11px] font-bold tracking-widest bg-slate-50 px-2 py-1 rounded-md border border-slate-200/50">••••••••</span>
+                      <td className="px-6 py-4">
+                        <div className="space-y-0.5">
+                          <p className="text-[11px] font-bold text-slate-600 flex items-center">
+                            <Mail size={12} className="mr-2 text-slate-300" />
+                            {a.email}
+                          </p>
+                          <p className="text-[9px] text-slate-400 font-medium italic ml-5">
+                            Created {new Date(a.createdAt).toLocaleDateString()}
+                          </p>
                         </div>
                       </td>
-                      <td className="px-6 py-5 text-right pr-8">
+                      <td className="px-6 py-4 text-right pr-8 relative">
                         <div className="flex items-center justify-end space-x-2">
-                          {a.linkedIn ? (
-                            <a
-                              href={a.linkedIn}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-slate-900 text-white rounded-lg text-[10px] font-bold hover:bg-[#0077b5] transition-all shadow-sm"
-                            >
-                              <ExternalLink size={12} />
-                              <span>Profile</span>
-                            </a>
-                          ) : (
-                            <span className="text-[10px] font-bold text-slate-300 italic">No social link</span>
-                          )}
+                          <button className="p-1.5 text-slate-400 hover:text-black hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 rounded-md transition-all">
+                            <ShieldCheck size={14} />
+                          </button>
+                          <button className="p-1.5 text-slate-400 hover:text-black hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 rounded-md transition-all">
+                            <Key size={14} />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -303,6 +346,34 @@ export default function AlumniManagement() {
                 </tbody>
               </table>
             </div>
+            
+            {/* Pagination Controls */}
+            {filteredAlumni.length > 0 && (
+              <div className="bg-slate-50 px-6 py-3 border-t border-slate-100 flex items-center justify-between shrink-0">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                  Showing {(currentPage - 1) * rowsPerPage + 1} - {Math.min(currentPage * rowsPerPage, filteredAlumni.length)} of {filteredAlumni.length}
+                </span>
+                <div className="flex items-center space-x-2">
+                  <button 
+                    disabled={currentPage === 1} 
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    className="px-3 py-1.5 rounded-md bg-white border border-slate-200 text-[10px] font-bold uppercase tracking-wider text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  >
+                    Prev
+                  </button>
+                  <span className="text-[10px] font-bold text-slate-900 bg-white px-3 py-1.5 rounded-md border border-slate-200">
+                    {currentPage} / {totalPages}
+                  </span>
+                  <button 
+                    disabled={currentPage === totalPages} 
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    className="px-3 py-1.5 rounded-md bg-[#18181b] text-white border border-transparent text-[10px] font-bold uppercase tracking-wider hover:bg-black disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

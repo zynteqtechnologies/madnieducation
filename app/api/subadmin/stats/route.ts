@@ -13,7 +13,9 @@ export async function GET() {
       SELECT 
         (SELECT COUNT(*) FROM "Student" WHERE "schoolId" = $1) as "totalStudents",
         (SELECT COUNT(*) FROM "Standard" WHERE "schoolId" = $1) as "activeStandards",
-        (SELECT COUNT(*) FROM "Student" WHERE "schoolId" = $1 AND "createdAt" > NOW() - INTERVAL '30 days') as "recentEnrollments",
+        (SELECT COALESCE(SUM(amount), 0) FROM "Transaction" WHERE "schoolId" = $1) as "totalDonations",
+        (SELECT COALESCE(SUM(amount), 0) FROM "Transaction" WHERE "schoolId" = $1 AND type = 'CONSTRUCTION') as "constructionDonations",
+        (SELECT COALESCE(SUM(amount), 0) FROM "Transaction" WHERE "schoolId" = $1 AND type IN ('ZAKAT', 'LILLAH', 'SADKA', 'FINANCIAL_AID')) as "financialAidDonations",
         (
           SELECT COALESCE(SUM(std.fees), 0) 
           FROM "Student" s 
@@ -25,21 +27,23 @@ export async function GET() {
     const result = await pool.query(statsQuery, [session.schoolId]);
     const stats = result.rows[0];
 
-    const recentAdmissionsQuery = `
-      SELECT name, "createdAt", "studentCode"
-      FROM "Student"
+    const recentTransactionsQuery = `
+      SELECT id, amount, "donorName", type, "createdAt"
+      FROM "Transaction"
       WHERE "schoolId" = $1
       ORDER BY "createdAt" DESC
-      LIMIT 5
+      LIMIT 6
     `;
-    const recentAdmissions = await pool.query(recentAdmissionsQuery, [session.schoolId]);
+    const recentTransactions = await pool.query(recentTransactionsQuery, [session.schoolId]);
 
     return NextResponse.json({
-      totalStudents: parseInt(stats.totalStudents),
-      activeStandards: parseInt(stats.activeStandards),
-      recentEnrollments: parseInt(stats.recentEnrollments),
-      totalFeesPotential: parseFloat(stats.totalFeesPotential),
-      recentAdmissions: recentAdmissions.rows
+      totalStudents: parseInt(stats.totalStudents) || 0,
+      activeStandards: parseInt(stats.activeStandards) || 0,
+      totalDonations: parseFloat(stats.totalDonations) || 0,
+      constructionDonations: parseFloat(stats.constructionDonations) || 0,
+      financialAidDonations: parseFloat(stats.financialAidDonations) || 0,
+      totalFeesPotential: parseFloat(stats.totalFeesPotential) || 0,
+      recentTransactions: recentTransactions.rows
     });
 
   } catch (error: any) {

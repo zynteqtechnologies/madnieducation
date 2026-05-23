@@ -141,79 +141,79 @@ export default function StandardManagement() {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
+    <div className="lg:h-full lg:overflow-hidden flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-4 duration-700">
 
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-slate-100 mb-8">
-        <div className="space-y-1">
-          <h2 className="text-xl font-bold text-slate-900 tracking-tight">Academic standards</h2>
-          <p className="text-xs text-slate-500 font-medium tracking-tight">Grade configuration and institutional fee structures</p>
+      {/* Header Row */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white px-5 py-3 rounded-md border border-slate-200 shadow-sm shrink-0">
+        <div>
+          <h2 className="text-lg font-bold text-slate-900 tracking-tight">Academic Standards</h2>
+          <p className="text-xs text-slate-500 font-medium uppercase tracking-wide">Grade configuration and institutional fee structures</p>
         </div>
         <button
           onClick={() => { setShowAddForm(true); setEditingStandard(null); resetForm(); }}
-          className="bg-emerald-600 text-white px-5 py-2.5 rounded-xl hover:bg-emerald-700 transition font-bold text-[12px] shadow-lg shadow-emerald-600/10 flex items-center w-fit"
+          className="bg-[#18181b] text-white px-4 py-2 rounded-md hover:bg-black transition font-bold text-[11px] shadow-sm flex items-center w-fit uppercase tracking-wider"
         >
-          <Plus size={18} className="mr-2" />
-          <span>Add standard</span>
+          <Plus size={16} className="mr-2" />
+          <span>Add Standard</span>
         </button>
       </div>
 
       {error && (
-        <div className="p-4 bg-rose-50 border border-rose-100 rounded-md flex items-center space-x-3 text-rose-700 text-xs font-semibold">
-          <ShieldCheck size={16} />
+        <div className="p-3 bg-rose-50 border border-rose-100 rounded-md flex items-center space-x-3 text-rose-700 text-xs font-semibold shrink-0">
+          <ShieldCheck size={14} />
           <p>{error}</p>
         </div>
       )}
 
-      {/* Standards List - Transitioned to Professional Table */}
-      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden mt-8">
-        <div className="overflow-x-auto">
-          <table className="w-full table-fixed min-w-[1000px]">
-            <thead>
-              <tr className="bg-slate-50/50 border-b border-slate-100">
-                <th className="px-6 py-4 text-[11px] font-semibold text-slate-400 text-left w-[35%]">Grade</th>
-                <th className="px-6 py-4 text-[11px] font-semibold text-slate-400 text-left w-[25%]">Fees</th>
-                <th className="px-6 py-4 text-[11px] font-semibold text-slate-400 text-left w-[30%]">Batch</th>
-                <th className="px-6 py-4 text-[11px] font-semibold text-slate-400 text-right w-[10%] pr-8">Actions</th>
+      {/* Standards List Container */}
+      <div className="bg-white rounded-md border border-slate-100 shadow-sm overflow-hidden flex-1 min-h-0 flex flex-col">
+        <div className="overflow-auto custom-scrollbar flex-1">
+          <table className="w-full text-left border-collapse text-[11px] min-w-[800px]">
+            <thead className="bg-slate-50 sticky top-0 z-20 border-b border-slate-100">
+              <tr>
+                <th className="px-6 py-4 text-[#dac48b] font-bold uppercase tracking-wider">Grade Identity</th>
+                <th className="px-6 py-4 text-[#dac48b] font-bold uppercase tracking-wider">Tuition Fees</th>
+                <th className="px-6 py-4 text-[#dac48b] font-bold uppercase tracking-wider text-center">Academic Year</th>
+                <th className="px-6 py-4 text-[#dac48b] font-bold uppercase tracking-wider text-right pr-8">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-50">
+            <tbody className="divide-y divide-slate-100">
               {loading && !standards.length ? (
-                <tr><td colSpan={4} className="px-6 py-12 text-center"><Loader2 className="animate-spin text-emerald-600 mx-auto" size={24} /></td></tr>
+                <tr><td colSpan={4} className="px-6 py-12 text-center"><Loader2 className="animate-spin text-[#dac48b] mx-auto" size={24} /></td></tr>
               ) : standards.length === 0 ? (
                 <tr><td colSpan={4} className="px-6 py-12 text-center text-slate-400 text-sm italic">No academic standards localized.</td></tr>
               ) : (
                 standards.map(std => (
                   <tr key={std.id} className="hover:bg-slate-50/40 transition-all group align-middle">
-                    <td className="px-6 py-5">
+                    <td className="px-6 py-4">
                       <div className="flex items-center space-x-3.5">
-                        <div className="w-10 h-10 rounded-xl bg-slate-100/50 border border-slate-200/60 flex items-center justify-center text-slate-400 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-all">
-                          <Layers size={18} strokeWidth={1.5} />
+                        <div className="w-9 h-9 rounded-md bg-slate-100 border border-slate-200/60 flex items-center justify-center text-slate-400 group-hover:bg-white group-hover:text-[#dac48b] transition-all shrink-0">
+                          <Layers size={16} strokeWidth={1.5} />
                         </div>
                         <div className="min-w-0">
-                          <p className="text-[14px] font-bold text-slate-700 leading-snug">{std.standardName}</p>
-                          <p className="text-[10px] text-slate-400 mt-1 font-medium italic">Div: {std.division || 'Main'}</p>
+                          <p className="text-[13px] font-bold text-slate-700 leading-snug group-hover:text-black transition-colors">{std.standardName}</p>
+                          <p className="text-[10px] text-slate-400 mt-0.5 font-medium italic">Div: {std.division || 'Main'}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-5">
-                       <div className="flex items-center space-x-1 font-bold text-slate-700">
-                          <IndianRupee size={14} className="text-emerald-500" />
-                          <span className="text-[14px]">{parseFloat(std.fees as string).toLocaleString('en-IN')}</span>
+                    <td className="px-6 py-4">
+                       <div className="flex items-center space-x-1 font-bold text-slate-700 tabular-nums">
+                          <IndianRupee size={13} className="text-[#dac48b]" />
+                          <span className="text-[13px]">{parseFloat(std.fees as string).toLocaleString('en-IN')}</span>
                        </div>
                     </td>
-                    <td className="px-6 py-5">
-                       <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 text-[10px] font-bold rounded-lg border border-emerald-100/50">
+                    <td className="px-6 py-4 text-center">
+                       <span className="px-2 py-1 bg-amber-50 text-[#a98f4a] text-[10px] font-bold rounded-md border border-amber-100/50">
                           {std.batchYear || 'Floating'}
                        </span>
                     </td>
-                    <td className="px-6 py-5 text-right pr-8">
-                       <div className="flex items-center justify-end space-x-2 opacity-0 group-hover:opacity-100 transition-all scale-95 group-hover:scale-100">
-                        <button onClick={() => handleEdit(std)} className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 rounded-lg transition-all" title="Modify Context">
-                          <Edit3 size={15} />
+                    <td className="px-6 py-4 text-right pr-8">
+                       <div className="flex items-center justify-end space-x-2">
+                        <button onClick={() => handleEdit(std)} className="p-1.5 text-slate-400 hover:text-black hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 rounded-md transition-all" title="Modify Context">
+                          <Edit3 size={14} />
                         </button>
-                        <button onClick={() => handleDelete(std.id)} className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-100 rounded-lg transition-all" title="Delete Policy">
-                          <Trash2 size={15} />
+                        <button onClick={() => handleDelete(std.id)} className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-100 rounded-md transition-all" title="Delete Policy">
+                          <Trash2 size={14} />
                         </button>
                       </div>
                     </td>
@@ -228,40 +228,40 @@ export default function StandardManagement() {
       {/* Config Form Modal */}
       {showAddForm && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-in fade-in duration-300">
-          <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl p-10 relative border border-slate-100">
-            <div className="flex justify-between items-center mb-8">
+          <div className="bg-[#FAF7F0] w-full max-w-md rounded-md shadow-2xl p-8 relative border border-[#E6DFD3]">
+            <div className="flex justify-between items-center mb-6">
               <div>
-                <h3 className="text-xl font-bold text-slate-900 tracking-tight">{editingStandard ? 'Update grade context' : 'Define standard'}</h3>
-                <p className="text-slate-400 text-xs font-medium mt-1">Institutional academic control center</p>
+                <h3 className="text-lg font-bold text-slate-900 tracking-tight">{editingStandard ? 'Update Grade Context' : 'Define Standard'}</h3>
+                <p className="text-slate-500 text-xs font-medium mt-0.5 uppercase tracking-wide">Institutional academic control center</p>
               </div>
-              <button onClick={() => setShowAddForm(false)} className="p-2 text-slate-300 hover:text-slate-600 transition-colors"><X size={20} /></button>
+              <button onClick={() => setShowAddForm(false)} className="p-1.5 text-slate-400 hover:text-slate-900 transition-colors"><X size={18} /></button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1">
-                <label className="text-[11px] font-bold text-slate-500 ml-1">Standard identity (e.g., 10th)</label>
-                <input type="text" required value={formData.standardName} onChange={e => setFormData({ ...formData, standardName: e.target.value })} className="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-emerald-500/5 focus:bg-white text-sm font-bold transition-all" placeholder="Enter Grade" />
+                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide ml-1">Standard Identity (e.g., 10th)</label>
+                <input type="text" required value={formData.standardName} onChange={e => setFormData({ ...formData, standardName: e.target.value })} className="w-full px-4 py-2 rounded-md outline-none focus:ring-2 focus:ring-[#dac48b]/20 text-sm transition-all" placeholder="Enter Grade" />
               </div>
 
               <div className="space-y-1">
-                <label className="text-[11px] font-bold text-slate-500 ml-1">Assigned divisions (e.g., A, B, C)</label>
-                <input type="text" value={formData.division} onChange={e => setFormData({ ...formData, division: e.target.value })} className="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-emerald-500/5 focus:bg-white text-sm font-bold transition-all" placeholder="Separated by commas" />
+                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide ml-1">Assigned Divisions (e.g., A, B, C)</label>
+                <input type="text" value={formData.division} onChange={e => setFormData({ ...formData, division: e.target.value })} className="w-full px-4 py-2 rounded-md outline-none focus:ring-2 focus:ring-[#dac48b]/20 text-sm transition-all" placeholder="Separated by commas" />
               </div>
 
               <div className="space-y-1">
-                <label className="text-[11px] font-bold text-slate-500 ml-1">Tuition fees (Annual)</label>
+                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide ml-1">Tuition fees (Annual)</label>
                 <div className="relative group">
-                  <IndianRupee size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-emerald-500 transition-colors" />
-                  <input type="number" required value={formData.fees} onChange={e => setFormData({ ...formData, fees: e.target.value })} className="w-full pl-12 pr-5 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-emerald-500/5 focus:bg-white text-sm font-bold transition-all" placeholder="0.00" />
+                  <IndianRupee size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#dac48b] transition-colors" />
+                  <input type="number" required value={formData.fees} onChange={e => setFormData({ ...formData, fees: e.target.value })} className="w-full pl-10 pr-4 py-2 rounded-md outline-none focus:ring-2 focus:ring-[#dac48b]/20 text-sm transition-all" placeholder="0.00" />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="text-[11px] font-bold text-slate-500 ml-1">Academic batch (e.g., 2024-25)</label>
+                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide ml-1">Academic batch (e.g., 2024-25)</label>
                 <select
                   value={formData.batchYear}
                   onChange={e => setFormData({ ...formData, batchYear: e.target.value })}
-                  className="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-emerald-500/5 focus:bg-white text-sm font-bold transition-all"
+                  className="w-full px-4 py-2 rounded-md outline-none focus:ring-2 focus:ring-[#dac48b]/20 text-sm transition-all"
                   required
                 >
                   <option value="">Select an Academic Year</option>
@@ -274,9 +274,9 @@ export default function StandardManagement() {
               </div>
 
               <div className="flex space-x-3 pt-6">
-                <button type="button" onClick={() => setShowAddForm(false)} className="flex-1 py-4 bg-slate-50 text-slate-400 rounded-xl font-bold text-[11px] hover:bg-slate-100 transition-all">Abort</button>
-                <button type="submit" disabled={loading} className="flex-[2] py-4 bg-emerald-600 text-white rounded-xl font-bold text-[11px] shadow-xl shadow-emerald-500/10 hover:bg-emerald-700 transition-all active:scale-95">
-                  {loading ? <Loader2 className="animate-spin mx-auto" size={20} /> : <span>{editingStandard ? 'Update policy' : 'Authorize standard'}</span>}
+                <button type="button" onClick={() => setShowAddForm(false)} className="flex-1 py-3 bg-slate-100 text-slate-500 rounded-md font-bold text-[11px] uppercase tracking-wider hover:bg-slate-200 transition-all">Abort</button>
+                <button type="submit" disabled={loading} className="flex-[2] py-3 bg-[#18181b] text-white rounded-md font-bold text-[11px] uppercase tracking-wider shadow-sm hover:bg-black transition-all active:scale-95">
+                  {loading ? <Loader2 className="animate-spin mx-auto" size={18} /> : <span>{editingStandard ? 'Update Policy' : 'Authorize Standard'}</span>}
                 </button>
               </div>
             </form>
