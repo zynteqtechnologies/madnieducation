@@ -64,15 +64,15 @@ export default function LoginForm({ roleName, loginEndpoint, accentColor, roleIc
         pattern: 'text-white/10'
       };
       case 'emerald': return {
-        bg: 'bg-emerald-600',
-        hover: 'hover:bg-emerald-700',
-        light: 'bg-emerald-50',
-        text: 'text-emerald-600',
+        bg: 'bg-[#1b4a50]',
+        hover: 'hover:bg-[#143d43]',
+        light: 'bg-[#1b4a50]/10',
+        text: 'text-[#1b4a50]',
         darkText: 'text-white',
-        ring: 'focus:ring-emerald-500/20',
-        border: 'focus:border-emerald-500',
-        gradient: 'from-emerald-700 via-teal-800 to-slate-900',
-        pattern: 'text-white/10'
+        ring: 'focus:ring-[#1b4a50]/20',
+        border: 'focus:border-[#1b4a50]',
+        gradient: 'from-[#1b4a50] via-[#143d43] to-[#0d2a4a]',
+        pattern: 'text-white/5'
       };
       case 'amber': return {
         bg: 'bg-amber-600',

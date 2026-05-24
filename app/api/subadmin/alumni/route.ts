@@ -12,26 +12,39 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url);
     const type = searchParams.get('type') || 'directory';
+    const standardFilter = searchParams.get('standard') || 'All';
+
+    let standardCondition = `(std."standardName" ILIKE '%10%' OR std."standardName" ILIKE '%11%' OR std."standardName" ILIKE '%12%')`;
+    if (standardFilter !== 'All') {
+      // Extract numeric part (e.g. "10th" -> "10") to match "Class 10", "10", "10th"
+      const numericGrade = standardFilter.replace(/\D/g, ''); 
+      standardCondition = `std."standardName" ILIKE '%${numericGrade}%'`;
+    }
 
     if (type === 'eligible') {
-      // Fetch Standard 10 students not already in Alumni table
+      // Fetch eligible students not already in Alumni table
       const result = await pool.query(`
         SELECT s.id, s.name, s."studentCode", std."standardName", std."batchYear"
         FROM "Student" s
         JOIN "Standard" std ON s."standardId" = std.id
         LEFT JOIN "Alumni" a ON s.id = a."studentId"
         WHERE s."schoolId" = $1 
-        AND std."standardName" ILIKE '%10%'
+        AND ${standardCondition}
         AND a.id IS NULL
       `, [session.schoolId]);
       return NextResponse.json(result.rows);
     } else {
-      // Fetch Alumni directory
+      // Fetch Alumni directory with their standard info
+      const dirCondition = standardFilter === 'All' ? `(${standardCondition} OR std.id IS NULL)` : standardCondition;
+      
       const result = await pool.query(`
-        SELECT id, name, email, "linkedIn", "batchYear", "studentId", "createdAt" 
-        FROM "Alumni" 
-        WHERE "schoolId" = $1 
-        ORDER BY "batchYear" DESC, name ASC
+        SELECT a.id, a.name, a.email, a."linkedIn", a."batchYear", a."studentId", a."createdAt", std."standardName"
+        FROM "Alumni" a
+        LEFT JOIN "Student" s ON a."studentId" = s.id
+        LEFT JOIN "Standard" std ON s."standardId" = std.id
+        WHERE a."schoolId" = $1 
+        AND ${dirCondition}
+        ORDER BY a."batchYear" DESC, a.name ASC
       `, [session.schoolId]);
       return NextResponse.json(result.rows);
     }

@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@imagekit/nodejs": "^7.6.1",
     "@lucide/lab": "^0.1.2",
     "@types/bcryptjs": "^2.4.6",
     "@types/cookie": "^0.6.0",
@@ -18,7 +19,7 @@
     "clsx": "^2.1.1",
     "cookie": "^1.1.1",
     "drizzle-orm": "^0.45.2",
-    "@imagekit/nodejs": "^7.6.1",
+    "imagekit": "^6.0.0",
     "jose": "^6.2.2",
     "jsonwebtoken": "^9.0.3",
     "lucide-react": "^1.7.0",

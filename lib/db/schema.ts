@@ -79,6 +79,7 @@ export const standards = pgTable('Standard', {
   id: uuid('id').defaultRandom().primaryKey(),
   standardName: varchar('standardName', { length: 100 }).notNull(),
   division: varchar('division', { length: 100 }),
+  stream: varchar('stream', { length: 100 }),
   fees: decimal('fees', { precision: 10, scale: 2 }).default('0'),
   batchYear: varchar('batchYear', { length: 100 }),
   schoolId: uuid('schoolId').notNull().references(() => schools.id, { onDelete: 'cascade' }),
@@ -220,7 +221,30 @@ export const studentEnrollments = pgTable('StudentEnrollment', {
   studentId: uuid('studentId').references(() => students.id, { onDelete: 'cascade' }).notNull(),
   standardId: uuid('standardId').references(() => standards.id, { onDelete: 'cascade' }).notNull(),
   academicYearId: uuid('academicYearId').references(() => academicYears.id, { onDelete: 'cascade' }).notNull(),
-  status: varchar('status', { length: 50 }).default('ACTIVE'), // ACTIVE, PROMOTED, REPEATING, DROPPED
+  status: varchar('status', { length: 50 }).default('ACTIVE'), // ACTIVE, PROMOTED, REPEATING, DROPPED, GRADUATED
+  rank: integer('rank'), // 1, 2, 3 for toppers
+  percentage: decimal('percentage', { precision: 5, scale: 2 }), // e.g. 95.50
   createdAt: timestamp('createdAt').defaultNow(),
   updatedAt: timestamp('updatedAt').defaultNow(),
+});
+
+// Event Table
+export const events = pgTable('Event', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  title: varchar('title', { length: 255 }).notNull(),
+  description: text('description'),
+  date: date('date'),
+  schoolId: uuid('schoolId').references(() => schools.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('createdAt').defaultNow(),
+  updatedAt: timestamp('updatedAt').defaultNow(),
+});
+
+// Event Media Table
+export const eventMedia = pgTable('EventMedia', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  eventId: uuid('eventId').references(() => events.id, { onDelete: 'cascade' }).notNull(),
+  mediaType: varchar('mediaType', { length: 50 }).notNull(), // IMAGE or VIDEO
+  url: text('url').notNull(),
+  fileId: varchar('fileId', { length: 255 }), // ImageKit file ID
+  createdAt: timestamp('createdAt').defaultNow(),
 });

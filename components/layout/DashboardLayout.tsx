@@ -21,6 +21,7 @@ import {
   Sun,
   Shield,
   Activity,
+  CalendarDays,
   Layers,
   History,
   Globe,
@@ -92,7 +93,7 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
           'Donations': 'donations',
           'Students': 'students',
           'Promotion': 'promotion',
-          'Activity': 'activity',
+          'Events': 'events',
           'Class Setup': 'class-setup'
         };
         const path = routeMap[item];
@@ -126,7 +127,7 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
     { name: 'Subadmins', icon: <Users size={18} />, role: ['SUPER_ADMIN'] },
     { name: 'Academic Years', icon: <Calendar size={18} />, role: ['SUPER_ADMIN'] },
     { name: 'Promotion', icon: <ArrowUpCircle size={18} />, role: ['SUB_ADMIN'] },
-    { name: 'Activity', icon: <Activity size={18} />, role: ['SUPER_ADMIN', 'SUB_ADMIN'] },
+    { name: 'Events', icon: <CalendarDays size={18} />, role: ['SUPER_ADMIN', 'SUB_ADMIN'] },
   ].filter(item => item.role.includes(role));
 
   const getLayoutColors = () => {
@@ -186,7 +187,7 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
 
             {/* Centered Navigation Tabs */}
             <nav className="hidden lg:flex items-center justify-center flex-1 mx-6">
-              <div className="inline-flex items-center rounded-xl border border-[#E6DFD3]/70 bg-[#EFECE5] px-2 py-2 gap-2">
+              <div className="inline-flex items-center rounded-lg border border-[#E6DFD3]/70 bg-[#fff9] px-2 py-2 gap-2">
                 {menuItems.map((item) => (
                   <button
                     key={item.name}

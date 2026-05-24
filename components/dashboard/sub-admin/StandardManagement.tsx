@@ -19,6 +19,7 @@ interface Standard {
   id: string;
   standardName: string;
   division: string | null;
+  stream?: string | null;
   fees: string | number;
   batchYear: string | null;
 }
@@ -41,6 +42,7 @@ export default function StandardManagement() {
   const [formData, setFormData] = useState({
     standardName: '',
     division: '',
+    stream: '',
     fees: '',
     batchYear: '',
   });
@@ -125,6 +127,7 @@ export default function StandardManagement() {
     setFormData({
       standardName: std.standardName,
       division: std.division || '',
+      stream: std.stream || '',
       fees: std.fees.toString(),
       batchYear: std.batchYear || '',
     });
@@ -135,6 +138,7 @@ export default function StandardManagement() {
     setFormData({
       standardName: '',
       division: '',
+      stream: '',
       fees: '',
       batchYear: '',
     });
@@ -191,7 +195,7 @@ export default function StandardManagement() {
                           <Layers size={16} strokeWidth={1.5} />
                         </div>
                         <div className="min-w-0">
-                          <p className="text-[13px] font-bold text-slate-700 leading-snug group-hover:text-black transition-colors">{std.standardName}</p>
+                          <p className="text-[13px] font-bold text-slate-700 leading-snug group-hover:text-black transition-colors">{std.standardName} {std.stream ? `(${std.stream})` : ''}</p>
                           <p className="text-[10px] text-slate-400 mt-0.5 font-medium italic">Div: {std.division || 'Main'}</p>
                         </div>
                       </div>
@@ -247,6 +251,23 @@ export default function StandardManagement() {
                 <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide ml-1">Assigned Divisions (e.g., A, B, C)</label>
                 <input type="text" value={formData.division} onChange={e => setFormData({ ...formData, division: e.target.value })} className="w-full px-4 py-2 rounded-md outline-none focus:ring-2 focus:ring-[#dac48b]/20 text-sm transition-all" placeholder="Separated by commas" />
               </div>
+
+              {(formData.standardName.trim().toLowerCase() === '11th' || formData.standardName.trim().toLowerCase() === '12th') && (
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide ml-1">Stream</label>
+                  <select
+                    value={formData.stream}
+                    onChange={e => setFormData({ ...formData, stream: e.target.value })}
+                    className="w-full px-4 py-2 rounded-md outline-none focus:ring-2 focus:ring-[#dac48b]/20 text-sm transition-all"
+                    required
+                  >
+                    <option value="">Select Stream</option>
+                    <option value="Science">Science</option>
+                    <option value="Commerce">Commerce</option>
+                    <option value="Arts">Arts</option>
+                  </select>
+                </div>
+              )}
 
               <div className="space-y-1">
                 <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide ml-1">Tuition fees (Annual)</label>

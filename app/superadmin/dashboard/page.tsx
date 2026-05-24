@@ -2,11 +2,8 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import TrustManagement from '@/components/dashboard/super-admin/TrustManagement';
-import SchoolManagement from '@/components/dashboard/super-admin/SchoolManagement';
-import SubAdminManagement from '@/components/dashboard/super-admin/SubAdminManagement';
-import AcademicYearManager from '@/components/dashboard/super-admin/AcademicYearManager';
 import {
   Users,
   Plus,
@@ -28,7 +25,7 @@ interface SystemStats {
 }
 
 export default function SuperAdminDashboard() {
-  const [activeView, setActiveView] = useState('Dashboard');
+  const router = useRouter();
   const [systemStats, setSystemStats] = useState<SystemStats>({ 
     totalUsers: 0, 
     activeTrusts: 0, 
@@ -143,14 +140,14 @@ export default function SuperAdminDashboard() {
           </h3>
           <div className="grid grid-cols-2 gap-4">
             {[
-              { name: 'Trust Registry', view: 'Trusts', color: 'bg-blue-50', text: 'text-blue-700', icon: <Building2 size={16} /> },
-              { name: 'School Directory', view: 'Schools', color: 'bg-emerald-50', text: 'text-emerald-700', icon: <School size={16} /> },
-              { name: 'Officer Roster', view: 'Subadmins', color: 'bg-purple-50', text: 'text-purple-700', icon: <Users size={16} /> },
-              { name: 'Academic Terms', view: 'Academic Years', color: 'bg-amber-50', text: 'text-amber-700', icon: <Activity size={16} /> }
+              { name: 'Trust Registry', path: '/superadmin/trust', color: 'bg-blue-50', text: 'text-blue-700', icon: <Building2 size={16} /> },
+              { name: 'School Directory', path: '/superadmin/school', color: 'bg-emerald-50', text: 'text-emerald-700', icon: <School size={16} /> },
+              { name: 'Officer Roster', path: '/superadmin/subadmin', color: 'bg-purple-50', text: 'text-purple-700', icon: <Users size={16} /> },
+              { name: 'Academic Terms', path: '/superadmin/academic-year', color: 'bg-amber-50', text: 'text-amber-700', icon: <Activity size={16} /> }
             ].map((item) => (
               <button
                 key={item.name}
-                onClick={() => setActiveView(item.view)}
+                onClick={() => router.push(item.path)}
                 className={`flex items-center justify-between p-5 ${item.color} rounded-2xl group hover:shadow-sm transition-all border border-transparent hover:border-slate-200`}
               >
                 <div className="flex items-center space-x-3">
@@ -191,23 +188,16 @@ export default function SuperAdminDashboard() {
     <DashboardLayout
       title="Super Admin Dashboard"
       role="SUPER_ADMIN"
-      activeItem={activeView}
-      onNavigate={setActiveView}
+      activeItem="Dashboard"
     >
       <div className="space-y-6 max-w-7xl mx-auto py-4">
-        {loading && activeView === 'Dashboard' ? (
+        {loading ? (
           <div className="flex flex-col items-center justify-center py-40 animate-pulse">
             <Activity className="text-slate-200 mb-4 animate-spin" size={40} />
             <p className="text-slate-400 font-semibold text-sm tracking-widest uppercase">Initializing Command Center...</p>
           </div>
         ) : (
-          <>
-            {activeView === 'Dashboard' && renderOverview()}
-            {activeView === 'Trusts' && <TrustManagement />}
-            {activeView === 'Schools' && <SchoolManagement />}
-            {activeView === 'Subadmins' && <SubAdminManagement />}
-            {activeView === 'Academic Years' && <AcademicYearManager isAdmin />}
-          </>
+          renderOverview()
         )}
       </div>
     </DashboardLayout>

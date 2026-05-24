@@ -16,7 +16,9 @@ export async function POST(request: Request) {
       targetStandardId, 
       academicYearId, 
       status, 
-      currentAcademicYearId 
+      currentAcademicYearId,
+      toppers,
+      otherPercentages
     } = await request.json();
 
     if (!studentIds || !studentIds.length || !academicYearId || !status) {
@@ -46,9 +48,37 @@ export async function POST(request: Request) {
               eq(studentEnrollments.academicYearId, currentAcademicYearId)
             )
           );
+          
+        // Update ranks and percentages for toppers
+        if (toppers && Array.isArray(toppers)) {
+          for (const topper of toppers) {
+            await tx.update(studentEnrollments)
+              .set({ rank: topper.rank, percentage: topper.percentage ? topper.percentage.toString() : null })
+              .where(
+                and(
+                  eq(studentEnrollments.studentId, topper.studentId),
+                  eq(studentEnrollments.academicYearId, currentAcademicYearId)
+                )
+              );
+          }
+        }
+
+        // Update percentages for non-toppers
+        if (otherPercentages && Array.isArray(otherPercentages)) {
+          for (const item of otherPercentages) {
+            await tx.update(studentEnrollments)
+              .set({ percentage: item.percentage ? item.percentage.toString() : null })
+              .where(
+                and(
+                  eq(studentEnrollments.studentId, item.studentId),
+                  eq(studentEnrollments.academicYearId, currentAcademicYearId)
+                )
+              );
+          }
+        }
       }
 
-      // 2. Create new enrollment records
+      // 2. Create new enrollment records (unless they dropped or graduated)
       if (status === 'PROMOTED' || status === 'REPEATING') {
         const enrollmentValues = studentIds.map((studentId: string) => ({
           studentId,
@@ -64,6 +94,15 @@ export async function POST(request: Request) {
           .set({ 
             standardId: targetStandardId,
             currentClass: targetStandard?.standardName || null,
+            updatedAt: new Date()
+          })
+          .where(inArray(students.id, studentIds));
+      } else if (status === 'GRADUATED' || status === 'DROPPED') {
+        // Clear their current standard mapping so they don't appear in active student lists
+        await tx.update(students)
+          .set({ 
+            standardId: null,
+            currentClass: null,
             updatedAt: new Date()
           })
           .where(inArray(students.id, studentIds));

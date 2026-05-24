@@ -88,7 +88,7 @@ export default function NeedyAnalytics() {
       {loading ? (
         <div className="flex-1 flex flex-col items-center justify-center space-y-4 bg-white rounded-md border border-slate-100 shadow-sm">
            <Loader2 className="animate-spin text-[#dac48b]" size={36} />
-           <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">Analyzing Student Registry...</p>
+           <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">Analyzing Student Data...</p>
         </div>
       ) : error ? (
         <div className="flex-1 flex flex-col items-center justify-center bg-rose-50 border border-rose-100 rounded-md p-10 max-w-md mx-auto">
@@ -112,7 +112,7 @@ export default function NeedyAnalytics() {
                        <th className="px-6 py-4 text-[#dac48b] font-bold uppercase tracking-wider border-l border-slate-200 bg-amber-50/30 text-center" colSpan={3}>Zakat Fund Focus</th>
                        <th className="px-6 py-4 text-[#dac48b] font-bold uppercase tracking-wider border-l border-slate-200 bg-slate-100/30 text-center" colSpan={3}>Lillah Fund Focus</th>
                        <th className="px-6 py-4 text-[#dac48b] font-bold uppercase tracking-wider border-l border-slate-200 text-center">Metrics</th>
-                       <th className="px-6 py-4 text-[#dac48b] font-bold uppercase tracking-wider border-l border-slate-200 text-right bg-white">Total Deficit</th>
+                       <th className="px-6 py-4 text-[#dac48b] font-bold uppercase tracking-wider border-l border-slate-200 text-right bg-white">Amount Needed</th>
                     </tr>
                     <tr className="bg-slate-50/50 border-b border-slate-200 text-[9px] font-bold text-slate-400 uppercase tracking-wider">
                        <th className="px-6 py-2 sticky left-0 z-30 bg-slate-50/80 border-r border-slate-200"></th>

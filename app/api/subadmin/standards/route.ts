@@ -37,17 +37,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No school assigned' }, { status: 400 });
     }
 
-    const { standardName, division, fees, batchYear } = await request.json();
+    const { standardName, division, stream, fees, batchYear } = await request.json();
 
     if (!standardName) {
       return NextResponse.json({ error: 'Standard name is required' }, { status: 400 });
     }
 
     const result = await query(
-      `INSERT INTO "Standard" (id, "standardName", division, fees, "batchYear", "schoolId", "createdAt", "updatedAt") 
-       VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, NOW(), NOW()) 
+      `INSERT INTO "Standard" (id, "standardName", division, stream, fees, "batchYear", "schoolId", "createdAt", "updatedAt") 
+       VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, NOW(), NOW()) 
        RETURNING *`,
-      [standardName, division || null, fees || 0, batchYear || null, session.schoolId]
+      [standardName, division || null, stream || null, fees || 0, batchYear || null, session.schoolId]
     );
 
     return NextResponse.json(result.rows[0]);
@@ -65,7 +65,7 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
-    const { id, standardName, division, fees, batchYear } = await request.json();
+    const { id, standardName, division, stream, fees, batchYear } = await request.json();
 
     if (!id || !standardName) {
       return NextResponse.json({ error: 'ID and Standard name are required' }, { status: 400 });
@@ -78,9 +78,9 @@ export async function PUT(request: Request) {
     }
 
     const result = await query(
-      `UPDATE "Standard" SET "standardName" = $1, division = $2, fees = $3, "batchYear" = $4, "updatedAt" = NOW() 
-       WHERE id = $5 RETURNING *`,
-      [standardName, division || null, fees || 0, batchYear || null, id]
+      `UPDATE "Standard" SET "standardName" = $1, division = $2, stream = $3, fees = $4, "batchYear" = $5, "updatedAt" = NOW() 
+       WHERE id = $6 RETURNING *`,
+      [standardName, division || null, stream || null, fees || 0, batchYear || null, id]
     );
 
     return NextResponse.json(result.rows[0]);

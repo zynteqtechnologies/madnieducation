@@ -141,7 +141,7 @@ export default function FinancialAidCoverage() {
         {/* Zakat Split */}
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold text-slate-900">Zakat Aid Stream</span>
+            <span className="text-sm font-semibold text-slate-900">Zakat Fund</span>
             <span className="text-sm font-semibold text-slate-700 tabular-nums">{zakatCoverageRate}%</span>
           </div>
           <div className="relative w-full h-1.5 bg-black/5 rounded-full overflow-hidden">
@@ -156,7 +156,7 @@ export default function FinancialAidCoverage() {
         {/* Lillah Split */}
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold text-slate-900">Lillah Aid Stream</span>
+            <span className="text-sm font-semibold text-slate-900">Lillah Fund</span>
             <span className="text-sm font-semibold text-slate-700 tabular-nums">{lillahCoverageRate}%</span>
           </div>
           <div className="relative w-full h-1.5 bg-black/5 rounded-full overflow-hidden">
@@ -172,7 +172,7 @@ export default function FinancialAidCoverage() {
       {/* Deficit Footer */}
       <div className="pt-3 border-t border-slate-200/40 flex items-end justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Remaining Deficit Gap</p>
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Amount Still Needed</p>
           <p className="text-lg font-black text-rose-500 tracking-tight">₹{remainingDeficit.toLocaleString('en-IN')}</p>
         </div>
       </div>

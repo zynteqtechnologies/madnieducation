@@ -37,6 +37,7 @@ interface Alumni {
   batchYear: string;
   studentId: string | null;
   createdAt: string;
+  standardName?: string;
 }
 
 export default function AlumniManagement() {
@@ -50,19 +51,21 @@ export default function AlumniManagement() {
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 10;
 
+  const [selectedStandard, setSelectedStandard] = useState('All');
+
   useEffect(() => {
     if (activeTab === 'eligibility') fetchEligible();
     else fetchAlumni();
-  }, [activeTab]);
+  }, [activeTab, selectedStandard]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, activeTab]);
+  }, [searchTerm, activeTab, selectedStandard]);
 
   const fetchEligible = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/subadmin/alumni?type=eligible');
+      const res = await fetch(`/api/subadmin/alumni?type=eligible&standard=${selectedStandard}`);
       if (res.ok) {
         const data = await res.json();
         setEligibleStudents(data.map((s: any) => ({ ...s, gmailId: '', linkedIn: '' })));
@@ -75,7 +78,7 @@ export default function AlumniManagement() {
   const fetchAlumni = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/subadmin/alumni?type=directory');
+      const res = await fetch(`/api/subadmin/alumni?type=directory&standard=${selectedStandard}`);
       if (res.ok) {
         const data = await res.json();
         setAlumniList(data);
@@ -134,7 +137,7 @@ export default function AlumniManagement() {
       {/* Tab Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white px-5 py-3 rounded-md border border-slate-200 shadow-sm shrink-0">
         <div>
-          <h2 className="text-lg font-bold text-slate-900 tracking-tight">Alumni Registry</h2>
+          <h2 className="text-lg font-bold text-slate-900 tracking-tight">Alumni Directory</h2>
           <p className="text-xs text-slate-500 font-medium uppercase tracking-wide">Graduation Management & Directory</p>
         </div>
         <div className="flex bg-slate-100 p-1 rounded-md">
@@ -151,6 +154,20 @@ export default function AlumniManagement() {
             Directory
           </button>
         </div>
+      </div>
+
+      {/* Standard Filters */}
+      <div className="flex bg-white px-5 py-2 rounded-md border border-slate-200 shadow-sm shrink-0 items-center space-x-2">
+        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wide mr-2">Filter Standard:</span>
+        {['All', '10th', '11th', '12th'].map(std => (
+          <button
+            key={std}
+            onClick={() => setSelectedStandard(std)}
+            className={`px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md transition-all border ${selectedStandard === std ? 'bg-amber-50 text-[#dac48b] border-amber-100' : 'bg-transparent text-slate-500 border-transparent hover:bg-slate-50'}`}
+          >
+            {std}
+          </button>
+        ))}
       </div>
 
       {loading ? (
@@ -306,6 +323,9 @@ export default function AlumniManagement() {
                           <div className="min-w-0">
                             <p className="text-[13px] font-bold text-slate-700 leading-snug group-hover:text-black transition-colors">{a.name}</p>
                             <div className="flex items-center space-x-2 mt-0.5">
+                              {a.standardName && (
+                                <span className="text-[10px] font-bold text-slate-400">{a.standardName}</span>
+                              )}
                               {a.linkedIn && (
                                 <a href={a.linkedIn} target="_blank" rel="noopener noreferrer" className="text-[10px] text-[#dac48b] hover:underline flex items-center font-medium">
                                   <Link2 size={10} className="mr-1" /> Profile Link

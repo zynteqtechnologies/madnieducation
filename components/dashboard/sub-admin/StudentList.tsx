@@ -108,7 +108,7 @@ export default function StudentList() {
       {/* Header & Controls Card */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white px-5 py-3 rounded-md border border-slate-200 shadow-sm shrink-0">
          <div>
-            <h2 className="text-lg font-bold text-slate-900 tracking-tight">Student Registry</h2>
+            <h2 className="text-lg font-bold text-slate-900 tracking-tight">Student Directory</h2>
             <p className="text-xs text-slate-500 font-medium uppercase tracking-wide">Institutional database for student records</p>
          </div>
 

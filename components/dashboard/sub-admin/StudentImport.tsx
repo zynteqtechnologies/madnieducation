@@ -139,7 +139,7 @@ export default function StudentImport() {
              <div className="w-16 h-16 bg-[#dac48b]/10 text-[#dac48b] rounded-md flex items-center justify-center mx-auto mb-4">
                 <FileUp size={32} />
              </div>
-             <h3 className="text-xl font-bold text-slate-900 mb-1">Student Registry Import</h3>
+             <h3 className="text-xl font-bold text-slate-900 mb-1">Import Students</h3>
              <p className="text-slate-500 text-xs font-medium uppercase tracking-wide mb-8">Select a standard and upload the corresponding Excel template.</p>
              
              <div className="space-y-4">

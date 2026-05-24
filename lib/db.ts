@@ -28,7 +28,7 @@ if (process.env.NODE_ENV === 'production') {
   if (!global._pool) {
     global._pool = new Pool({
       connectionString,
-      ssl: false, // Usually disabled for local dev
+      ssl: { rejectUnauthorized: false }, // Neon requires SSL even in local dev
     });
   }
   pool = global._pool;

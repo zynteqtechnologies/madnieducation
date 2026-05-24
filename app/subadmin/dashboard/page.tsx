@@ -2,29 +2,17 @@
 
 import React, { useState } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import StandardManagement from '@/components/dashboard/sub-admin/StandardManagement';
-import SetupWizard from '@/components/dashboard/sub-admin/SetupWizard';
-import StudentImport from '@/components/dashboard/sub-admin/StudentImport';
-import StudentList from '@/components/dashboard/sub-admin/StudentList';
-import NeedyAnalytics from '@/components/dashboard/sub-admin/NeedyAnalytics';
-import CostManagement from '@/components/dashboard/sub-admin/CostManagement';
-import AlumniManagement from '@/components/dashboard/super-admin/AlumniManagement';
-import TransactionHistory from '@/components/dashboard/sub-admin/TransactionHistory';
-import AlumniInteractionManager from '@/components/dashboard/sub-admin/AlumniInteractionManager';
-import PromotionHub from '@/components/dashboard/super-admin/PromotionHub';
 import FinancialAidCoverage from '@/components/dashboard/sub-admin/FinancialAidCoverage';
 import {
   Users,
   BookOpen,
   TrendingUp,
-  Activity,
   Calendar,
   ArrowUpRight,
   Landmark,
 } from 'lucide-react';
 
 export default function SubAdminDashboard() {
-  const [activeItem, setActiveItem] = useState('Dashboard');
   const [stats, setStats] = useState<any>(null);
 
   React.useEffect(() => {
@@ -39,45 +27,13 @@ export default function SubAdminDashboard() {
     } catch (err) { }
   };
 
-  const renderContent = () => {
-    switch (activeItem) {
-      case 'Dashboard':
-        return <OverviewTab stats={stats} />;
-      case 'Class Setup':
-        return <SetupWizard />;
-      case 'Academic':
-        return <AcademicRegistrySection />;
-      case 'Students':
-        return <StudentList />;
-      case 'Accounts':
-        return <AccountsHubSection />;
-      case 'Donations':
-        return <TransactionHistory />;
-      case 'Alumni':
-        return <AlumniHubSection />;
-      case 'Promotion':
-        return <PromotionHub />;
-      case 'Activity':
-        return (
-          <div className="py-20 text-center bg-white rounded-md border border-slate-100 shadow-sm">
-            <Activity size={48} className="mx-auto text-slate-200 mb-4" />
-            <h3 className="text-xl font-bold text-slate-900">System Activity</h3>
-            <p className="text-slate-400 text-sm font-medium">Tracking administrative logs and student synchronizations...</p>
-          </div>
-        );
-      default:
-        return <OverviewTab stats={stats} />;
-    }
-  };
-
   return (
     <DashboardLayout
       title="School administration"
       role="SUB_ADMIN"
-      activeItem={activeItem}
-      onNavigate={setActiveItem}
+      activeItem="Dashboard"
     >
-      {renderContent()}
+      <OverviewTab stats={stats} />
     </DashboardLayout>
   );
 }
@@ -94,11 +50,16 @@ export default function SubAdminDashboard() {
      • Right: Recent Contributions Ledger
 ───────────────────────────────────────────── */
 function OverviewTab({ stats }: { stats: any }) {
+  const iconStyle = {
+    color: 'text-[#8b7355]',
+    bg: 'bg-[#efebe1] border border-[#e4dcd1]'
+  };
+
   const displayStats = [
-    { label: 'Total Students', value: stats?.totalStudents ?? 0, icon: <Users size={15} />, color: 'text-amber-600', bg: 'bg-amber-50' },
-    { label: 'Active Standards', value: stats?.activeStandards ?? 0, icon: <BookOpen size={15} />, color: 'text-amber-600', bg: 'bg-amber-50' },
-    { label: 'Total Donations', value: `₹${((stats?.totalDonations || 0) / 100000).toFixed(1)}L`, icon: <TrendingUp size={15} />, color: 'text-amber-600', bg: 'bg-amber-50' },
-    { label: 'Fee Potential', value: `₹${((stats?.totalFeesPotential || 0) / 100000).toFixed(1)}L`, icon: <ArrowUpRight size={15} />, color: 'text-amber-600', bg: 'bg-amber-50' },
+    { label: 'Total Students', value: stats?.totalStudents ?? 0, icon: <Users size={20} />, ...iconStyle },
+    { label: 'Active Standards', value: stats?.activeStandards ?? 0, icon: <BookOpen size={20} />, ...iconStyle },
+    { label: 'Total Donations', value: `₹${((stats?.totalDonations || 0) / 100000).toFixed(1)}L`, icon: <TrendingUp size={20} />, ...iconStyle },
+    { label: 'Fee Potential', value: `₹${((stats?.totalFeesPotential || 0) / 100000).toFixed(1)}L`, icon: <ArrowUpRight size={20} />, ...iconStyle },
   ];
 
   // ── Donut chart calculations ──────────────────
@@ -146,16 +107,14 @@ function OverviewTab({ stats }: { stats: any }) {
     <div className="lg:h-full lg:overflow-hidden flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-4 duration-700">
 
       {/* ── HEADER ───────────────────────────────── */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-6 rounded-md border border-slate-200 shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white px-5 py-3 rounded-md border border-slate-200 shadow-sm shrink-0">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 tracking-tight flex items-center">
-            Dashboard Overview
-          </h2>
-          <p className="text-xs text-slate-400 font-medium uppercase tracking-widest mt-1">Institutional Command Center</p>
+          <h2 className="text-lg font-bold text-slate-900 tracking-tight">Dashboard Overview</h2>
+          <p className="text-xs text-slate-500 font-medium uppercase tracking-wide">School Overview</p>
         </div>
-        <div className="flex items-center space-x-2.5 bg-slate-100 px-4 py-2 rounded-md border border-slate-200/50">
+        <div className="flex items-center space-x-2 bg-slate-100 px-3 py-1.5 rounded-md border border-slate-200/50">
           <Calendar size={13} className="text-[#67C090]" />
-          <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Academic Session 2026-27</span>
+          <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Academic Session 2026-27</span>
         </div>
       </div>
 
@@ -174,10 +133,10 @@ function OverviewTab({ stats }: { stats: any }) {
               key={i}
               className="bg-white px-3 py-2.5 rounded-md border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 group flex items-center space-x-2.5"
             >
-              <div className={`${stat.bg} ${stat.color} w-10 h-10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform shrink-0`}>
+              <div className={`${stat.bg} ${stat.color} w-12 h-12 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shrink-0`}>
                 {stat.icon}
               </div>
-              <div className="min-w-0">
+              <div className="min-w-0 ml-1">
                 <p className="text-xs font-normal text-slate-500 uppercase tracking-wide leading-tight truncate">{stat.label}</p>
                 <h3 className="text-base font-black text-slate-900 tracking-tight leading-snug">{stat.value}</h3>
               </div>
@@ -195,7 +154,7 @@ function OverviewTab({ stats }: { stats: any }) {
           <div className="flex items-center justify-between shrink-0">
             <p className="text-sm font-black text-slate-900 uppercase tracking-wide flex items-center gap-1.5">
               <Landmark size={15} className="text-[#dac48b]" />
-              Donation Analytics
+              Donation Stats
             </p>
             <span className="text-xs font-semibold bg-amber-50 text-[#dac48b] px-2.5 py-1 rounded-lg uppercase tracking-wide">Live</span>
           </div>
@@ -295,7 +254,7 @@ function OverviewTab({ stats }: { stats: any }) {
         {/* RIGHT: Recent Contributions Ledger */}
         <div className="bg-white p-4 rounded-md shadow-sm flex flex-col min-h-[240px] overflow-hidden">
           <div className="flex items-center justify-between mb-3 shrink-0">
-            <p className="text-sm font-black text-slate-900 uppercase tracking-wide">Recent Contributions Ledger</p>
+            <p className="text-sm font-black text-slate-900 uppercase tracking-wide">Recent Donations</p>
             <span className="text-xs font-semibold text-slate-400">up to 10 entries</span>
           </div>
 
@@ -311,7 +270,7 @@ function OverviewTab({ stats }: { stats: any }) {
                   >
                     {/* Avatar + name */}
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="w-7 h-7 rounded-lg bg-amber-50 flex items-center justify-center border border-[#b46c3833] text-xs text-amber-600 shrink-0">
+                      <div className="w-8 h-8 rounded-xl bg-[#efebe1] border border-[#e4dcd1] text-[#8b7355] flex items-center justify-center text-xs shrink-0 font-bold shadow-sm">
                         {t.donorName ? t.donorName[0].toUpperCase() : 'D'}
                       </div>
                       <div className="min-w-0">
@@ -347,77 +306,4 @@ function OverviewTab({ stats }: { stats: any }) {
 
 /* ─── Other tab section components ────────── */
 
-function AccountsHubSection() {
-  const [activeTab, setActiveTab] = useState<'sponsorships' | 'projects'>('sponsorships');
-  return (
-    <div className="lg:h-full lg:overflow-hidden flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white px-5 py-3 rounded-md border border-slate-200 shadow-sm shrink-0">
-        <div>
-          <h2 className="text-lg font-bold text-slate-900 tracking-tight">Accounts Hub</h2>
-          <p className="text-xs text-slate-500 font-medium uppercase tracking-wide">Trust Fund & Project Management</p>
-        </div>
-        <div className="flex bg-slate-100 p-1 rounded-md">
-          <button onClick={() => setActiveTab('sponsorships')} className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${activeTab === 'sponsorships' ? 'bg-[#18181b] text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
-            Sponsorships
-          </button>
-          <button onClick={() => setActiveTab('projects')} className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${activeTab === 'projects' ? 'bg-[#18181b] text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
-            Projects
-          </button>
-        </div>
-      </div>
-      <div className="flex-1 min-h-0 lg:overflow-hidden">
-        {activeTab === 'sponsorships' ? <NeedyAnalytics /> : <CostManagement />}
-      </div>
-    </div>
-  );
-}
 
-function AlumniHubSection() {
-  const [activeTab, setActiveTab] = useState<'profiles' | 'interactions'>('profiles');
-  return (
-    <div className="lg:h-full lg:overflow-hidden flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white px-5 py-3 rounded-md border border-slate-200 shadow-sm shrink-0">
-        <div>
-          <h2 className="text-lg font-bold text-slate-900 tracking-tight">Alumni Hub</h2>
-          <p className="text-xs text-slate-500 font-medium uppercase tracking-wide">Unified Network Management</p>
-        </div>
-        <div className="flex bg-slate-100 p-1 rounded-md">
-          <button onClick={() => setActiveTab('profiles')} className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${activeTab === 'profiles' ? 'bg-[#18181b] text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
-            Profiles
-          </button>
-          <button onClick={() => setActiveTab('interactions')} className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${activeTab === 'interactions' ? 'bg-[#18181b] text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
-            Interactions
-          </button>
-        </div>
-      </div>
-      <div className="flex-1 min-h-0 lg:overflow-hidden">
-        {activeTab === 'profiles' ? <AlumniManagement /> : <AlumniInteractionManager />}
-      </div>
-    </div>
-  );
-}
-
-function AcademicRegistrySection() {
-  const [activeTab, setActiveTab] = useState<'standards' | 'admissions'>('standards');
-  return (
-    <div className="lg:h-full lg:overflow-hidden flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white px-5 py-3 rounded-md border border-slate-200 shadow-sm shrink-0">
-        <div>
-          <h2 className="text-lg font-bold text-slate-900 tracking-tight">Academic Registry</h2>
-          <p className="text-xs text-slate-500 font-medium uppercase tracking-wide">Grade Structures & Student Intake</p>
-        </div>
-        <div className="flex bg-slate-100 p-1 rounded-md overflow-x-auto custom-scrollbar">
-          <button onClick={() => setActiveTab('standards')} className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all whitespace-nowrap ${activeTab === 'standards' ? 'bg-[#18181b] text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
-            Grade Configurations
-          </button>
-          <button onClick={() => setActiveTab('admissions')} className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all whitespace-nowrap ${activeTab === 'admissions' ? 'bg-[#18181b] text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
-            Student Admissions
-          </button>
-        </div>
-      </div>
-      <div className="flex-1 min-h-0 lg:overflow-hidden">
-        {activeTab === 'standards' ? <StandardManagement /> : <StudentImport />}
-      </div>
-    </div>
-  );
-}
