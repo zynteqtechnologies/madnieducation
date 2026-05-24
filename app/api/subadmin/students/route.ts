@@ -11,10 +11,19 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url);
     const standardId = searchParams.get('standardId');
-    const academicYearId = searchParams.get('academicYearId');
+    let academicYearId = searchParams.get('academicYearId');
 
     let queryText = '';
     const params: any[] = [session.schoolId];
+
+    if (!academicYearId) {
+      const activeYearRes = await pool.query(
+        `SELECT id FROM "AcademicYear" WHERE "isActive" = true LIMIT 1`
+      );
+      if (activeYearRes.rows.length > 0) {
+        academicYearId = activeYearRes.rows[0].id;
+      }
+    }
 
     if (academicYearId) {
       queryText = `

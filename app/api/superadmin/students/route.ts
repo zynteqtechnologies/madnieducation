@@ -30,7 +30,7 @@ export async function GET(request: Request) {
       });
 
       const mapped = enrollments.map(e => ({
-        ...e.student,
+        ...(e.student as any),
         rank: e.rank,
         percentage: e.percentage,
         enrollmentStatus: e.status
