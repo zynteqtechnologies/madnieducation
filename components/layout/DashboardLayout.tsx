@@ -127,7 +127,7 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
     { name: 'Subadmins', icon: <Users size={18} />, role: ['SUPER_ADMIN'] },
     { name: 'Academic Years', icon: <Calendar size={18} />, role: ['SUPER_ADMIN'] },
     { name: 'Promotion', icon: <ArrowUpCircle size={18} />, role: ['SUB_ADMIN'] },
-    { name: 'Events', icon: <CalendarDays size={18} />, role: ['SUPER_ADMIN', 'SUB_ADMIN'] },
+    { name: 'Events', icon: <CalendarDays size={18} />, role: ['SUB_ADMIN'] },
   ].filter(item => item.role.includes(role));
 
   const getLayoutColors = () => {
