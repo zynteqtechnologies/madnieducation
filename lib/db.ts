@@ -22,7 +22,7 @@ if (process.env.NODE_ENV === 'production') {
     ssl: { rejectUnauthorized: false }, // Common for cloud DBs, adjust if needed
     max: 20, // Limit connections per serverless instance
     idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 2000,
+    connectionTimeoutMillis: 10000,
   });
 } else {
   if (!global._pool) {
