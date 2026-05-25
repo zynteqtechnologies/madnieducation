@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { students } from '@/lib/db/schema';
+import pool from '@/lib/db';
 import { getSessionFromCookies } from '@/lib/auth';
-import { eq, and } from 'drizzle-orm';
 
 export async function GET(request: Request) {
   try {
@@ -18,33 +16,29 @@ export async function GET(request: Request) {
     }
 
     if (academicYearId) {
-      const enrollments = await db.query.studentEnrollments.findMany({
-        where: (se, { and, eq }) => and(
-          eq(se.standardId, standardId),
-          eq(se.academicYearId, academicYearId),
-          eq(se.status, 'ACTIVE')
-        ),
-        with: {
-          student: true
-        }
-      });
+      const enrollmentsRes = await pool.query(`
+        SELECT s.*, se."rank", se."percentage", se."status" as "enrollmentStatus"
+        FROM "StudentEnrollment" se
+        JOIN "Student" s ON se."studentId" = s."id"
+        WHERE se."standardId" = $1 AND se."academicYearId" = $2 AND se."status" = 'ACTIVE'
+        ORDER BY se."percentage" DESC NULLS LAST
+      `, [standardId, academicYearId]);
 
-      const mapped = enrollments.map(e => ({
-        ...(e.student as any),
-        rank: e.rank,
-        percentage: e.percentage,
-        enrollmentStatus: e.status
-      }));
-
-      return NextResponse.json(mapped);
-    } else {
-      const standardStudents = await db.query.students.findMany({
-        where: eq(students.standardId, standardId),
-        orderBy: [students.name],
-      });
-
-      return NextResponse.json(standardStudents);
+      if (enrollmentsRes.rows.length > 0) {
+        return NextResponse.json(enrollmentsRes.rows);
+      }
     }
+
+    // Fallback if no enrollments exist for that batch (or batch is not provided)
+    const fallbackRes = await pool.query(`
+      SELECT s.*, NULL as "rank", NULL as "percentage", 'ACTIVE' as "enrollmentStatus"
+      FROM "Student" s
+      WHERE s."standardId" = $1
+      ORDER BY s."name" ASC
+    `, [standardId]);
+
+    return NextResponse.json(fallbackRes.rows);
+
   } catch (error) {
     console.error('SuperAdmin students fetch error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

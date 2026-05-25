@@ -120,7 +120,7 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
     { name: 'Academic', icon: <Layers size={18} />, role: ['SUB_ADMIN'] },
     { name: 'Accounts', icon: <Wallet size={18} />, role: ['SUB_ADMIN'] },
     { name: 'Donations', icon: <History size={18} />, role: ['SUB_ADMIN'] },
-    { name: 'Students', icon: <Users size={18} />, role: ['SUB_ADMIN'] },
+    { name: 'Students', icon: <Users size={18} />, role: ['SUPER_ADMIN', 'SUB_ADMIN'] },
     { name: 'Careers', icon: <Briefcase size={18} />, role: ['ALUMNI'] },
     { name: 'Mentorship', icon: <UserCheck size={18} />, role: ['ALUMNI'] },
     { name: 'Alumni', icon: <GraduationCap size={18} />, role: ['SUB_ADMIN'] },
