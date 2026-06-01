@@ -25,10 +25,20 @@ export async function GET() {
       pool.query(mentorshipQuery, [session.userId])
     ]);
 
+    const donationQuery = `SELECT COALESCE(SUM(amount), 0) as total FROM "Transaction" WHERE "donorEmail" = $1 AND status = 'SUCCESS'`;
+    const donationRes = await pool.query(donationQuery, [alumni.email]);
+    const totalDonated = parseFloat(donationRes.rows[0].total) || 0;
+
+    const urgentCauseQuery = `SELECT * FROM "Expense" WHERE "type" IN ('CONSTRUCTION', 'EVENT') ORDER BY "createdAt" DESC LIMIT 1`;
+    const urgentCauseRes = await pool.query(urgentCauseQuery);
+    const urgentCause = urgentCauseRes.rows[0] || null;
+
     return NextResponse.json({
       alumni,
+      urgentCause,
       stats: {
-        totalPosts: parseInt(careerRes.rows[0].count) + parseInt(mentorshipRes.rows[0].count)
+        totalPosts: parseInt(careerRes.rows[0].count) + parseInt(mentorshipRes.rows[0].count),
+        totalDonated
       }
     });
 

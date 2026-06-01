@@ -10,5 +10,5 @@ export default function AlumniLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <>{children}</>;
+  return <div className="alumni-portal h-full">{children}</div>;
 }

@@ -139,6 +139,7 @@ export const careerOpportunities = pgTable('CareerOpportunity', {
   role: varchar('role', { length: 255 }).notNull(),
   relation: text('relation'),
   description: text('description'),
+  category: varchar('category', { length: 100 }),
   status: varchar('status', { length: 20 }).default('PENDING'), // PENDING, APPROVED, REJECTED
   createdAt: timestamp('createdAt').defaultNow(),
   updatedAt: timestamp('updatedAt').defaultNow(),
@@ -153,6 +154,7 @@ export const mentorshipOffers = pgTable('MentorshipOffer', {
   description: text('description').notNull(),
   targetStudent: text('targetStudent'),
   availability: text('availability'),
+  category: varchar('category', { length: 100 }),
   status: varchar('status', { length: 20 }).default('PENDING'), // PENDING, APPROVED, REJECTED
   createdAt: timestamp('createdAt').defaultNow(),
   updatedAt: timestamp('updatedAt').defaultNow(),

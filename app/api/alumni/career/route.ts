@@ -24,7 +24,7 @@ export async function POST(request: Request) {
     const session = await getSessionFromCookies('ALUMNI');
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { type, companyName, companyLink, role, relation, description } = await request.json();
+    const { type, companyName, companyLink, role, relation, description, category } = await request.json();
 
     if (!type || !companyName || !role) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -40,10 +40,10 @@ export async function POST(request: Request) {
 
     const result = await pool.query(`
       INSERT INTO "CareerOpportunity" (
-        "alumniId", "schoolId", "type", "companyName", "companyLink", "role", "relation", "description", "status"
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'PENDING')
+        "alumniId", "schoolId", "type", "companyName", "companyLink", "role", "relation", "description", "category", "status"
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'PENDING')
       RETURNING *
-    `, [session.userId, schoolId, type, companyName, companyLink, role, relation, description]);
+    `, [session.userId, schoolId, type, companyName, companyLink, role, relation, description, category]);
 
     return NextResponse.json(result.rows[0]);
   } catch (error) {

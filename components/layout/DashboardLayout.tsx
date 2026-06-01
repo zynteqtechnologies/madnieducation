@@ -31,7 +31,13 @@ import {
   Sparkles,
   Wallet,
   Calendar,
-  ArrowUpCircle
+  ArrowUpCircle,
+  UserSearch,
+  Handshake,
+  Trophy,
+  BookOpen,
+  Heart,
+  PieChart
 } from 'lucide-react';
 
 interface DashboardLayoutProps {
@@ -113,8 +119,9 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
 
   const menuItems = [
     { name: 'Dashboard', icon: <LayoutDashboard size={18} />, role: ['SUPER_ADMIN', 'SUB_ADMIN', 'ALUMNI'] },
-    { name: 'Profile', icon: <User size={18} />, role: ['ALUMNI'] },
-    { name: 'Schools', icon: <Globe size={18} />, role: ['ALUMNI'] },
+    { name: 'Find Alumni', icon: <UserSearch size={18} />, role: ['ALUMNI'] },
+    { name: 'Give Back', icon: <Heart size={18} />, role: ['ALUMNI'] },
+    { name: 'My Impact', icon: <PieChart size={18} />, role: ['ALUMNI'] },
     { name: 'Trusts', icon: <Building2 size={18} />, role: ['SUPER_ADMIN'] },
     { name: 'Schools', icon: <School size={18} />, role: ['SUPER_ADMIN'] },
     { name: 'Class Setup', icon: <Sparkles size={18} />, role: ['SUB_ADMIN'] },
@@ -123,7 +130,9 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
     { name: 'Donations', icon: <History size={18} />, role: ['SUB_ADMIN'] },
     { name: 'Students', icon: <Users size={18} />, role: ['SUPER_ADMIN', 'SUB_ADMIN'] },
     { name: 'Careers', icon: <Briefcase size={18} />, role: ['ALUMNI'] },
-    { name: 'Mentorship', icon: <UserCheck size={18} />, role: ['ALUMNI'] },
+    { name: 'Mentorship', icon: <Handshake size={18} />, role: ['ALUMNI'] },
+    { name: 'Achievements', icon: <Trophy size={18} />, role: ['ALUMNI'] },
+    { name: 'Blogs', icon: <BookOpen size={18} />, role: ['ALUMNI'] },
     { name: 'Alumni', icon: <GraduationCap size={18} />, role: ['SUB_ADMIN'] },
     { name: 'Subadmins', icon: <UserCog size={18} />, role: ['SUPER_ADMIN'] },
     { name: 'Academic Years', icon: <Calendar size={18} />, role: ['SUPER_ADMIN'] },
@@ -140,10 +149,10 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
         logoBg: 'bg-[#AAFFC7]/15'
       };
       case 'ALUMNI': return {
-        sidebar: 'bg-gradient-to-br from-amber-700 via-orange-800 to-slate-900 rounded-r-[32px] border-r-0',
-        active: 'bg-amber-500 text-white rounded-xl shadow-lg shadow-amber-900/20',
-        hover: 'hover:bg-white/10 text-amber-100 hover:text-white',
-        logoBg: 'bg-amber-600/20'
+        sidebar: 'bg-white/30 text-slate-700',
+        active: 'bg-blue-600 text-white rounded-xl shadow-md shadow-blue-600/10',
+        hover: 'hover:bg-white/20 text-slate-600 hover:text-slate-900',
+        logoBg: 'bg-blue-500/10'
       };
       default: return {
         sidebar: 'bg-[#0b1525] rounded-r-[32px] border-r-0',
@@ -171,9 +180,9 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
       : role === 'SUB_ADMIN'
         ? 'bg-subadmin-gradient'
         : role === 'ALUMNI'
-          ? 'bg-gradient-to-br from-[#faf8f5] via-[#f5f1ea] to-[#ede7db]'
+          ? 'bg-gradient-to-tr from-[#5a8ba8] via-[#a8c3d4] to-[#e1e9ee]'
           : 'bg-[#F1F5F9]'
-      } ${role === 'SUB_ADMIN' ? 'subadmin-portal' : ''} text-slate-900 font-inter antialiased overflow-x-hidden`}>
+      } ${role === 'SUB_ADMIN' ? 'subadmin-portal' : ''} text-slate-900 font-inter antialiased overflow-x-clip`}>
 
       {role === 'SUB_ADMIN' ? (
         <div className="flex flex-col min-h-screen">
@@ -317,101 +326,165 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
       ) : (
         <>
           {/* Mobile Backdrop */}
-          {isMobileMenuOpen && (
+          {role !== 'ALUMNI' && isMobileMenuOpen && (
             <div
               className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[55] lg:hidden animate-in fade-in duration-300"
               onClick={() => setIsMobileMenuOpen(false)}
             />
           )}
 
-          {/* Sidebar - Clean & Sober */}
-          <aside className={`fixed top-0 left-0 h-full z-[60] ${colors.sidebar} transition-all duration-300 ease-in-out 
-            ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} 
-            ${isSidebarOpen ? 'w-64' : 'lg:w-20 w-64'} flex flex-col shadow-xl`}>
+          {/* Minimalist Bottom Dock (Alumni Portal Only) */}
+          {role === 'ALUMNI' && (
+            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center justify-center pointer-events-none w-full max-w-lg px-4">
+              <div className="flex items-center space-x-1.5 bg-white/40 backdrop-blur-xl border border-white/60 shadow-2xl rounded-full px-4 py-2 pointer-events-auto transition-all hover:scale-[1.01] hover:bg-white/50">
+                {menuItems.map((item) => {
+                  const isActive = activeItem === item.name;
+                  return (
+                    <div key={item.name} className="relative group">
+                      {/* Tooltip */}
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 px-3 py-1.5 bg-slate-900/90 backdrop-blur-md text-white text-[10px] font-bold rounded-xl opacity-0 pointer-events-none group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 transition-all duration-200 whitespace-nowrap shadow-lg">
+                        {item.name}
+                      </div>
 
-            {/* Simple Logo Section */}
-            <div className={`h-20 flex items-center transition-all duration-300 ease-in-out ${isSidebarOpen ? 'px-6' : 'px-4'} ${role === 'SUPER_ADMIN' ? '' : 'border-b border-white/5'} relative z-10`}>
-              <div className="flex items-center space-x-3">
-                <div className={`relative w-12 h-12 flex items-center justify-center shrink-0 rounded-md ${colors.logoBg}`}>
-                  <Image src="/madni-logo.png" alt="Logo" fill className="object-contain" priority />
+                      <button
+                        onClick={() => handleNavigate(item.name)}
+                        className={`w-11 h-11 rounded-full flex items-center justify-center transition-all duration-300 relative ${isActive
+                          ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30 scale-105'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-white/30 hover:scale-105'
+                          }`}
+                      >
+                        {item.icon}
+                      </button>
+                    </div>
+                  );
+                })}
+
+                {/* Separator */}
+                <div className="h-6 w-px bg-slate-300/60 mx-1"></div>
+
+                {/* Logout Action in Dock */}
+                <div className="relative group">
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 px-3 py-1.5 bg-red-600 text-white text-[10px] font-bold rounded-xl opacity-0 pointer-events-none group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 transition-all duration-200 whitespace-nowrap shadow-lg">
+                    Logout
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="w-11 h-11 rounded-full flex items-center justify-center text-slate-600 hover:text-red-600 hover:bg-white/30 hover:scale-105 transition-all duration-300"
+                  >
+                    <LogOut size={18} />
+                  </button>
                 </div>
-                {isSidebarOpen && (
-                  <span className="text-white font-bold tracking-tight text-sm">MadniEducation</span>
-                )}
               </div>
             </div>
+          )}
 
-            {/* Menu Items - Small Text */}
-            <nav className="flex-1 px-3 py-6 space-y-1 relative z-10">
-              {menuItems.map((item) => (
-                <button
-                  key={item.name}
-                  onClick={() => handleNavigate(item.name)}
-                  className={`w-full flex items-center px-4 py-3 rounded-md transition-all duration-200 relative group ${activeItem === item.name
-                    ? colors.active
-                    : `${colors.hover} hover:text-white`
-                    }`}
-                >
-                  <div className="flex-shrink-0 relative z-10 transition-transform duration-200 group-hover:scale-110 group-hover:rotate-3">
-                    {item.icon}
-                  </div>
-                  {isSidebarOpen && (
-                    <span className="ml-3 text-[13px] font-medium tracking-tight whitespace-nowrap relative z-10 transition-transform duration-200 group-hover:translate-x-0.5">{item.name}</span>
-                  )}
-                </button>
-              ))}
-            </nav>
+          {/* Sidebar - Clean & Sober */}
+          {role !== 'ALUMNI' && (
+            <aside className={`fixed z-[60] transition-all duration-300 ease-in-out 
+              top-0 left-0 h-full shadow-xl
+              ${colors.sidebar}
+              ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} 
+              ${isSidebarOpen ? 'w-64' : 'lg:w-20 w-64'} flex flex-col`}>
 
-            {/* Sidebar Footer */}
-            <div className={`p-4 mt-auto mb-2 relative z-10`}>
-              <div className="flex items-center justify-between px-2">
+              {/* Simple Logo Section */}
+              <div className={`h-20 flex items-center transition-all duration-300 ease-in-out ${isSidebarOpen ? 'px-6' : 'px-4'} ${role === 'SUPER_ADMIN' ? '' : 'border-b border-white/5'} relative z-10`}>
                 <div className="flex items-center space-x-3">
-                  <div className={`w-9 h-9 rounded-full ${role === 'ALUMNI' ? 'bg-amber-600' : 'bg-black'} border border-white/10 flex items-center justify-center text-white font-bold text-sm shrink-0`}>
-                    {userData?.name ? userData.name[0] : (role === 'ALUMNI' ? 'A' : 'S')}
+                  <div className={`relative w-12 h-12 flex items-center justify-center shrink-0 rounded-md ${colors.logoBg}`}>
+                    <Image src="/madni-logo.png" alt="Logo" fill className="object-contain" priority />
                   </div>
                   {isSidebarOpen && (
+                    <span className="text-white font-bold tracking-tight text-sm">MadniEducation</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Menu Items - Small Text */}
+              <div className="flex-1 px-3 py-6 overflow-y-auto space-y-4 relative z-10 scrollbar-none">
+                <div>
+                  <nav className="space-y-1">
+                    {menuItems.map((item) => (
+                      <button
+                        key={item.name}
+                        onClick={() => handleNavigate(item.name)}
+                        className={`w-full flex items-center px-4 py-2.5 rounded-xl transition-all duration-200 relative group ${activeItem === item.name
+                          ? colors.active
+                          : `${colors.hover} hover:text-slate-900`
+                          }`}
+                      >
+                        <div className="flex-shrink-0 relative z-10 transition-transform duration-200 group-hover:scale-105">
+                          {item.icon}
+                        </div>
+                        {isSidebarOpen && (
+                          <span className="ml-3 text-[13px] font-semibold tracking-tight whitespace-nowrap relative z-10 transition-transform duration-200 group-hover:translate-x-0.5">{item.name}</span>
+                        )}
+                      </button>
+                    ))}
+                  </nav>
+                </div>
+              </div>
+
+              {/* Sidebar Footer */}
+              <div className={`p-4 mt-auto mb-2 relative z-10`}>
+                <div className="flex items-center justify-between px-2">
+                  <div className="flex items-center space-x-3">
+                    <div className={`w-9 h-9 rounded-full bg-black border border-white/10 flex items-center justify-center text-white font-bold text-sm shrink-0`}>
+                      {userData?.name ? userData.name[0] : 'S'}
+                    </div>
+                    {isSidebarOpen && (
+                      <button
+                        onClick={handleLogout}
+                        className="flex items-center space-x-2 text-slate-400 hover:text-white transition-colors text-[13px] font-medium"
+                      >
+                        <LogOut size={16} />
+                        <span>Logout</span>
+                      </button>
+                    )}
+                  </div>
+                  {!isSidebarOpen && (
                     <button
                       onClick={handleLogout}
-                      className="flex items-center space-x-2 text-slate-400 hover:text-white transition-colors text-[13px] font-medium"
+                      className={`p-2 rounded-lg bg-black/40 text-slate-400 hover:text-white transition-colors`}
+                      title="Logout"
                     >
                       <LogOut size={16} />
-                      <span>Logout</span>
                     </button>
                   )}
                 </div>
-                {!isSidebarOpen && (
-                  <button
-                    onClick={handleLogout}
-                    className={`p-2 rounded-lg ${role === 'ALUMNI' ? 'bg-amber-950/40' : 'bg-black/40'} text-slate-400 hover:text-white transition-colors`}
-                    title="Logout"
-                  >
-                    <LogOut size={16} />
-                  </button>
-                )}
               </div>
-            </div>
-          </aside>
+            </aside>
+          )}
 
           {/* Main Content Area */}
           <main className={`transition-all duration-300 ease-in-out 
-            ${isSidebarOpen ? 'lg:pl-64' : 'lg:pl-20'} 
+            ${role === 'ALUMNI'
+              ? 'lg:pl-0 pl-0 pb-28'
+              : (isSidebarOpen ? 'lg:pl-64' : 'lg:pl-20')
+            } 
             min-h-screen flex flex-col w-full`}>
 
-            {/* Topbar - Simple & Sober */}
-            <header className="sticky top-0 z-40 h-20 flex items-center px-4 md:px-6 justify-between transition-all bg-transparent border-b-0 shadow-none">
-              <div className="flex items-center space-x-2 md:space-x-4">
-                <button
-                  onClick={() => setIsMobileMenuOpen(true)}
-                  className="p-2 text-slate-400 hover:text-slate-600 transition-colors lg:hidden"
-                >
-                  <Menu size={20} />
-                </button>
-                <button
-                  onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                  className="p-2 transition-all hidden lg:flex items-center justify-center rounded-lg border border-slate-200 bg-white/80 hover:bg-white text-slate-500 hover:text-slate-800 shadow-sm"
-                >
-                  {isSidebarOpen ? <X size={18} /> : <Menu size={18} />}
-                </button>
+            {/* Topbar - Premium & Glassmorphic */}
+            <header className={`sticky top-0 z-40 h-20 px-4 md:px-6 transition-all ${role === 'ALUMNI'
+                ? 'bg-white/40 backdrop-blur-md border-b border-white/50 shadow-sm'
+                : 'bg-white/70 backdrop-blur-md border-b border-slate-200/50 shadow-sm'
+              }`}>
+              <div className="w-full max-w-7xl mx-auto h-full flex items-center justify-between">
+                <div className="flex items-center space-x-2 md:space-x-4">
+                  {role !== 'ALUMNI' && (
+                  <>
+                    <button
+                      onClick={() => setIsMobileMenuOpen(true)}
+                      className="p-2 text-slate-400 hover:text-slate-600 transition-colors lg:hidden"
+                    >
+                      <Menu size={20} />
+                    </button>
+                    <button
+                      onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                      className="p-2 transition-all hidden lg:flex items-center justify-center rounded-lg border border-slate-200 bg-white/80 hover:bg-white text-slate-500 hover:text-slate-800 shadow-sm"
+                    >
+                      {isSidebarOpen ? <X size={18} /> : <Menu size={18} />}
+                    </button>
+                  </>
+                )}
                 <h2 className="text-lg md:text-xl font-bold text-[#0b1525]">{getHeaderTitle()}</h2>
               </div>
 
@@ -422,30 +495,66 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
                     type="text"
                     placeholder="Search..."
                     className={`text-sm outline-none transition-all pl-9 pr-4 py-2 w-64 ${role === 'ALUMNI'
-                      ? 'bg-[#FAF0E6]/80 hover:bg-[#FAF0E6] focus:bg-white border-0 rounded-xl focus:ring-1 focus:ring-amber-500/30 text-slate-700 placeholder-slate-400'
+                      ? 'bg-white/50 hover:bg-white/70 focus:bg-white border border-white/60 rounded-xl focus:ring-1 focus:ring-blue-500/30 text-slate-700 placeholder-slate-400 shadow-sm'
                       : 'bg-[#EBF2F7]/80 hover:bg-[#EBF2F7] focus:bg-white border-0 rounded-xl focus:ring-1 focus:ring-[#3f72af]/30 text-slate-700 placeholder-slate-400'
                       }`}
                   />
                 </div>
 
-                <button className="relative p-2 transition-colors text-slate-400 hover:text-amber-600">
+                <button className={`relative p-2 transition-colors ${role === 'ALUMNI' ? 'text-slate-600 hover:text-blue-600' : 'text-slate-400 hover:text-[#3f72af]'}`}>
                   <Bell size={20} />
-                  <span className={`absolute top-1.5 right-1.5 w-2 h-2 rounded-full border-2 border-white ${role === 'SUPER_ADMIN' ? 'bg-[#3f72af]' : 'bg-amber-500'
+                  <span className={`absolute top-1.5 right-1.5 w-2 h-2 rounded-full border-2 border-white ${role === 'SUPER_ADMIN' ? 'bg-[#3f72af]' : role === 'ALUMNI' ? 'bg-blue-600' : 'bg-amber-500'
                     }`}></span>
                 </button>
 
                 <div className="h-6 w-px bg-slate-200/80 mx-1"></div>
 
-                {/* Simple Profile */}
-                {role === 'ALUMNI' ? (
-                  <div className="w-9 h-9 rounded-lg bg-orange-600 text-white flex items-center justify-center font-bold text-xs shadow-sm cursor-pointer hover:bg-orange-700 transition-all">
-                    {userData?.name ? userData.name[0] : 'A'}
+                {/* Profile & Dropdown */}
+                <div className="relative">
+                  <div
+                    className={`w-9 h-9 rounded-lg text-white flex items-center justify-center font-bold text-xs cursor-pointer transition-all ${
+                      role === 'ALUMNI' 
+                        ? 'bg-blue-600 hover:bg-blue-700 shadow-md'
+                        : 'bg-[#0b1525] hover:bg-[#16325c] shadow-sm'
+                    }`}
+                    onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+                  >
+                    {userData?.name ? userData.name[0] : (role === 'ALUMNI' ? 'A' : 'S')}
                   </div>
-                ) : (
-                  <div className="w-9 h-9 rounded-lg bg-[#0b1525] text-white flex items-center justify-center font-bold text-xs shadow-sm cursor-pointer hover:bg-[#16325c] transition-all">
-                    {userData?.name ? userData.name[0] : 'S'}
-                  </div>
-                )}
+
+                  {/* Dropdown Menu */}
+                  {isProfileDropdownOpen && (
+                    <>
+                      <div className="fixed inset-0 z-10" onClick={() => setIsProfileDropdownOpen(false)}></div>
+                      <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-200/60 rounded-2xl shadow-xl py-2 z-20 animate-in fade-in slide-in-from-top-2 duration-200">
+                        {role === 'ALUMNI' && (
+                          <button
+                            onClick={() => {
+                              setIsProfileDropdownOpen(false);
+                              handleNavigate('Profile');
+                            }}
+                            className="w-full text-left px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors flex items-center space-x-2"
+                          >
+                            <User size={14} className="text-slate-500" />
+                            <span>Profile</span>
+                          </button>
+                        )}
+
+                        <button
+                          onClick={() => {
+                            setIsProfileDropdownOpen(false);
+                            handleLogout();
+                          }}
+                          className={`w-full text-left px-4 py-2.5 text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors flex items-center space-x-2 ${role === 'ALUMNI' ? 'border-t border-slate-100' : ''}`}
+                        >
+                          <LogOut size={14} className="text-red-500" />
+                          <span>Logout</span>
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
               </div>
             </header>
 

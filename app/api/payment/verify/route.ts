@@ -30,6 +30,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid payment signature' }, { status: 400 });
     }
 
+    // Fetch payment details from Razorpay to get the method
+    let paymentMode = 'unknown';
+    try {
+      const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_test_RXNuiBfUb7KG4A';
+      const rzpRes = await fetch(`https://api.razorpay.com/v1/payments/${razorpay_payment_id}`, {
+        headers: {
+          Authorization: `Basic ${Buffer.from(`${keyId}:${secret}`).toString('base64')}`
+        }
+      });
+      if (rzpRes.ok) {
+        const paymentData = await rzpRes.json();
+        paymentMode = paymentData.method || 'unknown';
+      }
+    } catch (err) {
+      console.error('Failed to fetch razorpay payment details', err);
+    }
+
     // 2. Database Update Transactionally
     const client = await pool.connect();
     try {
@@ -39,11 +56,11 @@ export async function POST(request: Request) {
       await client.query(`
         INSERT INTO "Transaction" (
           amount, type, "donorName", "donorEmail", "donorPhone", 
-          "razorpayPaymentId", "razorpayOrderId", status, "schoolId", "referenceId"
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+          "razorpayPaymentId", "razorpayOrderId", status, "schoolId", "referenceId", "paymentMode"
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
       `, [
         amount, type, donorName || 'Anonymous', donorEmail, donorPhone,
-        razorpay_payment_id, razorpay_order_id, 'SUCCESS', schoolId, referenceId
+        razorpay_payment_id, razorpay_order_id, 'SUCCESS', schoolId, referenceId, paymentMode
       ]);
 
       // Deduct from Expense or Student

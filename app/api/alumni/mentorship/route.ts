@@ -33,7 +33,7 @@ export async function POST(request: Request) {
     const session = await getSessionFromCookies('ALUMNI');
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { title, description, targetStudent, availability } = await request.json();
+    const { title, description, targetStudent, availability, category } = await request.json();
 
     if (!title || !description) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -58,6 +58,7 @@ export async function POST(request: Request) {
       description,
       targetStudent,
       availability,
+      category,
       status: 'PENDING'
     }).returning();
 

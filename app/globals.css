@@ -25,6 +25,30 @@ body {
 }
 
 /* ==========================================================================
+   ALUMNI PORTAL TYPOGRAPHY SYSTEM
+   (Simple, Nice, and Professional using Inter)
+   ========================================================================== */
+.alumni-portal,
+.alumni-portal * {
+  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+}
+
+/* Cap all aggressive font weights at medium (500) for an elegant look */
+.alumni-portal .font-bold,
+.alumni-portal .font-extrabold,
+.alumni-portal .font-black,
+.alumni-portal h1,
+.alumni-portal h2,
+.alumni-portal h3,
+.alumni-portal h4,
+.alumni-portal h5,
+.alumni-portal h6,
+.alumni-portal strong,
+.alumni-portal th {
+  font-weight: 500 !important;
+}
+
+/* ==========================================================================
    SUB ADMIN PORTAL TYPOGRAPHY SYSTEM
    (Light, Normal, Semibold weights only, Inter font-family, Sentence-case only)
    ========================================================================== */
@@ -265,32 +289,35 @@ body {
   border: 1px solid rgba(155, 28, 28, 0.2) !important;
 }
 
-/* Scrollbar styling matching the warm theme */
-.subadmin-portal ::-webkit-scrollbar {
-  width: 4px !important;
-  height: 4px !important;
+/* Global Custom Scrollbar (without top/bottom buttons, light styling) */
+::-webkit-scrollbar {
+  width: 8px !important;
+  height: 8px !important;
 }
 
-.subadmin-portal ::-webkit-scrollbar-button {
+::-webkit-scrollbar-button {
   display: none !important;
 }
 
-.subadmin-portal ::-webkit-scrollbar-track {
+::-webkit-scrollbar-track {
   background: transparent !important;
 }
 
-.subadmin-portal ::-webkit-scrollbar-thumb {
-  background: rgba(140, 130, 115, 0.25) !important;
+::-webkit-scrollbar-thumb {
+  background: rgba(140, 130, 115, 0.22) !important;
   border-radius: 10px !important;
+  border: 2px solid transparent !important;
+  background-clip: padding-box !important;
 }
 
-.subadmin-portal ::-webkit-scrollbar-thumb:hover {
-  background: rgba(140, 130, 115, 0.45) !important;
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(140, 130, 115, 0.40) !important;
+  border: 2px solid transparent !important;
+  background-clip: padding-box !important;
 }
 
 /* For Firefox support */
-.subadmin-portal,
-.subadmin-portal * {
+* {
   scrollbar-width: thin !important;
-  scrollbar-color: rgba(140, 130, 115, 0.25) transparent !important;
+  scrollbar-color: rgba(140, 130, 115, 0.22) transparent !important;
 }

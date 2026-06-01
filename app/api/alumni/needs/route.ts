@@ -33,12 +33,13 @@ export async function GET() {
         COUNT(CASE WHEN stu."isUnderRTE" = true THEN 1 END)::int as "rteCount",
         COALESCE(SUM(CASE WHEN stu."isNeedy" = true AND stu."sponsorshipType" ILIKE '%Zakat%' THEN stu."aidPaidAmount" ELSE 0 END), 0)::float as "zakatPaid",
         COALESCE(SUM(CASE WHEN stu."isNeedy" = true AND stu."sponsorshipType" ILIKE '%Sadka%' THEN stu."aidPaidAmount" ELSE 0 END), 0)::float as "sadkaPaid",
-        COALESCE(SUM(CASE WHEN stu."isNeedy" = true AND stu."sponsorshipType" ILIKE '%Lillah%' THEN stu."aidPaidAmount" ELSE 0 END), 0)::float as "lillahPaid"
+        COALESCE(SUM(CASE WHEN stu."isNeedy" = true AND stu."sponsorshipType" ILIKE '%Lillah%' THEN stu."aidPaidAmount" ELSE 0 END), 0)::float as "lillahPaid",
+        COUNT(stu.id)::int as "totalStudentsCount"
       FROM "School" sc
       JOIN "Standard" std ON sc.id = std."schoolId"
       JOIN "Student" stu ON std.id = stu."standardId"
-      WHERE (stu."isNeedy" = true OR stu."isUnderRTE" = true)
       GROUP BY sc.id, sc."schoolName", std.id, std."standardName", std.fees
+      HAVING (COUNT(CASE WHEN stu."isNeedy" = true THEN 1 END) > 0 OR COUNT(CASE WHEN stu."isUnderRTE" = true THEN 1 END) > 0)
       ORDER BY sc."schoolName" ASC, std.id ASC
     `);
 

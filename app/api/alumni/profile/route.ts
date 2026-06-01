@@ -11,7 +11,10 @@ export async function GET() {
     }
 
     const result = await pool.query(
-      'SELECT id, name, email, "batchYear", "linkedIn", "profilePic", "currentTitle", "currentBio", "workLink" FROM "Alumni" WHERE id = $1',
+      `SELECT a.id, a.name, a.email, a."batchYear", a."linkedIn", a."profilePic", a."currentTitle", a."currentBio", a."workLink", s."schoolName" 
+       FROM "Alumni" a
+       LEFT JOIN "School" s ON a."schoolId" = s.id
+       WHERE a.id = $1`,
       [session.userId]
     );
 
