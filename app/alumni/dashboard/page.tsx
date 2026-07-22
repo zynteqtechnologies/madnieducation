@@ -2,8 +2,8 @@
 
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import AlumniContributions from '@/components/dashboard/alumni/AlumniContributions';
-import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, School, Heart, Activity, Briefcase, Handshake, GraduationCap, Calendar, Sparkles, Megaphone, ArrowUpRight, Award, MessageSquare, Target, Flame } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Heart, Briefcase, Handshake, GraduationCap, Calendar, Sparkles, Megaphone, ArrowUpRight, Award, Target, Flame } from 'lucide-react';
 import AlumniCareerHub from '@/components/dashboard/alumni/AlumniCareerHub';
 import AlumniMentorshipHub from '@/components/dashboard/alumni/AlumniMentorshipHub';
 import AlumniProfile from '@/components/dashboard/alumni/AlumniProfile';
@@ -12,12 +12,26 @@ import AlumniAchievementHub from '@/components/dashboard/alumni/AlumniAchievemen
 import AlumniBlogHub from '@/components/dashboard/alumni/AlumniBlogHub';
 import AlumniDonationHistory from '@/components/dashboard/alumni/AlumniDonationHistory';
 
+interface NewsUpdate {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  publishDate: string | null;
+  imageUrl: string | null;
+  createdAt: string;
+  schoolName: string;
+}
+
 export default function AlumniDashboard() {
   const [activeTab, setActiveTab] = useState('Dashboard');
   const [data, setData] = useState<any>(null);
+  const [updates, setUpdates] = useState<NewsUpdate[]>([]);
+  const [updatesLoading, setUpdatesLoading] = useState(true);
 
-  React.useEffect(() => {
+  useEffect(() => {
     fetchData();
+    fetchUpdates();
   }, []);
 
   const fetchData = async () => {
@@ -25,7 +39,28 @@ export default function AlumniDashboard() {
       const res = await fetch('/api/alumni/stats');
       const d = await res.json();
       if (res.ok) setData(d);
-    } catch (err) { }
+    } catch { }
+  };
+
+  const fetchUpdates = async () => {
+    try {
+      const res = await fetch('/api/alumni/news-updates');
+      const d = await res.json();
+      if (res.ok) setUpdates(Array.isArray(d.updates) ? d.updates : []);
+    } catch {
+      setUpdates([]);
+    } finally {
+      setUpdatesLoading(false);
+    }
+  };
+
+  const formatUpdateDate = (update: NewsUpdate) => {
+    const date = update.publishDate || update.createdAt;
+    return new Date(date).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
   };
 
   const renderContent = () => {
@@ -174,32 +209,38 @@ export default function AlumniDashboard() {
                 </div>
 
                 <div className="space-y-5">
-                  <div className="p-4 rounded-xl bg-blue-50/30 border border-blue-100/50 hover:bg-blue-50/50 transition-colors group cursor-pointer">
-                    <div className="flex items-center gap-2 mb-1.5">
-                      <Calendar size={13} className="text-blue-600" />
-                      <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wide">July 15, 2026</span>
+                  {updatesLoading ? (
+                    <div className="p-4 rounded-xl bg-slate-50/50 border border-slate-100">
+                      <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">Loading updates...</p>
                     </div>
-                    <h4 className="text-xs font-bold text-slate-800 group-hover:text-blue-700 transition-colors">Annual Grand Alumni Meetup</h4>
-                    <p className="text-[11px] font-medium text-slate-500 mt-1 leading-relaxed">Join us at the main campus to reconnect with peers and mentor upcoming graduates.</p>
-                  </div>
-
-                  <div className="p-4 rounded-xl bg-slate-50/50 border border-slate-100 hover:bg-slate-50/80 transition-colors group cursor-pointer">
-                    <div className="flex items-center gap-2 mb-1.5">
-                      <Calendar size={13} className="text-slate-500" />
-                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">May 20, 2026</span>
+                  ) : updates.length === 0 ? (
+                    <div className="p-4 rounded-xl bg-slate-50/50 border border-slate-100">
+                      <p className="text-xs font-bold text-slate-700">No campus updates yet</p>
+                      <p className="text-[11px] font-medium text-slate-500 mt-1 leading-relaxed">Updates from your school will appear here once published.</p>
                     </div>
-                    <h4 className="text-xs font-bold text-slate-800 group-hover:text-blue-600 transition-colors">Inauguration of New STEM Lab</h4>
-                    <p className="text-[11px] font-medium text-slate-500 mt-1 leading-relaxed">Built with the support of Alumni contributions. Over 500+ students started STEM learning.</p>
-                  </div>
-
-                  <div className="p-4 rounded-xl bg-slate-50/50 border border-slate-100 hover:bg-slate-50/80 transition-colors group cursor-pointer">
-                    <div className="flex items-center gap-2 mb-1.5">
-                      <Calendar size={13} className="text-slate-500" />
-                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">April 10, 2026</span>
-                    </div>
-                    <h4 className="text-xs font-bold text-slate-800 group-hover:text-blue-600 transition-colors">Mentorship Enrollment Open</h4>
-                    <p className="text-[11px] font-medium text-slate-500 mt-1 leading-relaxed">Alumni can now register as mentors to guide seniors for final year projects.</p>
-                  </div>
+                  ) : (
+                    updates.map((update, index) => (
+                      <div key={update.id} className={`p-4 rounded-xl border transition-colors group ${index === 0 ? 'bg-blue-50/30 border-blue-100/50 hover:bg-blue-50/50' : 'bg-slate-50/50 border-slate-100 hover:bg-slate-50/80'}`}>
+	                        <div className="mb-3 aspect-video rounded-lg overflow-hidden bg-gradient-to-br from-blue-50 to-slate-100 border border-white/70 flex items-center justify-center">
+	                          {update.imageUrl ? (
+	                            <img src={update.imageUrl} alt={update.title} className="h-full w-full object-cover" />
+	                          ) : (
+	                            <Megaphone size={22} className="text-blue-300" />
+	                          )}
+	                        </div>
+                        <div className="flex items-center gap-2 mb-1.5">
+                          <Calendar size={13} className={index === 0 ? 'text-blue-600' : 'text-slate-500'} />
+                          <span className={`text-[10px] font-bold uppercase tracking-wide ${index === 0 ? 'text-blue-600' : 'text-slate-500'}`}>{formatUpdateDate(update)}</span>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                          <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-white/80 text-slate-500 uppercase tracking-wider border border-slate-100">{update.category}</span>
+                          <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-white/80 text-slate-500 uppercase tracking-wider border border-slate-100">{update.schoolName}</span>
+                        </div>
+                        <h4 className={`text-xs font-bold text-slate-800 transition-colors ${index === 0 ? 'group-hover:text-blue-700' : 'group-hover:text-blue-600'}`}>{update.title}</h4>
+                        <p className="text-[11px] font-medium text-slate-500 mt-1 leading-relaxed line-clamp-3">{update.description}</p>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             </div>

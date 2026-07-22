@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar, integer, text, timestamp, boolean, decimal, pgEnum, date } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, integer, text, timestamp, boolean, decimal, pgEnum, date, jsonb } from 'drizzle-orm/pg-core';
 
 // Enums
 export const roleEnum = pgEnum('Role', ['SUPER_ADMIN', 'SUB_ADMIN', 'ALUMNI']);
@@ -69,6 +69,7 @@ export const alumni = pgTable('Alumni', {
   currentBio: text('currentBio'),
   workLink: text('workLink'),
   linkedIn: text('linkedIn'),
+  isFeatured: boolean('isFeatured').default(false),
   schoolId: uuid('schoolId').references(() => schools.id, { onDelete: 'set null' }),
   createdAt: timestamp('createdAt', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updatedAt', { withTimezone: true }).defaultNow(),
@@ -160,6 +161,19 @@ export const mentorshipOffers = pgTable('MentorshipOffer', {
   updatedAt: timestamp('updatedAt').defaultNow(),
 });
 
+// Public registration / application interest for alumni-posted opportunities
+export const opportunityRegistrations = pgTable('OpportunityRegistration', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  postType: varchar('postType', { length: 20 }).notNull(), // CAREER or MENTORSHIP
+  postId: uuid('postId').notNull(),
+  alumniId: uuid('alumniId').references(() => alumni.id, { onDelete: 'cascade' }),
+  name: varchar('name', { length: 255 }).notNull(),
+  email: varchar('email', { length: 255 }).notNull(),
+  phoneNo: varchar('phoneNo', { length: 30 }).notNull(),
+  linkedInUrl: text('linkedInUrl'),
+  createdAt: timestamp('createdAt').defaultNow(),
+});
+
 // Expense Table
 export const expenses = pgTable('Expense', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -187,6 +201,8 @@ export const blogs = pgTable('Blog', {
   mediaUrl: text('mediaUrl'),
   mediaType: varchar('mediaType', { length: 50 }), // IMAGE or VIDEO
   status: varchar('status', { length: 20 }).default('PENDING'), // PENDING, APPROVED, REJECTED
+  isFeatured: boolean('isFeatured').default(false),
+  isTopFeatured: boolean('isTopFeatured').default(false),
   createdAt: timestamp('createdAt').defaultNow(),
   updatedAt: timestamp('updatedAt').defaultNow(),
 });
@@ -203,6 +219,7 @@ export const achievements = pgTable('Achievement', {
   mediaUrl: text('mediaUrl'), // Optional proof image/document
   mediaType: varchar('mediaType', { length: 50 }), // IMAGE or VIDEO
   status: varchar('status', { length: 20 }).default('PENDING'), // PENDING, APPROVED, REJECTED
+  isFeatured: boolean('isFeatured').default(false),
   createdAt: timestamp('createdAt').defaultNow(),
   updatedAt: timestamp('updatedAt').defaultNow(),
 });
@@ -234,7 +251,11 @@ export const studentEnrollments = pgTable('StudentEnrollment', {
 export const events = pgTable('Event', {
   id: uuid('id').defaultRandom().primaryKey(),
   title: varchar('title', { length: 255 }).notNull(),
+  tagline: text('tagline'),
   description: text('description'),
+  points: jsonb('points'),
+  featuredImage: text('featuredImage'),
+  category: varchar('category', { length: 100 }),
   date: date('date'),
   schoolId: uuid('schoolId').references(() => schools.id, { onDelete: 'cascade' }),
   createdAt: timestamp('createdAt').defaultNow(),
@@ -249,4 +270,88 @@ export const eventMedia = pgTable('EventMedia', {
   url: text('url').notNull(),
   fileId: varchar('fileId', { length: 255 }), // ImageKit file ID
   createdAt: timestamp('createdAt').defaultNow(),
+});
+
+// Mission Stats Table (For Home Page "Our Mission in Numbers")
+export const missionStats = pgTable('MissionStat', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  target: integer('target').notNull(),
+  prefix: varchar('prefix', { length: 50 }),
+  suffix: varchar('suffix', { length: 50 }),
+  label: varchar('label', { length: 255 }).notNull(),
+  desc: text('desc').notNull(),
+  orderNo: integer('orderNo').default(0),
+  isActive: boolean('isActive').default(true),
+  createdAt: timestamp('createdAt').defaultNow(),
+  updatedAt: timestamp('updatedAt').defaultNow(),
+});
+
+// Public news / announcement / event updates for userside homepage
+export const newsUpdates = pgTable('NewsUpdate', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  title: varchar('title', { length: 255 }).notNull(),
+  description: text('description').notNull(),
+  category: varchar('category', { length: 100 }).notNull(),
+  publishDate: date('publishDate'),
+  imageUrl: text('imageUrl'),
+  imageFileId: varchar('imageFileId', { length: 255 }),
+  schoolId: uuid('schoolId').references(() => schools.id, { onDelete: 'set null' }),
+  isActive: boolean('isActive').default(true),
+  createdByRole: varchar('createdByRole', { length: 50 }),
+  createdAt: timestamp('createdAt').defaultNow(),
+  updatedAt: timestamp('updatedAt').defaultNow(),
+});
+
+// Subadmin-managed content for each public school detail page
+export const schoolPageContents = pgTable('SchoolPageContent', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  schoolId: uuid('schoolId').notNull().unique().references(() => schools.id, { onDelete: 'cascade' }),
+  tagline: text('tagline'),
+  aboutTitle: varchar('aboutTitle', { length: 255 }),
+  aboutDescription: text('aboutDescription'),
+  aboutHighlights: text('aboutHighlights').array(),
+  academicPrograms: jsonb('academicPrograms').$type<Array<{
+    id: string;
+    category: string;
+    description?: string;
+    standardIds: string[];
+    subjects: string[];
+  }>>().default([]),
+  facilities: jsonb('facilities').$type<Array<{
+    id: string;
+    icon: string;
+    name: string;
+    detail: string;
+  }>>().default([]),
+  activityCategories: jsonb('activityCategories').$type<Array<{
+    id: string;
+    icon: string;
+    category: string;
+    items: Array<{ name: string; desc: string }>;
+  }>>().default([]),
+  teachers: jsonb('teachers').$type<Array<{
+    id: string;
+    name: string;
+    designation: string;
+    qualification: string;
+    experience: string;
+    subject: string;
+    standardIds: string[];
+  }>>().default([]),
+  admissionInfo: jsonb('admissionInfo').$type<{
+    currentlyOpen?: boolean;
+    session?: string;
+    openClasses?: string[];
+    process?: string[];
+    documents?: string[];
+    feeNote?: string;
+  }>().default({}),
+  donationInfo: jsonb('donationInfo').$type<{
+    headline?: string;
+    subline?: string;
+    amounts?: Array<{ label: string; amount: string; type?: string; standardIds?: string[] }>;
+  }>().default({}),
+  updatedBy: uuid('updatedBy').references(() => users.id, { onDelete: 'set null' }),
+  createdAt: timestamp('createdAt').defaultNow(),
+  updatedAt: timestamp('updatedAt').defaultNow(),
 });

@@ -7,7 +7,6 @@ import {
   Menu,
   X,
   LogOut,
-  Bell,
   Search,
   Settings,
   User,
@@ -37,8 +36,11 @@ import {
   Trophy,
   BookOpen,
   Heart,
-  PieChart
+  PieChart,
+  Newspaper,
+  FileText
 } from 'lucide-react';
+import NotificationBell from './NotificationBell';
 
 interface DashboardLayoutProps {
   title: string;
@@ -91,6 +93,8 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
           'Schools': 'school',
           'Trusts': 'trust',
           'Academic Years': 'academic-year',
+          'Mission Stats': 'mission-stats',
+          'Monitoring': 'monitoring',
           'Alumni': 'alumni',
           'Profile': 'profile',
           'Careers': 'careers',
@@ -101,6 +105,8 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
           'Students': 'students',
           'Promotion': 'promotion',
           'Events': 'events',
+          'Updates': 'updates',
+          'School Page': 'school-page',
           'Class Setup': 'class-setup'
         };
         const path = routeMap[item];
@@ -124,6 +130,10 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
     { name: 'My Impact', icon: <PieChart size={18} />, role: ['ALUMNI'] },
     { name: 'Trusts', icon: <Building2 size={18} />, role: ['SUPER_ADMIN'] },
     { name: 'Schools', icon: <School size={18} />, role: ['SUPER_ADMIN'] },
+    { name: 'Mission Stats', icon: <Activity size={18} />, role: ['SUPER_ADMIN'] },
+    { name: 'Monitoring', icon: <Shield size={18} />, role: ['SUPER_ADMIN'] },
+    { name: 'Updates', icon: <Newspaper size={18} />, role: ['SUPER_ADMIN', 'SUB_ADMIN'] },
+    { name: 'School Page', icon: <FileText size={18} />, role: ['SUB_ADMIN'] },
     { name: 'Class Setup', icon: <Sparkles size={18} />, role: ['SUB_ADMIN'] },
     { name: 'Academic', icon: <Layers size={18} />, role: ['SUB_ADMIN'] },
     { name: 'Accounts', icon: <Wallet size={18} />, role: ['SUB_ADMIN'] },
@@ -175,7 +185,7 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
   const colors = getLayoutColors();
 
   return (
-    <div className={`min-h-screen ${role === 'SUPER_ADMIN'
+    <div className={`h-[100dvh] min-h-[100dvh] overflow-hidden ${role === 'SUPER_ADMIN'
       ? 'bg-gradient-to-br from-[#ebf2f7] via-[#f1f6fa] to-[#f7fbfd]'
       : role === 'SUB_ADMIN'
         ? 'bg-subadmin-gradient'
@@ -185,9 +195,9 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
       } ${role === 'SUB_ADMIN' ? 'subadmin-portal' : ''} text-slate-900 font-inter antialiased overflow-x-clip`}>
 
       {role === 'SUB_ADMIN' ? (
-        <div className="flex flex-col min-h-screen">
+        <div className="flex flex-col h-full min-h-0">
           {/* Horizontal Topbar */}
-          <header className="sticky top-0 z-50 backdrop-blur-md px-6 py-4 flex items-center justify-between">
+          <header className="sticky top-0 z-50 shrink-0 backdrop-blur-md px-6 py-4 flex items-center justify-between">
             {/* Logo Section (Left-aligned) */}
             <div className="flex items-center cursor-pointer" onClick={() => handleNavigate('Dashboard')}>
               <div className="relative w-18 h-18 flex items-center justify-center shrink-0">
@@ -223,11 +233,7 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
                 <Menu size={16} />
               </button>
 
-              {/* Notifications */}
-              <button className="relative p-2.5 bg-white border border-[#E6DFD3] rounded-lg text-slate-500 hover:text-slate-900 transition-colors flex items-center justify-center">
-                <Bell size={16} />
-                <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
-              </button>
+              <NotificationBell role={role} variant="subadmin" />
 
               <div className="h-6 w-px bg-[#E6DFD3] hidden md:block"></div>
 
@@ -316,9 +322,9 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
           )}
 
           {/* Main Content Area */}
-          <main className="flex-1 px-4 md:px-8 py-6 lg:py-4 flex flex-col w-full mx-auto">
+          <main className="flex-1 min-h-0 overflow-hidden px-4 md:px-8 py-6 lg:py-4 flex flex-col w-full mx-auto">
 
-            <div className="flex-1 w-full min-h-0 lg:overflow-hidden flex flex-col">
+            <div className="flex-1 w-full min-h-0 overflow-y-auto overflow-x-hidden lg:overflow-hidden flex flex-col">
               {children}
             </div>
           </main>
@@ -333,14 +339,14 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
             />
           )}
 
-          {/* Minimalist Bottom Dock (Alumni Portal Only) */}
+          {/* Minimalist Bottom Dock (Alumni Portal Only - 100% Mobile Responsive) */}
           {role === 'ALUMNI' && (
-            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center justify-center pointer-events-none w-full max-w-lg px-4">
-              <div className="flex items-center space-x-1.5 bg-white/40 backdrop-blur-xl border border-white/60 shadow-2xl rounded-full px-4 py-2 pointer-events-auto transition-all hover:scale-[1.01] hover:bg-white/50">
+            <div className="fixed bottom-3 sm:bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center justify-center pointer-events-none w-full max-w-[94vw] sm:max-w-lg px-2 sm:px-4">
+              <div className="flex items-center space-x-1 sm:space-x-1.5 bg-white/75 sm:bg-white/40 backdrop-blur-xl border border-white/80 shadow-2xl rounded-full px-3 sm:px-4 py-1.5 sm:py-2 pointer-events-auto transition-all overflow-x-auto no-scrollbar max-w-full">
                 {menuItems.map((item) => {
                   const isActive = activeItem === item.name;
                   return (
-                    <div key={item.name} className="relative group">
+                    <div key={item.name} className="relative group shrink-0">
                       {/* Tooltip */}
                       <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 px-3 py-1.5 bg-slate-900/90 backdrop-blur-md text-white text-[10px] font-bold rounded-xl opacity-0 pointer-events-none group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 transition-all duration-200 whitespace-nowrap shadow-lg">
                         {item.name}
@@ -348,7 +354,7 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
 
                       <button
                         onClick={() => handleNavigate(item.name)}
-                        className={`w-11 h-11 rounded-full flex items-center justify-center transition-all duration-300 relative ${isActive
+                        className={`w-9 h-9 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition-all duration-300 relative ${isActive
                           ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30 scale-105'
                           : 'text-slate-600 hover:text-slate-900 hover:bg-white/30 hover:scale-105'
                           }`}
@@ -360,18 +366,18 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
                 })}
 
                 {/* Separator */}
-                <div className="h-6 w-px bg-slate-300/60 mx-1"></div>
+                <div className="h-5 sm:h-6 w-px bg-slate-300/60 mx-0.5 sm:mx-1 shrink-0"></div>
 
                 {/* Logout Action in Dock */}
-                <div className="relative group">
+                <div className="relative group shrink-0">
                   <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 px-3 py-1.5 bg-red-600 text-white text-[10px] font-bold rounded-xl opacity-0 pointer-events-none group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 transition-all duration-200 whitespace-nowrap shadow-lg">
                     Logout
                   </div>
                   <button
                     onClick={handleLogout}
-                    className="w-11 h-11 rounded-full flex items-center justify-center text-slate-600 hover:text-red-600 hover:bg-white/30 hover:scale-105 transition-all duration-300"
+                    className="w-9 h-9 sm:w-11 sm:h-11 rounded-full flex items-center justify-center text-slate-600 hover:text-red-600 hover:bg-white/30 hover:scale-105 transition-all duration-300"
                   >
-                    <LogOut size={18} />
+                    <LogOut size={16} />
                   </button>
                 </div>
               </div>
@@ -460,10 +466,10 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
               ? 'lg:pl-0 pl-0 pb-28'
               : (isSidebarOpen ? 'lg:pl-64' : 'lg:pl-20')
             } 
-            min-h-screen flex flex-col w-full`}>
+            h-full min-h-0 overflow-hidden flex flex-col w-full`}>
 
             {/* Topbar - Premium & Glassmorphic */}
-            <header className={`sticky top-0 z-40 h-20 px-4 md:px-6 transition-all ${role === 'ALUMNI'
+            <header className={`sticky top-0 z-40 h-20 shrink-0 px-4 md:px-6 transition-all ${role === 'ALUMNI'
                 ? 'bg-white/40 backdrop-blur-md border-b border-white/50 shadow-sm'
                 : 'bg-white/70 backdrop-blur-md border-b border-slate-200/50 shadow-sm'
               }`}>
@@ -501,11 +507,7 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
                   />
                 </div>
 
-                <button className={`relative p-2 transition-colors ${role === 'ALUMNI' ? 'text-slate-600 hover:text-blue-600' : 'text-slate-400 hover:text-[#3f72af]'}`}>
-                  <Bell size={20} />
-                  <span className={`absolute top-1.5 right-1.5 w-2 h-2 rounded-full border-2 border-white ${role === 'SUPER_ADMIN' ? 'bg-[#3f72af]' : role === 'ALUMNI' ? 'bg-blue-600' : 'bg-amber-500'
-                    }`}></span>
-                </button>
+                <NotificationBell role={role} />
 
                 <div className="h-6 w-px bg-slate-200/80 mx-1"></div>
 
@@ -559,7 +561,7 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
             </header>
 
             {/* Content Body - Clean Workspace */}
-            <section className="p-4 md:p-8 flex-1 overflow-x-hidden">
+            <section className="p-4 md:p-8 flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
               <div className="max-w-7xl mx-auto">
                 {children}
               </div>

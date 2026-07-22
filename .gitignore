@@ -30,7 +30,7 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# env files & secrets
 .env*
 
 # vercel
@@ -39,3 +39,15 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# database backups & local SQL dumps (Keep Drizzle migrations tracked)
+*.sql
+*.dump
+*.tar
+!drizzle/*.sql
+
+# local scratch & logs
+/scratch/
+/tmp/
+*.log
+

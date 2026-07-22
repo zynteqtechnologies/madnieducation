@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { 
   Briefcase, 
   Plus, 
@@ -322,15 +323,18 @@ export default function AlumniCareerHub() {
                       <p className="text-xs font-medium text-slate-500 leading-relaxed line-clamp-3 pl-1">{post.description}</p>
                    )}
 
-                   <div className="pt-6 mt-4 border-t border-slate-100/50 flex items-center justify-between">
-                      <div className="flex items-center text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                         <Clock size={14} className="mr-1.5" />
-                         Posted {new Date(post.createdAt).toLocaleDateString()}
-                      </div>
-                      <button className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm">
-                         <ChevronRight size={16} />
-                      </button>
-                   </div>
+                   <div className="pt-6 mt-4 border-t border-slate-100/50 flex items-center justify-between gap-3">
+	                      <div className="flex items-center text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+	                         <Clock size={14} className="mr-1.5" />
+	                         Posted {new Date(post.createdAt).toLocaleDateString()}
+	                      </div>
+                        <Link
+                          href={`/alumni/registrations?postType=CAREER&postId=${post.id}`}
+                          className="flex items-center justify-center h-8 px-4 rounded-full bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm text-[10px] font-bold uppercase tracking-wider"
+                        >
+                          Registrations <ChevronRight size={14} className="ml-1" />
+                        </Link>
+	                   </div>
                 </div>
              </div>
           </div>

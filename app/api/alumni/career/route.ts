@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { getSessionFromCookies } from '@/lib/auth';
+import { createNotification } from '@/lib/notifications';
 
 export async function GET(request: Request) {
   try {
@@ -44,6 +45,24 @@ export async function POST(request: Request) {
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'PENDING')
       RETURNING *
     `, [session.userId, schoolId, type, companyName, companyLink, role, relation, description, category]);
+
+    await createNotification({
+      title: 'New career opening submitted',
+      message: `${role} at ${companyName} is waiting for review.`,
+      type: 'CAREER',
+      priority: 'NORMAL',
+      actorRole: 'ALUMNI',
+      actorId: session.userId,
+      schoolId,
+      entityType: 'CareerOpportunity',
+      entityId: result.rows[0].id,
+      link: '/subadmin/alumni',
+      audiences: [
+        { type: 'ROLE', recipientRole: 'SUPER_ADMIN' },
+        { type: 'SCHOOL_ROLE', recipientRole: 'SUB_ADMIN', schoolId },
+        { type: 'SCHOOL_ALUMNI', schoolId },
+      ],
+    });
 
     return NextResponse.json(result.rows[0]);
   } catch (error) {

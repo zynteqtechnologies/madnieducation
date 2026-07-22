@@ -15,7 +15,8 @@ import {
   Calendar,
   ExternalLink,
   ChevronRight,
-  School
+  School,
+  Star
 } from 'lucide-react';
 
 interface EligibleStudent {
@@ -38,6 +39,7 @@ interface Alumni {
   studentId: string | null;
   createdAt: string;
   standardName?: string;
+  isFeatured?: boolean;
 }
 
 export default function AlumniManagement() {
@@ -113,6 +115,26 @@ export default function AlumniManagement() {
       } else {
         const err = await res.json();
         alert(err.error);
+      }
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const handleFeatureAlumni = async (alumni: Alumni) => {
+    setProcessingId(alumni.id);
+    try {
+      const res = await fetch('/api/subadmin/alumni', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: alumni.id, isFeatured: !alumni.isFeatured }),
+      });
+
+      if (res.ok) {
+        fetchAlumni();
+      } else {
+        const err = await res.json();
+        alert(err.error || 'Failed to update featured alumni');
       }
     } finally {
       setProcessingId(null);
@@ -352,8 +374,16 @@ export default function AlumniManagement() {
                         </div>
                       </td>
                       <td className="px-6 py-4 text-right pr-8 relative">
-                        <div className="flex items-center justify-end space-x-2">
-                          <button className="p-1.5 text-slate-400 hover:text-black hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 rounded-md transition-all">
+	                        <div className="flex items-center justify-end space-x-2">
+	                          <button
+	                            onClick={() => handleFeatureAlumni(a)}
+	                            disabled={processingId === a.id}
+	                            className={`p-1.5 border rounded-md transition-all ${a.isFeatured ? 'text-amber-500 bg-amber-50 border-amber-100' : 'text-slate-400 hover:text-amber-500 hover:bg-white hover:shadow-sm border-transparent hover:border-slate-200'}`}
+	                            title={a.isFeatured ? 'Remove from Donate page impact section' : 'Show on Donate page impact section'}
+	                          >
+	                            <Star size={14} fill={a.isFeatured ? 'currentColor' : 'none'} />
+	                          </button>
+	                          <button className="p-1.5 text-slate-400 hover:text-black hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 rounded-md transition-all">
                             <ShieldCheck size={14} />
                           </button>
                           <button className="p-1.5 text-slate-400 hover:text-black hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 rounded-md transition-all">

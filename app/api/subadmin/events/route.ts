@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { getSessionFromCookies } from '@/lib/auth';
+import { createNotification } from '@/lib/notifications';
+import { broadcastEmailToAlumni } from '@/lib/notifyAlumniByEmail';
 
 export async function GET(request: Request) {
   try {
@@ -50,23 +52,109 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { title, description, date } = await request.json();
+    const { title, tagline, description, points, featuredImage, date, category } = await request.json();
 
     if (!title || !date) {
       return NextResponse.json({ error: 'Title and Date are required' }, { status: 400 });
     }
 
     const query = `
-      INSERT INTO "Event" (title, description, date, "schoolId")
-      VALUES ($1, $2, $3, $4)
+      INSERT INTO "Event" (title, tagline, description, points, "featuredImage", date, category, "schoolId")
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       RETURNING *
     `;
-    const result = await pool.query(query, [title, description, date, session.schoolId]);
+    const result = await pool.query(query, [
+      title,
+      tagline || null,
+      description || null,
+      JSON.stringify(points || []),
+      featuredImage || null,
+      date,
+      category || 'General',
+      session.schoolId
+    ]);
+
+    await createNotification({
+      title: 'New school event added',
+      message: title,
+      type: 'CONTENT',
+      priority: 'NORMAL',
+      actorRole: 'SUB_ADMIN',
+      actorId: session.userId,
+      schoolId: session.schoolId,
+      entityType: 'Event',
+      entityId: result.rows[0].id,
+      link: '/alumni/dashboard',
+      audiences: [
+        { type: 'ROLE', recipientRole: 'SUPER_ADMIN' },
+        { type: 'SCHOOL_ALUMNI', schoolId: session.schoolId },
+      ],
+    });
+
+    // Send broadcast email notification to all registered alumni of this school
+    broadcastEmailToAlumni({
+      schoolId: session.schoolId,
+      type: 'EVENT',
+      title,
+      description: tagline ? `${tagline}\n\n${description || ''}` : description,
+      date,
+      category: category || 'Event',
+      imageUrl: featuredImage || null,
+    }).catch((err) => console.error('Error broadcasting event email:', err));
 
     return NextResponse.json({ ...result.rows[0], media: [] }, { status: 201 });
   } catch (error) {
     console.error('Create event error:', error);
     return NextResponse.json({ error: 'Failed to create event' }, { status: 500 });
+  }
+}
+
+export async function PUT(request: Request) {
+  try {
+    const session = await getSessionFromCookies('ADMIN');
+    if (!session || session.role !== 'SUB_ADMIN' || !session.schoolId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { id, title, tagline, description, points, featuredImage, date, category } = await request.json();
+
+    if (!id || !title || !date) {
+      return NextResponse.json({ error: 'ID, Title, and Date are required' }, { status: 400 });
+    }
+
+    const query = `
+      UPDATE "Event"
+      SET title = $1, tagline = $2, description = $3, points = $4, "featuredImage" = $5, date = $6, category = $7, "updatedAt" = NOW()
+      WHERE id = $8 AND "schoolId" = $9
+      RETURNING *
+    `;
+    const result = await pool.query(query, [
+      title,
+      tagline || null,
+      description || null,
+      JSON.stringify(points || []),
+      featuredImage || null,
+      date,
+      category || 'General',
+      id,
+      session.schoolId
+    ]);
+
+    if (result.rows.length === 0) {
+      return NextResponse.json({ error: 'Event not found or unauthorized' }, { status: 404 });
+    }
+
+    // Also get the media for the updated event
+    const mediaQuery = `SELECT id, "mediaType", url, "fileId" FROM "EventMedia" WHERE "eventId" = $1`;
+    const mediaResult = await pool.query(mediaQuery, [id]);
+
+    return NextResponse.json({
+      ...result.rows[0],
+      media: mediaResult.rows || []
+    });
+  } catch (error) {
+    console.error('Update event error:', error);
+    return NextResponse.json({ error: 'Failed to update event' }, { status: 500 });
   }
 }
 

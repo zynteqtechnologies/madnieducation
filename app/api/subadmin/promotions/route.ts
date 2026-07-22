@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { studentEnrollments, students, standards } from '@/lib/db/schema';
 import { getSessionFromCookies } from '@/lib/auth';
+import { createNotification } from '@/lib/notifications';
 import { eq, inArray, and } from 'drizzle-orm';
 
 export async function POST(request: Request) {
@@ -107,6 +108,20 @@ export async function POST(request: Request) {
           })
           .where(inArray(students.id, studentIds));
       }
+    });
+
+    await createNotification({
+      title: 'Student promotion processed',
+      message: `${studentIds.length} student records were processed with ${status}.`,
+      type: 'MONITORING',
+      priority: 'NORMAL',
+      actorRole: 'SUB_ADMIN',
+      actorId: session.userId,
+      schoolId: session.schoolId,
+      entityType: 'StudentPromotion',
+      entityId: academicYearId,
+      link: '/superadmin/students',
+      audiences: [{ type: 'ROLE', recipientRole: 'SUPER_ADMIN' }],
     });
 
     return NextResponse.json({ success: true, message: `Processed ${studentIds.length} students` });

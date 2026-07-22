@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import pool from '@/lib/db';
-import { getSessionFromCookies } from '@/lib/auth';
+import { createNotification } from '@/lib/notifications';
+import { checkRateLimit } from '@/lib/rateLimit';
 
 export async function POST(request: Request) {
+  const rateLimitError = checkRateLimit(request, 15, 60 * 1000);
+  if (rateLimitError) return rateLimitError;
+
   try {
     const { 
       razorpay_order_id, 
@@ -101,6 +105,21 @@ export async function POST(request: Request) {
     } finally {
       client.release();
     }
+
+    await createNotification({
+      title: 'Donation payment received',
+      message: `${donorName || 'A donor'} paid Rs. ${Number(amount).toLocaleString('en-IN')} for ${type}.`,
+      type: 'DONATION',
+      priority: 'HIGH',
+      schoolId,
+      entityType: 'Transaction',
+      entityId: razorpay_payment_id,
+      link: '/superadmin/dashboard',
+      audiences: [
+        { type: 'ROLE', recipientRole: 'SUPER_ADMIN' },
+        ...(schoolId ? [{ type: 'SCHOOL_ROLE' as const, recipientRole: 'SUB_ADMIN' as const, schoolId }] : []),
+      ],
+    });
 
     return NextResponse.json({ success: true });
 

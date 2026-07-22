@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { mentorshipOffers, alumni } from '@/lib/db/schema';
 import { getSessionFromCookies } from '@/lib/auth';
+import { createNotification } from '@/lib/notifications';
 import { desc, eq } from 'drizzle-orm';
 
 export async function GET(request: Request) {
@@ -61,6 +62,24 @@ export async function POST(request: Request) {
       category,
       status: 'PENDING'
     }).returning();
+
+    await createNotification({
+      title: 'New mentorship offer submitted',
+      message: `${title} is waiting for review.`,
+      type: 'CAREER',
+      priority: 'NORMAL',
+      actorRole: 'ALUMNI',
+      actorId: session.userId,
+      schoolId,
+      entityType: 'MentorshipOffer',
+      entityId: newOffer.id,
+      link: '/subadmin/alumni',
+      audiences: [
+        { type: 'ROLE', recipientRole: 'SUPER_ADMIN' },
+        { type: 'SCHOOL_ROLE', recipientRole: 'SUB_ADMIN', schoolId },
+        { type: 'SCHOOL_ALUMNI', schoolId },
+      ],
+    });
 
     return NextResponse.json(newOffer);
   } catch (error) {

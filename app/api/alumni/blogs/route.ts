@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { blogs, alumni } from '@/lib/db/schema';
 import { getSessionFromCookies } from '@/lib/auth';
 import { uploadMedia } from '@/lib/imagekit';
+import { createNotification } from '@/lib/notifications';
 import { eq, desc } from 'drizzle-orm';
 
 export async function GET(request: Request) {
@@ -69,6 +70,23 @@ export async function POST(request: Request) {
       mediaType,
       status: 'PENDING',
     }).returning();
+
+    await createNotification({
+      title: 'New alumni blog submitted',
+      message: `${title} is waiting for moderation.`,
+      type: 'CONTENT',
+      priority: 'NORMAL',
+      actorRole: 'ALUMNI',
+      actorId: session.userId,
+      schoolId: alumniRecord.schoolId,
+      entityType: 'Blog',
+      entityId: newBlog.id,
+      link: '/subadmin/alumni',
+      audiences: [
+        { type: 'ROLE', recipientRole: 'SUPER_ADMIN' },
+        { type: 'SCHOOL_ROLE', recipientRole: 'SUB_ADMIN', schoolId: alumniRecord.schoolId },
+      ],
+    });
 
     return NextResponse.json(newBlog);
   } catch (error) {

@@ -251,8 +251,8 @@ const AlumniAchievementHub = () => {
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Promoted to Senior Architect"
-                    value={formData.title || ''}
+                    placeholder="e.g. Promoted to Senior Architect / Gold Medalist"
+                    value={formData.title ?? ''}
                     onChange={e => setFormData({ ...formData, title: e.target.value })}
                     className="w-full px-5 py-3.5 bg-white/50 border border-slate-200/80 hover:bg-white focus:bg-white focus:border-blue-500 rounded-2xl outline-none transition-all duration-300 focus:ring-4 focus:ring-blue-500/10 text-xs font-semibold text-slate-800 placeholder:text-slate-400 animate-transition"
                   />
@@ -264,7 +264,7 @@ const AlumniAchievementHub = () => {
                     rows={4}
                     required
                     placeholder="Tell us more about this milestone..."
-                    value={formData.description || ''}
+                    value={formData.description ?? ''}
                     onChange={e => setFormData({ ...formData, description: e.target.value })}
                     className="w-full px-5 py-3.5 bg-white/50 border border-slate-200/80 hover:bg-white focus:bg-white focus:border-blue-500 rounded-2xl outline-none transition-all duration-300 focus:ring-4 focus:ring-blue-500/10 text-xs font-semibold text-slate-800 placeholder:text-slate-400 resize-none animate-transition"
                   />
@@ -275,7 +275,7 @@ const AlumniAchievementHub = () => {
                     <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider ml-1">Recognition Date</label>
                     <input
                       type="date"
-                      value={formData.date || ''}
+                      value={formData.date ?? ''}
                       onChange={e => setFormData({ ...formData, date: e.target.value })}
                       className="w-full px-5 py-3.5 bg-white/50 border border-slate-200/80 hover:bg-white focus:bg-white focus:border-blue-500 rounded-2xl outline-none transition-all duration-300 focus:ring-4 focus:ring-blue-500/10 text-xs font-semibold text-slate-800 placeholder:text-slate-400 animate-transition"
                     />
@@ -284,8 +284,8 @@ const AlumniAchievementHub = () => {
                     <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider ml-1">Sector / Category</label>
                     <input
                       type="text"
-                      placeholder="e.g. Professional, Academic"
-                      value={formData.category || ''}
+                      placeholder="e.g. Professional, Academic Excellence"
+                      value={formData.category ?? ''}
                       onChange={e => setFormData({ ...formData, category: e.target.value })}
                       className="w-full px-5 py-3.5 bg-white/50 border border-slate-200/80 hover:bg-white focus:bg-white focus:border-blue-500 rounded-2xl outline-none transition-all duration-300 focus:ring-4 focus:ring-blue-500/10 text-xs font-semibold text-slate-800 placeholder:text-slate-400 animate-transition"
                     />
@@ -294,40 +294,47 @@ const AlumniAchievementHub = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider ml-1">Proof Type</label>
+                    <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider ml-1">Proof Attachment Type</label>
                     <div className="flex space-x-4 bg-white/50 p-1.5 rounded-2xl border border-slate-200/80">
                         <button
                             type="button"
                             onClick={() => setFormData({ ...formData, mediaType: 'IMAGE' })}
                             className={`flex-1 flex items-center justify-center p-2.5 rounded-xl text-xs font-bold transition-all ${formData.mediaType === 'IMAGE' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20' : 'text-slate-500 hover:text-slate-700'}`}
                         >
-                            <ImageIcon size={16} className="mr-2" /> Image
+                            <ImageIcon size={16} className="mr-2" /> Image / Certificate Proof
                         </button>
                         <button
                             type="button"
                             onClick={() => setFormData({ ...formData, mediaType: 'VIDEO' })}
                             className={`flex-1 flex items-center justify-center p-2.5 rounded-xl text-xs font-bold transition-all ${formData.mediaType === 'VIDEO' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20' : 'text-slate-500 hover:text-slate-700'}`}
                         >
-                            <Video size={16} className="mr-2" /> YouTube
+                            <Video size={16} className="mr-2" /> Video Link / YouTube
                         </button>
                     </div>
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider ml-1">
-                        {formData.mediaType === 'IMAGE' ? 'Upload Proof' : 'Reference Link'}
+                        {formData.mediaType === 'IMAGE' ? 'Select Proof File (Photo/Certificate)' : 'Video Reference URL'}
                     </label>
                     {formData.mediaType === 'IMAGE' ? (
-                        <input
-                            type="file"
-                            accept="image/*"
-                            onChange={e => setFormData({ ...formData, file: e.target.files?.[0] || null })}
-                            className="w-full px-5 py-3 bg-white/50 border border-slate-200/80 hover:bg-white focus:bg-white focus:border-blue-500 rounded-2xl outline-none transition-all duration-300 focus:ring-4 focus:ring-blue-500/10 text-xs font-semibold text-slate-800 animate-transition"
-                        />
+                        <div>
+                          <input
+                              type="file"
+                              accept="image/*,.pdf"
+                              onChange={e => setFormData({ ...formData, file: e.target.files?.[0] || null })}
+                              className="w-full px-5 py-3 bg-white/50 border border-slate-200/80 hover:bg-white focus:bg-white focus:border-blue-500 rounded-2xl outline-none transition-all duration-300 focus:ring-4 focus:ring-blue-500/10 text-xs font-semibold text-slate-800 animate-transition"
+                          />
+                          {formData.file && (
+                            <div className="mt-1.5 text-[11px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-3 py-1 rounded-xl inline-block">
+                              ✓ Selected: {formData.file.name}
+                            </div>
+                          )}
+                        </div>
                     ) : (
                         <input
                             type="url"
-                            placeholder="https://youtu.be/..."
-                            value={formData.mediaUrl || ''}
+                            placeholder="https://youtube.com/watch?v=..."
+                            value={formData.mediaUrl ?? ''}
                             onChange={e => setFormData({ ...formData, mediaUrl: e.target.value })}
                             className="w-full px-5 py-3.5 bg-white/50 border border-slate-200/80 hover:bg-white focus:bg-white focus:border-blue-500 rounded-2xl outline-none transition-all duration-300 focus:ring-4 focus:ring-blue-500/10 text-xs font-semibold text-slate-800 placeholder:text-slate-400 animate-transition"
                         />

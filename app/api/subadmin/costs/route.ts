@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { expenses, schools } from '@/lib/db/schema';
 import { getSessionFromCookies } from '@/lib/auth';
 import { uploadMedia } from '@/lib/imagekit';
+import { createNotification } from '@/lib/notifications';
 import { desc, eq, and } from 'drizzle-orm';
 
 export async function GET(request: Request) {
@@ -82,6 +83,20 @@ export async function POST(request: Request) {
       mediaType,
       schoolId: session.schoolId
     }).returning();
+
+    await createNotification({
+      title: 'New fundraising cost added',
+      message: `${title} was added for ${schoolName}.`,
+      type: 'MONITORING',
+      priority: 'NORMAL',
+      actorRole: 'SUB_ADMIN',
+      actorId: session.userId,
+      schoolId: session.schoolId,
+      entityType: 'Expense',
+      entityId: newExpense.id,
+      link: '/superadmin/dashboard',
+      audiences: [{ type: 'ROLE', recipientRole: 'SUPER_ADMIN' }],
+    });
 
     return NextResponse.json(newExpense);
 

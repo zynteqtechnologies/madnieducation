@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import {
   Users,
   Plus,
@@ -408,13 +409,19 @@ export default function AlumniMentorshipHub() {
                         <Calendar size={14} className="mr-1.5" />
                         Offered on {new Date(post.createdAt).toLocaleDateString()}
                       </div>
-                      <button 
-                        onClick={() => setSelectedPost(post)}
-                        className="flex items-center justify-center h-8 px-4 rounded-full bg-indigo-50 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-sm text-[10px] font-bold uppercase tracking-wider"
-                      >
-                        Manage <ChevronRight size={14} className="ml-1" />
-                      </button>
-                    </div>
+	                      <button 
+	                        onClick={() => setSelectedPost(post)}
+	                        className="flex items-center justify-center h-8 px-4 rounded-full bg-indigo-50 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-sm text-[10px] font-bold uppercase tracking-wider"
+	                      >
+	                        Manage <ChevronRight size={14} className="ml-1" />
+	                      </button>
+                        <Link
+                          href={`/alumni/registrations?postType=MENTORSHIP&postId=${post.id}`}
+                          className="flex items-center justify-center h-8 px-4 rounded-full bg-white text-indigo-600 border border-indigo-100 hover:bg-indigo-600 hover:text-white transition-all shadow-sm text-[10px] font-bold uppercase tracking-wider"
+                        >
+                          Registrations
+                        </Link>
+	                    </div>
                   </div>
                 </div>
               </div>

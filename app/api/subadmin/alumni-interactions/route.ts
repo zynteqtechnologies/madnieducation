@@ -26,9 +26,27 @@ export async function GET(request: Request) {
       ORDER BY m."createdAt" DESC
     `, [session.schoolId]);
 
+    const blogsRes = await pool.query(`
+      SELECT b.*, a.name as "alumniName", a.email as "alumniEmail", a."currentTitle" as "alumniTitle"
+      FROM "Blog" b
+      JOIN "Alumni" a ON b."alumniId" = a.id
+      WHERE b."schoolId" = $1
+      ORDER BY b."createdAt" DESC
+    `, [session.schoolId]);
+
+    const achievementsRes = await pool.query(`
+      SELECT ac.*, a.name as "alumniName", a.email as "alumniEmail", a."currentTitle" as "alumniTitle"
+      FROM "Achievement" ac
+      JOIN "Alumni" a ON ac."alumniId" = a.id
+      WHERE ac."schoolId" = $1
+      ORDER BY ac."createdAt" DESC
+    `, [session.schoolId]);
+
     return NextResponse.json({
       jobs: jobsRes.rows,
-      mentorships: mentorshipsRes.rows
+      mentorships: mentorshipsRes.rows,
+      blogs: blogsRes.rows,
+      achievements: achievementsRes.rows
     });
 
   } catch (error) {
@@ -44,26 +62,71 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
-    const { id, type, status } = await request.json();
+    const { id, type, status, isFeatured } = await request.json();
 
-    if (!id || !type || !status) {
+    if (!id || !type || (!status && typeof isFeatured !== 'boolean')) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    const table = type === 'job' ? 'CareerOpportunity' : 'MentorshipOffer';
+    const tableMap: Record<string, string> = {
+      job: 'CareerOpportunity',
+      mentorship: 'MentorshipOffer',
+      blog: 'Blog',
+      achievement: 'Achievement',
+    };
+    const table = tableMap[type];
+
+    if (!table) {
+      return NextResponse.json({ error: 'Invalid interaction type' }, { status: 400 });
+    }
     
     // Verify ownership before update
-    const checkRes = await pool.query(`SELECT id FROM "${table}" WHERE id = $1 AND "schoolId" = $2`, [id, session.schoolId]);
+    const checkRes = await pool.query(`SELECT id, status FROM "${table}" WHERE id = $1 AND "schoolId" = $2`, [id, session.schoolId]);
     if (checkRes.rows.length === 0) {
       return NextResponse.json({ error: 'Interaction not found for this school' }, { status: 404 });
     }
 
+    if (typeof isFeatured === 'boolean') {
+      if (type !== 'blog' && type !== 'achievement') {
+        return NextResponse.json({ error: 'Featured selection is only available for blogs and achievements' }, { status: 400 });
+      }
+
+      const currentStatus = status || checkRes.rows[0].status;
+      if (isFeatured && currentStatus !== 'APPROVED') {
+        return NextResponse.json({ error: 'Only approved content can be featured' }, { status: 400 });
+      }
+
+      if (isFeatured) {
+        await pool.query(`UPDATE "${table}" SET "isFeatured" = false, "updatedAt" = NOW() WHERE "schoolId" = $1`, [session.schoolId]);
+      }
+    }
+
+    const updates: string[] = [];
+    const params: any[] = [];
+
+    if (status) {
+      params.push(status);
+      updates.push(`status = $${params.length}`);
+
+      if (status !== 'APPROVED' && (type === 'blog' || type === 'achievement')) {
+        updates.push(`"isFeatured" = false`);
+      }
+    }
+
+    if (typeof isFeatured === 'boolean') {
+      params.push(isFeatured);
+      updates.push(`"isFeatured" = $${params.length}`);
+    }
+
+    updates.push(`"updatedAt" = NOW()`);
+    params.push(id);
+
     const result = await pool.query(`
-      UPDATE "${table}" 
-      SET status = $1, "updatedAt" = NOW()
-      WHERE id = $2
+      UPDATE "${table}"
+      SET ${updates.join(', ')}
+      WHERE id = $${params.length}
       RETURNING *
-    `, [status, id]);
+    `, params);
 
     return NextResponse.json(result.rows[0]);
 

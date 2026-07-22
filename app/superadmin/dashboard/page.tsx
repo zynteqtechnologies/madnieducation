@@ -143,7 +143,8 @@ export default function SuperAdminDashboard() {
               { name: 'Trust Registry', path: '/superadmin/trust', color: 'bg-blue-50', text: 'text-blue-700', icon: <Building2 size={16} /> },
               { name: 'School Directory', path: '/superadmin/school', color: 'bg-emerald-50', text: 'text-emerald-700', icon: <School size={16} /> },
               { name: 'Officer Roster', path: '/superadmin/subadmin', color: 'bg-purple-50', text: 'text-purple-700', icon: <Users size={16} /> },
-              { name: 'Academic Terms', path: '/superadmin/academic-year', color: 'bg-amber-50', text: 'text-amber-700', icon: <Activity size={16} /> }
+              { name: 'Academic Terms', path: '/superadmin/academic-year', color: 'bg-amber-50', text: 'text-amber-700', icon: <Activity size={16} /> },
+              { name: 'Monitoring', path: '/superadmin/monitoring', color: 'bg-slate-100', text: 'text-slate-700', icon: <ShieldCheck size={16} /> }
             ].map((item) => (
               <button
                 key={item.name}
