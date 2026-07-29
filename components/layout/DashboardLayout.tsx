@@ -20,7 +20,6 @@ import {
   Sun,
   Shield,
   Activity,
-  CalendarDays,
   Layers,
   UserCog,
   History,
@@ -38,7 +37,6 @@ import {
   Heart,
   PieChart,
   Newspaper,
-  FileText,
   Plus
 } from 'lucide-react';
 import NotificationBell from './NotificationBell';
@@ -110,6 +108,7 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
           'Events': 'events',
           'Updates': 'updates',
           'School Page': 'school-page',
+          'School Hub': 'school-hub',
           'Class Setup': 'class-setup'
         };
         const path = routeMap[item];
@@ -137,8 +136,8 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
     { name: 'Schools', icon: <School size={18} />, role: ['SUPER_ADMIN'] },
     { name: 'Mission Stats', icon: <Activity size={18} />, role: ['SUPER_ADMIN'] },
     { name: 'Monitoring', icon: <Shield size={18} />, role: ['SUPER_ADMIN'] },
-    { name: 'Updates', icon: <Newspaper size={18} />, role: ['SUPER_ADMIN', 'SUB_ADMIN'] },
-    { name: 'School Page', icon: <FileText size={18} />, role: ['SUB_ADMIN'] },
+    { name: 'Updates', icon: <Newspaper size={18} />, role: ['SUPER_ADMIN'] },
+    { name: 'School Hub', icon: <BookOpen size={18} />, role: ['SUB_ADMIN'] },
     { name: 'Class Setup', icon: <Sparkles size={18} />, role: ['SUB_ADMIN'] },
     { name: 'Academic', icon: <Layers size={18} />, role: ['SUB_ADMIN'] },
     { name: 'Accounts', icon: <Wallet size={18} />, role: ['SUB_ADMIN'] },
@@ -148,7 +147,6 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
     { name: 'Subadmins', icon: <UserCog size={18} />, role: ['SUPER_ADMIN'] },
     { name: 'Academic Years', icon: <Calendar size={18} />, role: ['SUPER_ADMIN'] },
     { name: 'Promotion', icon: <ArrowUpCircle size={18} />, role: ['SUB_ADMIN'] },
-    { name: 'Events', icon: <CalendarDays size={18} />, role: ['SUB_ADMIN'] },
   ].filter(item => item.role.includes(role));
 
   const getLayoutColors = () => {

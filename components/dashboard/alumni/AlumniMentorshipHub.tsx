@@ -14,7 +14,8 @@ import {
   Loader2,
   ChevronRight,
   UserCheck,
-  Tags
+  Tags,
+  Handshake
 } from 'lucide-react';
 
 const PROFESSIONAL_CATEGORIES = [
@@ -39,10 +40,18 @@ interface MentorshipPost {
   createdAt: string;
 }
 
-export default function AlumniMentorshipHub() {
+interface AlumniMentorshipHubProps {
+  autoOpenForm?: boolean;
+}
+
+export default function AlumniMentorshipHub({ autoOpenForm }: AlumniMentorshipHubProps) {
   const [posts, setPosts] = useState<MentorshipPost[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
+  const [showForm, setShowForm] = useState(Boolean(autoOpenForm));
+
+  useEffect(() => {
+    if (autoOpenForm) setShowForm(true);
+  }, [autoOpenForm]);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -212,6 +221,22 @@ export default function AlumniMentorshipHub() {
         </div>
       ) : (
         <>
+          {/* Header Action Row when list is non-empty */}
+          {!showForm && posts.length > 0 && (
+            <div className="flex items-center justify-between bg-white/40 backdrop-blur-md p-4 sm:p-5 rounded-3xl border border-white/60 shadow-sm">
+              <div>
+                <h3 className="text-base font-extrabold text-slate-800 tracking-tight">Your Mentorship Offers</h3>
+                <p className="text-xs text-slate-500 font-medium">Manage and offer student guidance sessions</p>
+              </div>
+              <button
+                onClick={() => setShowForm(true)}
+                className="bg-slate-900 text-white font-extrabold text-xs px-4 py-2.5 rounded-2xl shadow-md flex items-center gap-1.5 hover:bg-slate-800 transition-all cursor-pointer shrink-0"
+              >
+                <Plus size={15} />
+                <span>Add New Mentorship</span>
+              </button>
+            </div>
+          )}
 
           {/* Filter Chips */}
           {!showForm && (
@@ -332,12 +357,19 @@ export default function AlumniMentorshipHub() {
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em]">Accessing Mentorship Hub...</p>
               </div>
             ) : posts.length === 0 ? (
-              <div className="lg:col-span-2 py-32 text-center bg-white/40 backdrop-blur-md rounded-[2rem] border border-white/60 shadow-sm">
-                <div className="w-24 h-24 bg-white border border-slate-100 text-indigo-200 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
-                  <GraduationCap size={40} />
+              <div className="lg:col-span-2 py-24 flex flex-col items-center justify-center text-center bg-white/40 backdrop-blur-md rounded-[2.5rem] border border-white/60 shadow-sm p-8">
+                <div className="w-16 h-16 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-purple-100 shadow-sm">
+                  <Handshake size={32} />
                 </div>
-                <h3 className="text-xl font-bold text-slate-900">No active offers</h3>
-                <p className="text-slate-500 text-sm font-medium mt-2">Become a beacon of light for students today.</p>
+                <h3 className="text-lg font-bold text-slate-800">No Mentorship Offers Added Yet</h3>
+                <p className="text-slate-500 text-xs font-medium mt-1.5 max-w-sm mx-auto">Become a beacon of guidance for Madni students and junior alumni.</p>
+                <button
+                  onClick={() => setShowForm(true)}
+                  className="bg-slate-900 text-white hover:bg-slate-800 text-xs font-extrabold px-5 py-2.5 rounded-2xl shadow-md inline-flex items-center gap-2 cursor-pointer transition-all hover:scale-[1.02] mt-5"
+                >
+                  <Plus size={16} />
+                  <span>Add Now</span>
+                </button>
               </div>
             ) : posts.filter(post => selectedCategory === 'All' || post.category === selectedCategory).length === 0 ? (
               <div className="lg:col-span-2 py-32 text-center bg-white/40 backdrop-blur-md rounded-[2rem] border border-white/60 shadow-sm">

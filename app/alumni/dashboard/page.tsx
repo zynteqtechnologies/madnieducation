@@ -342,13 +342,16 @@ export default function AlumniDashboard() {
                   ) : (
                     updates.map((update, index) => (
                       <div key={update.id} className={`p-4 rounded-xl border transition-colors group ${index === 0 ? 'bg-blue-50/30 border-blue-100/50 hover:bg-blue-50/50' : 'bg-slate-50/50 border-slate-100 hover:bg-slate-50/80'}`}>
-	                        <div className="mb-3 aspect-video rounded-lg overflow-hidden bg-gradient-to-br from-blue-50 to-slate-100 border border-white/70 flex items-center justify-center">
-	                          {update.imageUrl ? (
-	                            <img src={update.imageUrl} alt={update.title} className="h-full w-full object-cover" />
-	                          ) : (
-	                            <Megaphone size={22} className="text-blue-300" />
-	                          )}
-	                        </div>
+                          <div className="mb-3 relative aspect-video rounded-lg overflow-hidden bg-gradient-to-br from-blue-50 to-slate-100 border border-white/70">
+                            {update.imageUrl ? (
+                              <img src={update.imageUrl} alt={update.title} className="absolute inset-0 w-full h-full object-cover" />
+                            ) : (
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <Megaphone size={22} className="text-blue-300" />
+                              </div>
+                            )}
+                          </div>
+
                         <div className="flex items-center gap-2 mb-1.5">
                           <Calendar size={13} className={index === 0 ? 'text-blue-600' : 'text-slate-500'} />
                           <span className={`text-[10px] font-bold uppercase tracking-wide ${index === 0 ? 'text-blue-600' : 'text-slate-500'}`}>{formatUpdateDate(update)}</span>

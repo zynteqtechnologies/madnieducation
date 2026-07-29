@@ -29,12 +29,17 @@ interface Achievement {
 
 interface AlumniAchievementHubProps {
   hideHeader?: boolean;
+  autoOpenForm?: boolean;
 }
 
-const AlumniAchievementHub: React.FC<AlumniAchievementHubProps> = ({ hideHeader }) => {
+const AlumniAchievementHub: React.FC<AlumniAchievementHubProps> = ({ hideHeader, autoOpenForm }) => {
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
+  const [showForm, setShowForm] = useState(Boolean(autoOpenForm));
+
+  useEffect(() => {
+    if (autoOpenForm) setShowForm(true);
+  }, [autoOpenForm]);
   const [selectedAchievement, setSelectedAchievement] = useState<Achievement | null>(null);
   const [formData, setFormData] = useState({
     title: '',
@@ -228,6 +233,22 @@ const AlumniAchievementHub: React.FC<AlumniAchievementHubProps> = ({ hideHeader 
         </div>
       ) : (
         <>
+          {/* Header Action Row when list is non-empty */}
+          {!showForm && achievements.length > 0 && (
+            <div className="flex items-center justify-between bg-white/40 backdrop-blur-md p-4 sm:p-5 rounded-3xl border border-white/60 shadow-sm">
+              <div>
+                <h3 className="text-base font-extrabold text-slate-800 tracking-tight">Your Achievements</h3>
+                <p className="text-xs text-slate-500 font-medium">Manage and document your milestones</p>
+              </div>
+              <button
+                onClick={() => setShowForm(true)}
+                className="bg-slate-900 text-white font-extrabold text-xs px-4 py-2.5 rounded-2xl shadow-md flex items-center gap-1.5 hover:bg-slate-800 transition-all cursor-pointer shrink-0"
+              >
+                <Plus size={15} />
+                <span>Add New Achievement</span>
+              </button>
+            </div>
+          )}
 
           {showForm && (
             <div className="bg-white/40 backdrop-blur-md p-8 md:p-10 rounded-[2rem] border border-white/60 shadow-xl shadow-slate-900/5 overflow-hidden animate-in zoom-in-95 duration-300">
@@ -360,12 +381,19 @@ const AlumniAchievementHub: React.FC<AlumniAchievementHubProps> = ({ hideHeader 
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em]">Loading success stories...</p>
               </div>
             ) : achievements.length === 0 ? (
-              <div className="lg:col-span-2 py-32 flex flex-col items-center justify-center text-center bg-white/40 backdrop-blur-md rounded-[2rem] border border-white/60 shadow-sm">
-                <div className="w-20 h-20 bg-blue-50 text-blue-300 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Trophy size={40} />
+              <div className="lg:col-span-2 py-24 flex flex-col items-center justify-center text-center bg-white/40 backdrop-blur-md rounded-[2.5rem] border border-white/60 shadow-sm p-8">
+                <div className="w-16 h-16 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-amber-100 shadow-sm">
+                  <Trophy size={32} />
                 </div>
-                <h3 className="text-xl font-bold text-slate-800">Your wall is ready</h3>
-                <p className="text-slate-500 text-xs font-medium mt-2">Document your milestones and inspire others.</p>
+                <h3 className="text-lg font-bold text-slate-800">No Achievements Added Yet</h3>
+                <p className="text-slate-500 text-xs font-medium mt-1.5 max-w-sm mx-auto">Document your milestones, awards & honors to inspire the community.</p>
+                <button
+                  onClick={() => setShowForm(true)}
+                  className="bg-slate-900 text-white hover:bg-slate-800 text-xs font-extrabold px-5 py-2.5 rounded-2xl shadow-md inline-flex items-center gap-2 cursor-pointer transition-all hover:scale-[1.02] mt-5"
+                >
+                  <Plus size={16} />
+                  <span>Add Now</span>
+                </button>
               </div>
             ) : achievements.map(achievement => (
               <div key={achievement.id} className="bg-white/60 backdrop-blur-md rounded-3xl border border-white shadow-sm hover:shadow-xl hover:shadow-blue-900/5 hover:-translate-y-1 transition-all duration-300 overflow-hidden group">

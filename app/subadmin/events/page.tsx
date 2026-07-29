@@ -1,7 +1,5 @@
 import { getSessionFromCookies } from '@/lib/auth';
 import { redirect } from 'next/navigation';
-import DashboardLayout from '@/components/layout/DashboardLayout';
-import EventGallery from '@/components/dashboard/sub-admin/EventGallery';
 
 export default async function EventsPage() {
   const session = await getSessionFromCookies('ADMIN');
@@ -9,9 +7,5 @@ export default async function EventsPage() {
     redirect('/subadmin/login');
   }
 
-  return (
-    <DashboardLayout title="Events" role="SUB_ADMIN" activeItem="Events">
-      <EventGallery schoolId={session.schoolId} />
-    </DashboardLayout>
-  );
+  redirect('/subadmin/school-hub?tab=events');
 }

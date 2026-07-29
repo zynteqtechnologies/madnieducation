@@ -1,48 +1,176 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
+  AlertCircle,
+  BookOpen,
+  Briefcase,
+  CheckCircle2,
+  Clock,
+  Eye,
+  FileText,
+  GraduationCap,
+  Handshake,
+  ListFilter,
   Plus,
   Sparkles,
   Trophy,
-  BookOpen,
-  Briefcase,
-  Handshake,
-  Clock,
-  CheckCircle2,
-  AlertCircle,
-  ChevronRight,
-  Trash2,
-  Edit3,
-  ExternalLink,
-  BarChart2,
-  FileText,
-  User,
-  Heart,
-  MessageSquare,
-  Share2,
-  Calendar,
-  GraduationCap
+  XCircle,
 } from 'lucide-react';
 import AlumniAchievementHub from './AlumniAchievementHub';
 import AlumniBlogHub from './AlumniBlogHub';
 import AlumniCareerHub from './AlumniCareerHub';
 import AlumniMentorshipHub from './AlumniMentorshipHub';
-import CreatePostModal from './CreatePostModal';
+import CreatePostSubmenu from './CreatePostSubmenu';
+
+type ManagerTab = 'all' | 'achievements' | 'blogs' | 'careers' | 'mentorship' | 'contributions';
+type StatusFilter = 'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED';
+type PostTypeFilter = 'ALL' | 'ACHIEVEMENT' | 'STORY' | 'JOB' | 'INTERNSHIP' | 'MENTORSHIP';
+
+interface MyPost {
+  id: string;
+  title: string;
+  description: string;
+  type: Exclude<PostTypeFilter, 'ALL'>;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | string;
+  createdAt?: string | null;
+  date?: string | null;
+  mediaUrl?: string | null;
+  companyName?: string | null;
+  meta?: string | null;
+}
+
+const statusFilters: Array<{ id: StatusFilter; label: string }> = [
+  { id: 'ALL', label: 'All' },
+  { id: 'PENDING', label: 'Pending' },
+  { id: 'APPROVED', label: 'Approved' },
+  { id: 'REJECTED', label: 'Rejected' },
+];
+
+const typeFilters: Array<{ id: PostTypeFilter; label: string }> = [
+  { id: 'ALL', label: 'All Types' },
+  { id: 'JOB', label: 'Jobs' },
+  { id: 'INTERNSHIP', label: 'Internships' },
+  { id: 'MENTORSHIP', label: 'Mentorship' },
+  { id: 'STORY', label: 'Stories' },
+  { id: 'ACHIEVEMENT', label: 'Achievements' },
+];
+
+const typeStyles: Record<Exclude<PostTypeFilter, 'ALL'>, { label: string; color: string; icon: React.ReactNode }> = {
+  ACHIEVEMENT: {
+    label: 'Achievement',
+    color: 'bg-amber-50 text-amber-700 border-amber-200',
+    icon: <Trophy size={15} />,
+  },
+  STORY: {
+    label: 'Story',
+    color: 'bg-sky-50 text-sky-700 border-sky-200',
+    icon: <BookOpen size={15} />,
+  },
+  JOB: {
+    label: 'Job',
+    color: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    icon: <Briefcase size={15} />,
+  },
+  INTERNSHIP: {
+    label: 'Internship',
+    color: 'bg-teal-50 text-teal-700 border-teal-200',
+    icon: <GraduationCap size={15} />,
+  },
+  MENTORSHIP: {
+    label: 'Mentorship',
+    color: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+    icon: <Handshake size={15} />,
+  },
+};
+
+const statusStyles: Record<string, { label: string; color: string; icon: React.ReactNode; note: string }> = {
+  PENDING: {
+    label: 'Pending',
+    color: 'bg-amber-50 text-amber-700 border-amber-200',
+    icon: <Clock size={14} />,
+    note: 'Waiting for review',
+  },
+  APPROVED: {
+    label: 'Approved',
+    color: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    icon: <CheckCircle2 size={14} />,
+    note: 'Visible after approval',
+  },
+  REJECTED: {
+    label: 'Rejected',
+    color: 'bg-rose-50 text-rose-700 border-rose-200',
+    icon: <XCircle size={14} />,
+    note: 'Needs revision',
+  },
+};
+
+function getStatusStyle(status: string) {
+  return statusStyles[status] || statusStyles.PENDING;
+}
+
+function formatDate(value?: string | null) {
+  if (!value) return 'No date';
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'No date';
+
+  return date.toLocaleDateString('en-US', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+}
+
+function PostRowSkeleton() {
+  return (
+    <article className="animate-pulse rounded-3xl border border-white/80 bg-white/70 p-5 shadow-sm">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0 flex-1 space-y-3">
+          <div className="flex flex-wrap gap-2">
+            <div className="h-5 w-24 rounded-full bg-blue-100/90" />
+            <div className="h-5 w-20 rounded-full bg-slate-200/80" />
+            <div className="h-5 w-28 rounded-full bg-slate-100" />
+          </div>
+          <div className="h-5 w-3/4 rounded-full bg-slate-200/80" />
+          <div className="space-y-2">
+            <div className="h-3 w-full rounded-full bg-slate-200/70" />
+            <div className="h-3 w-2/3 rounded-full bg-slate-200/70" />
+          </div>
+        </div>
+        <div className="h-10 w-24 rounded-2xl bg-slate-100" />
+      </div>
+    </article>
+  );
+}
 
 export default function AlumniMyPostsHub() {
-  const [activeTab, setActiveTab] = useState<'all' | 'achievements' | 'blogs' | 'careers' | 'mentorship'>('all');
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<ManagerTab>('all');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
+  const [typeFilter, setTypeFilter] = useState<PostTypeFilter>('ALL');
+  const [isSubmenuOpen, setIsSubmenuOpen] = useState(false);
+  const [autoOpenForm, setAutoOpenForm] = useState(false);
   const [userData, setUserData] = useState<any>(null);
   const [achievementsList, setAchievementsList] = useState<any[]>([]);
   const [blogsList, setBlogsList] = useState<any[]>([]);
   const [careersList, setCareersList] = useState<any[]>([]);
   const [mentorshipList, setMentorshipList] = useState<any[]>([]);
+  const [contributionsList, setContributionsList] = useState<any[]>([]);
+  const [aoyWinner, setAoyWinner] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetch('/api/auth/me').then(res => res.json()).then(data => {
-      if (!data.error) setUserData(data);
+      if (!data.error) {
+        setUserData(data);
+        fetch(`/api/alumni/contributions?alumniId=${data.id}`).then(r => r.json()).then(c => {
+          setContributionsList(Array.isArray(c) ? c : []);
+        }).catch(() => []);
+      }
+    }).catch(() => { });
+
+    fetch('/api/public/alumni-of-the-year').then(res => res.json()).then(data => {
+      if (data && !data.error) setAoyWinner(data);
     }).catch(() => { });
 
     fetchAllMyPosts();
@@ -69,281 +197,469 @@ export default function AlumniMyPostsHub() {
     }
   };
 
+  const posts = useMemo<MyPost[]>(() => {
+    const normalized: MyPost[] = [
+      ...achievementsList.map((item) => ({
+        id: item.id,
+        title: item.title || 'Untitled achievement',
+        description: item.description || '',
+        type: 'ACHIEVEMENT' as const,
+        status: item.status || 'PENDING',
+        createdAt: item.createdAt,
+        date: item.date,
+        mediaUrl: item.mediaUrl,
+        meta: item.category,
+      })),
+      ...blogsList.map((item) => ({
+        id: item.id,
+        title: item.title || 'Untitled story',
+        description: item.content || '',
+        type: 'STORY' as const,
+        status: item.status || 'PENDING',
+        createdAt: item.createdAt,
+        mediaUrl: item.mediaUrl,
+        meta: Array.isArray(item.tags) ? item.tags.slice(0, 2).join(', ') : null,
+      })),
+      ...careersList.map((item) => {
+        const type: MyPost['type'] = item.type === 'INTERNSHIP' ? 'INTERNSHIP' : 'JOB';
+        return {
+          id: item.id,
+          title: item.role && item.companyName ? `${item.role} at ${item.companyName}` : item.role || 'Career opportunity',
+          description: item.description || '',
+          type,
+          status: item.status || 'PENDING',
+          createdAt: item.createdAt,
+          companyName: item.companyName,
+          meta: [item.location, item.workMode].filter(Boolean).join(' | '),
+        };
+      }),
+      ...mentorshipList.map((item) => ({
+        id: item.id,
+        title: item.title || 'Mentorship offer',
+        description: item.description || '',
+        type: 'MENTORSHIP' as const,
+        status: item.status || 'PENDING',
+        createdAt: item.createdAt,
+        meta: item.category || item.targetStudent,
+      })),
+    ];
+
+    return normalized.sort((a, b) => {
+      const first = new Date(a.createdAt || a.date || 0).getTime();
+      const second = new Date(b.createdAt || b.date || 0).getTime();
+      return second - first;
+    });
+  }, [achievementsList, blogsList, careersList, mentorshipList]);
+
+  const counts = useMemo(() => {
+    const byStatus = {
+      ALL: posts.length,
+      PENDING: posts.filter(post => post.status === 'PENDING').length,
+      APPROVED: posts.filter(post => post.status === 'APPROVED').length,
+      REJECTED: posts.filter(post => post.status === 'REJECTED').length,
+    };
+
+    const byType = typeFilters.reduce((acc, filter) => {
+      acc[filter.id] = filter.id === 'ALL' ? posts.length : posts.filter(post => post.type === filter.id).length;
+      return acc;
+    }, {} as Record<PostTypeFilter, number>);
+
+    return { byStatus, byType };
+  }, [posts]);
+
+  const filteredPosts = posts.filter((post) => {
+    const matchesStatus = statusFilter === 'ALL' || post.status === statusFilter;
+    const matchesType = typeFilter === 'ALL' || post.type === typeFilter;
+    return matchesStatus && matchesType;
+  });
+
   const handleCreateSelect = (type: 'achievement' | 'story' | 'job' | 'mentorship') => {
+    setAutoOpenForm(true);
+    setIsSubmenuOpen(false);
+
     if (type === 'achievement') setActiveTab('achievements');
     else if (type === 'story') setActiveTab('blogs');
     else if (type === 'job') setActiveTab('careers');
-    else if (type === 'mentorship') setActiveTab('mentorship');
+    else setActiveTab('mentorship');
   };
 
-  // Compute real analytics
-  const totalCount = achievementsList.length + blogsList.length + careersList.length + mentorshipList.length;
-  const approvedCount = [
-    ...achievementsList,
-    ...blogsList,
-    ...careersList,
-    ...mentorshipList
-  ].filter(i => i.status === 'APPROVED').length;
-  const pendingCount = totalCount - approvedCount;
+  const openManager = (postType: MyPost['type']) => {
+    setAutoOpenForm(false);
 
-  return (
-    <div className="max-w-5xl mx-auto space-y-6 animate-in fade-in duration-300 pb-16">
-      
-      {/* 1. Portal Theme Alumni Creator Card */}
-      <div className="bg-white/90 backdrop-blur-md rounded-3xl border border-white/80 shadow-xl shadow-slate-900/5 overflow-hidden relative group">
-        
-        {/* Portal Signature Gradient Header */}
-        <div className="h-32 bg-gradient-to-r from-[#143d43] via-[#1b4a50] to-[#0d2a4a] relative p-6 flex items-start justify-between">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-white text-xs font-bold border border-white/20">
-            <Sparkles size={13} className="text-amber-300 animate-pulse" />
-            <span>Alumni Creator Hub</span>
-          </span>
+    if (postType === 'ACHIEVEMENT') setActiveTab('achievements');
+    else if (postType === 'STORY') setActiveTab('blogs');
+    else if (postType === 'MENTORSHIP') setActiveTab('mentorship');
+    else setActiveTab('careers');
+  };
 
-          <button
-            onClick={() => setIsCreateModalOpen(true)}
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs shadow-lg shadow-blue-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
-          >
-            <Plus size={16} />
-            <span>+ Create New Post</span>
+  const returnToTracker = () => {
+    setAutoOpenForm(false);
+    setActiveTab('all');
+    fetchAllMyPosts();
+  };
+
+  if (activeTab === 'achievements') {
+    return (
+      <div className="space-y-4 pb-16">
+        <button onClick={returnToTracker} className="rounded-2xl border border-white bg-white/70 px-4 py-2 text-xs font-bold text-slate-600 shadow-sm hover:text-slate-950">
+          Back to My Posts
+        </button>
+        <AlumniAchievementHub autoOpenForm={autoOpenForm} />
+      </div>
+    );
+  }
+
+  if (activeTab === 'blogs') {
+    return (
+      <div className="space-y-4 pb-16">
+        <button onClick={returnToTracker} className="rounded-2xl border border-white bg-white/70 px-4 py-2 text-xs font-bold text-slate-600 shadow-sm hover:text-slate-950">
+          Back to My Posts
+        </button>
+        <AlumniBlogHub autoOpenForm={autoOpenForm} />
+      </div>
+    );
+  }
+
+  if (activeTab === 'careers') {
+    return (
+      <div className="space-y-4 pb-16">
+        <button onClick={returnToTracker} className="rounded-2xl border border-white bg-white/70 px-4 py-2 text-xs font-bold text-slate-600 shadow-sm hover:text-slate-950">
+          Back to My Posts
+        </button>
+        <AlumniCareerHub autoOpenForm={autoOpenForm} />
+      </div>
+    );
+  }
+
+  if (activeTab === 'mentorship') {
+    return (
+      <div className="space-y-4 pb-16">
+        <button onClick={returnToTracker} className="rounded-2xl border border-white bg-white/70 px-4 py-2 text-xs font-bold text-slate-600 shadow-sm hover:text-slate-950">
+          Back to My Posts
+        </button>
+        <AlumniMentorshipHub autoOpenForm={autoOpenForm} />
+      </div>
+    );
+  }
+
+  if (activeTab === 'contributions') {
+    return (
+      <div className="space-y-6 pb-16">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <button onClick={returnToTracker} className="w-fit rounded-2xl border border-white bg-white/70 px-4 py-2 text-xs font-bold text-slate-600 shadow-sm hover:text-slate-950">
+            Back to My Posts
           </button>
+          <span className="inline-flex w-fit items-center gap-1.5 rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
+            <FileText size={13} />
+            My Financial & Infrastructure Impact
+          </span>
         </div>
 
-        {/* Profile Details & Live Analytics Grid */}
-        <div className="p-6 pt-0 relative z-10">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 -mt-10 mb-6">
-            <div className="flex items-end gap-4">
-              <div className="relative shrink-0">
-                {userData?.profilePic ? (
-                  <img src={userData.profilePic} alt={userData.name} className="w-20 h-20 rounded-2xl object-cover border-4 border-white shadow-md" />
-                ) : (
-                  <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-black text-2xl flex items-center justify-center border-4 border-white shadow-md overflow-hidden">
-                    {userData?.name ? userData.name.charAt(0) : 'A'}
+        <div className="rounded-3xl border border-white/70 bg-white/50 p-5 shadow-xl shadow-slate-900/5 backdrop-blur-md sm:p-6">
+          <h3 className="mb-1 text-lg font-black text-slate-900">My Contributions & Tax Receipts</h3>
+          <p className="mb-6 text-xs font-medium text-slate-500">Download official 80G tax receipt PDFs for all your donations, construction aid, and student sponsorships.</p>
+
+          {contributionsList.length === 0 ? (
+            <div className="rounded-3xl border border-dashed border-slate-200 bg-white/60 px-5 py-16 text-center">
+              <p className="text-sm font-bold text-slate-700">No financial contributions logged yet.</p>
+              <p className="mt-1 text-xs text-slate-400">When you sponsor student fees or construction aid, your tax receipt PDF will appear here for instant download.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              {contributionsList.map((c: any) => (
+                <div key={c.id} className="flex min-w-0 flex-col justify-between space-y-4 rounded-3xl border border-white/80 bg-white/75 p-5 shadow-sm">
+                  <div>
+                    <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                      <span className="rounded-full border border-emerald-100 bg-emerald-50 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-emerald-800">
+                        {c.contributionType || 'FINANCIAL'}
+                      </span>
+                      <span className="text-xs font-bold text-slate-400">
+                        {new Date(c.date || c.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+
+                    <h4 className="break-words text-sm font-bold text-slate-900">{c.title}</h4>
+                    {c.description && <p className="mt-1 break-words text-xs text-slate-500">{c.description}</p>}
+
+                    {c.amount && (
+                      <div className="mt-3 text-lg font-black text-emerald-700">
+                        Rs. {parseFloat(c.amount).toLocaleString('en-IN')}
+                      </div>
+                    )}
                   </div>
-                )}
-                <span className="absolute -bottom-1 -right-1 w-5 h-5 bg-emerald-500 text-white rounded-full flex items-center justify-center text-[10px] font-bold border-2 border-white">✓</span>
+
+                  <a
+                    href={`/api/public/download-receipt?id=${c.id}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex min-h-10 w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-black"
+                  >
+                    <FileText size={14} />
+                    <span>Download 80G Receipt PDF</span>
+                  </a>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mx-auto flex w-full max-w-7xl flex-col gap-5 pb-16 animate-in fade-in duration-300">
+      {/* Alumni of the Year Spotlight Banner */}
+      {aoyWinner && (
+        <section className="relative overflow-hidden rounded-3xl border border-amber-200/80 bg-amber-50/70 p-5 shadow-xl shadow-slate-900/5 backdrop-blur-md">
+          <div className="relative z-10 flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+            <div className="flex min-w-0 items-start gap-4">
+              <div className="relative shrink-0">
+                <img
+                  src={aoyWinner.alumniProfilePic || '/images/img-101.jpg'}
+                  alt={aoyWinner.alumniName}
+                  className="h-16 w-16 rounded-2xl border-2 border-amber-400 object-cover shadow-md sm:h-20 sm:w-20"
+                />
+                <span className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full border border-white bg-amber-500 text-white shadow-md">
+                  <Trophy size={13} />
+                </span>
               </div>
 
-              <div className="mb-1">
-                <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">{userData?.name || 'Alumni Creator'}</h2>
-                <p className="text-xs text-slate-500 font-medium flex items-center gap-1.5 mt-0.5">
-                  <GraduationCap size={14} className="text-blue-600" />
-                  <span>Batch of {userData?.batchYear || '2026-27'}</span>
-                  <span>·</span>
-                  <span>{userData?.schoolName || 'Madni Education Trust'}</span>
+              <div className="min-w-0 space-y-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="rounded-full bg-amber-500 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-white">
+                    Alumni of the Year {aoyWinner.year || 2026}
+                  </span>
+                  {aoyWinner.schoolName && (
+                    <span className="break-words text-[11px] font-bold text-slate-500">
+                      {aoyWinner.schoolName}
+                    </span>
+                  )}
+                </div>
+
+                <h3 className="break-words text-lg font-black tracking-tight text-slate-900 sm:text-xl">
+                  {aoyWinner.alumniName}
+                </h3>
+                <p className="break-words text-xs font-bold text-amber-900">
+                  {aoyWinner.headline || 'Top Educational Aid & Computer Lab Sponsor'}
+                </p>
+                <p className="mt-1 line-clamp-2 max-w-2xl break-words text-xs font-medium text-slate-600">
+                  "{aoyWinner.reason}"
                 </p>
               </div>
             </div>
 
-            {/* Real Analytics Counter Cards */}
-            <div className="flex items-center gap-3 overflow-x-auto pb-1">
-              <div className="px-4 py-2.5 rounded-2xl bg-slate-50 border border-slate-100 text-center min-w-[85px]">
-                <span className="text-lg font-black text-slate-900 block leading-none">{totalCount}</span>
-                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Total</span>
+            {Array.isArray(aoyWinner.highlights) && aoyWinner.highlights.length > 0 && (
+              <div className="w-full min-w-0 rounded-2xl border border-amber-200/60 bg-white/80 p-4 text-xs font-semibold text-slate-700 backdrop-blur-md md:w-auto md:min-w-[260px] md:shrink-0">
+                <p className="border-b border-amber-100 pb-1 text-[10px] font-black uppercase tracking-widest text-amber-900">
+                  Key Impact Highlights
+                </p>
+                <div className="mt-2 space-y-1.5">
+                  {aoyWinner.highlights.map((h: string, idx: number) => (
+                    <p key={idx} className="flex min-w-0 items-center gap-1.5 break-words text-[11px]">
+                      <CheckCircle2 size={12} className="shrink-0 text-amber-500" />
+                      <span className="min-w-0 break-words">{h}</span>
+                    </p>
+                  ))}
+                </div>
               </div>
-              <div className="px-4 py-2.5 rounded-2xl bg-emerald-50 border border-emerald-100 text-center min-w-[85px]">
-                <span className="text-lg font-black text-emerald-700 block leading-none">{approvedCount}</span>
-                <span className="text-[10px] text-emerald-600 font-bold uppercase tracking-wider">Approved</span>
-              </div>
-              <div className="px-4 py-2.5 rounded-2xl bg-amber-50 border border-amber-100 text-center min-w-[85px]">
-                <span className="text-lg font-black text-amber-700 block leading-none">{pendingCount}</span>
-                <span className="text-[10px] text-amber-600 font-bold uppercase tracking-wider">In Review</span>
-              </div>
-            </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      <section className="relative overflow-visible rounded-3xl border border-white/60 bg-white/40 p-5 shadow-xl shadow-slate-900/5 backdrop-blur-md sm:p-6">
+        <div className="relative z-10 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div className="min-w-0">
+            <span className="inline-flex w-fit items-center gap-1.5 rounded-full border border-blue-500/10 bg-blue-500/10 px-2.5 py-0.5 text-[11px] font-bold text-blue-600">
+              <Sparkles size={11} className="animate-pulse" />
+              Submission Tracker
+            </span>
+            <h2 className="mt-2 text-xl font-extrabold tracking-tight text-slate-800 sm:text-2xl">My Posts</h2>
+            <p className="mt-1 max-w-xl text-xs font-medium leading-relaxed text-slate-600">
+              Track your jobs, internships, mentorship offers, stories, and achievements in one place.
+            </p>
+            {userData?.schoolName && (
+              <p className="mt-2 text-xs font-semibold text-slate-500">{userData.schoolName}</p>
+            )}
           </div>
 
-          {/* 2. Portal Palette Quick Post Action Cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 border-t border-slate-100">
+          <div className="relative">
             <button
-              onClick={() => setActiveTab('achievements')}
-              className="p-3.5 rounded-2xl bg-amber-50/60 hover:bg-amber-50 border border-amber-200/80 text-left transition-all hover:scale-[1.02] cursor-pointer group"
+              type="button"
+              onClick={() => setIsSubmenuOpen(!isSubmenuOpen)}
+              className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 px-4 text-xs font-extrabold text-white shadow-md shadow-blue-500/20 transition-all hover:bg-blue-700 sm:w-auto"
             >
-              <div className="flex items-center justify-between text-xs font-bold text-amber-700 mb-1">
-                <span className="flex items-center gap-1.5"><Trophy size={15} /> Achievements</span>
-                <span className="bg-amber-200/60 text-amber-800 text-[10px] px-2 py-0.5 rounded-full font-black">{achievementsList.length}</span>
-              </div>
-              <p className="text-[11px] text-slate-600 line-clamp-1 font-medium">Share awards & honors</p>
+              <Plus size={15} />
+              <span>Create Post</span>
             </button>
 
-            <button
-              onClick={() => setActiveTab('blogs')}
-              className="p-3.5 rounded-2xl bg-blue-50/60 hover:bg-blue-50 border border-blue-200/80 text-left transition-all hover:scale-[1.02] cursor-pointer group"
-            >
-              <div className="flex items-center justify-between text-xs font-bold text-blue-700 mb-1">
-                <span className="flex items-center gap-1.5"><BookOpen size={15} /> Stories / Blogs</span>
-                <span className="bg-blue-200/60 text-blue-800 text-[10px] px-2 py-0.5 rounded-full font-black">{blogsList.length}</span>
-              </div>
-              <p className="text-[11px] text-slate-600 line-clamp-1 font-medium">Write articles & memories</p>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('careers')}
-              className="p-3.5 rounded-2xl bg-emerald-50/60 hover:bg-emerald-50 border border-emerald-200/80 text-left transition-all hover:scale-[1.02] cursor-pointer group"
-            >
-              <div className="flex items-center justify-between text-xs font-bold text-emerald-700 mb-1">
-                <span className="flex items-center gap-1.5"><Briefcase size={15} /> Jobs & Internships</span>
-                <span className="bg-emerald-200/60 text-emerald-800 text-[10px] px-2 py-0.5 rounded-full font-black">{careersList.length}</span>
-              </div>
-              <p className="text-[11px] text-slate-600 line-clamp-1 font-medium">Post hiring opportunities</p>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('mentorship')}
-              className="p-3.5 rounded-2xl bg-purple-50/60 hover:bg-purple-50 border border-purple-200/80 text-left transition-all hover:scale-[1.02] cursor-pointer group"
-            >
-              <div className="flex items-center justify-between text-xs font-bold text-purple-700 mb-1">
-                <span className="flex items-center gap-1.5"><Handshake size={15} /> Mentorship</span>
-                <span className="bg-purple-200/60 text-purple-800 text-[10px] px-2 py-0.5 rounded-full font-black">{mentorshipList.length}</span>
-              </div>
-              <p className="text-[11px] text-slate-600 line-clamp-1 font-medium">Offer student sessions</p>
-            </button>
+            <CreatePostSubmenu
+              isOpen={isSubmenuOpen}
+              onClose={() => setIsSubmenuOpen(false)}
+              onSelectType={handleCreateSelect}
+            />
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* 3. Submissions Filter Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-        {[
-          { id: 'all', label: 'All My Posts', count: totalCount },
-          { id: 'achievements', label: 'Achievements', count: achievementsList.length },
-          { id: 'blogs', label: 'Stories & Blogs', count: blogsList.length },
-          { id: 'careers', label: 'Jobs & Internships', count: careersList.length },
-          { id: 'mentorship', label: 'Mentorship Offers', count: mentorshipList.length },
-        ].map((tab) => {
-          const active = activeTab === tab.id;
+      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {statusFilters.map((status) => {
+          const style = status.id === 'ALL'
+            ? { color: 'border-slate-200 bg-white text-slate-800', icon: <FileText size={18} /> }
+            : getStatusStyle(status.id);
+          const active = statusFilter === status.id;
+
           return (
             <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
-                active
-                  ? 'bg-slate-900 text-white shadow-md'
-                  : 'bg-white/80 hover:bg-white text-slate-600 border border-slate-200/80'
+              key={status.id}
+              type="button"
+              onClick={() => setStatusFilter(status.id)}
+              className={`rounded-3xl border p-4 text-left shadow-lg shadow-slate-900/5 backdrop-blur-md transition-all ${
+                active ? 'border-slate-950 bg-slate-950 text-white' : `${style.color} hover:border-slate-300`
               }`}
             >
-              <span>{tab.label}</span>
-              <span className={`text-[10px] px-2 py-0.5 rounded-full ${active ? 'bg-blue-500 text-white' : 'bg-slate-100 text-slate-600'}`}>
-                {tab.count}
-              </span>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-xs font-bold uppercase">{status.label}</span>
+                <span className={active ? 'text-white' : ''}>{style.icon}</span>
+              </div>
+              <p className="mt-3 text-2xl font-black">{counts.byStatus[status.id]}</p>
             </button>
           );
         })}
-      </div>
+      </section>
 
-      {/* 4. Submissions Manager Content */}
-      {activeTab === 'achievements' ? (
-        <AlumniAchievementHub />
-      ) : activeTab === 'blogs' ? (
-        <AlumniBlogHub />
-      ) : activeTab === 'careers' ? (
-        <AlumniCareerHub />
-      ) : activeTab === 'mentorship' ? (
-        <AlumniMentorshipHub />
-      ) : (
-        /* ALL POSTS MANAGER LIST */
-        <div className="space-y-4">
-          {loading ? (
-            <div className="p-8 text-center text-slate-400 text-xs font-bold">Loading your posts...</div>
-          ) : totalCount === 0 ? (
-            <div className="bg-white/90 p-10 text-center space-y-3 rounded-3xl border border-slate-100 shadow-sm">
-              <div className="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mx-auto">
-                <FileText size={22} />
-              </div>
-              <h3 className="text-sm font-bold text-slate-800">You haven't submitted any posts yet</h3>
-              <p className="text-xs text-slate-500 max-w-sm mx-auto font-medium">Share your achievements, write a blog, or post a job opportunity to help Madni students!</p>
-              <button
-                onClick={() => setIsCreateModalOpen(true)}
-                className="mt-2 inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-xl hover:bg-blue-700 transition-colors cursor-pointer"
-              >
-                <Plus size={14} />
-                <span>Create First Post</span>
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {[
-                ...achievementsList.map(i => ({ ...i, itemType: 'achievement' })),
-                ...blogsList.map(i => ({ ...i, itemType: 'story' })),
-                ...careersList.map(i => ({ ...i, itemType: i.type?.toLowerCase() || 'job', title: `${i.role} at ${i.companyName}` })),
-                ...mentorshipList.map(i => ({ ...i, itemType: 'mentorship' }))
-              ].map((post) => {
-                const isApproved = post.status === 'APPROVED';
-                return (
-                  <article
-                    key={`post-${post.itemType}-${post.id}`}
-                    className="bg-white/90 backdrop-blur-md rounded-3xl p-5 sm:p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all duration-200"
-                  >
-                    <div className="flex items-start justify-between gap-4 mb-3">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-9 h-9 rounded-xl text-white flex items-center justify-center shrink-0 shadow-sm ${
-                          post.itemType === 'achievement' ? 'bg-amber-500' :
-                          post.itemType === 'story' ? 'bg-blue-600' :
-                          post.itemType === 'mentorship' ? 'bg-purple-600' : 'bg-emerald-600'
-                        }`}>
-                          {post.itemType === 'achievement' ? <Trophy size={18} /> :
-                           post.itemType === 'story' ? <BookOpen size={18} /> :
-                           post.itemType === 'mentorship' ? <Handshake size={18} /> : <Briefcase size={18} />}
-                        </div>
-
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">
-                              {post.itemType}
-                            </span>
-                            <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full flex items-center gap-1 ${
-                              isApproved ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
-                            }`}>
-                              {isApproved ? <CheckCircle2 size={10} /> : <Clock size={10} />}
-                              <span>{isApproved ? 'APPROVED' : 'PENDING REVIEW'}</span>
-                            </span>
-                          </div>
-                          <h4 className="font-extrabold text-slate-900 text-sm mt-1">{post.title}</h4>
-                        </div>
-                      </div>
-
-                      <button
-                        onClick={() => {
-                          if (post.itemType === 'achievement') setActiveTab('achievements');
-                          else if (post.itemType === 'story') setActiveTab('blogs');
-                          else if (post.itemType === 'mentorship') setActiveTab('mentorship');
-                          else setActiveTab('careers');
-                        }}
-                        className="text-xs font-bold text-blue-600 hover:underline shrink-0 cursor-pointer"
-                      >
-                        Manage →
-                      </button>
-                    </div>
-
-                    <p className="text-xs text-slate-600 font-medium line-clamp-2 leading-relaxed mb-3">
-                      {post.content || post.description}
-                    </p>
-
-                    {post.mediaUrl && (
-                      <div className="mb-3 rounded-2xl overflow-hidden aspect-video bg-slate-100 border border-slate-200/60 max-h-48">
-                        <img src={post.mediaUrl} alt={post.title} className="w-full h-full object-cover" />
-                      </div>
-                    )}
-
-                    <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400 font-medium">
-                      <span>Posted on {new Date(post.createdAt).toLocaleDateString()}</span>
-                      <span className="text-slate-500 font-bold">
-                        {isApproved ? 'Visible on Community Feed' : 'Under admin verification'}
-                      </span>
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-          )}
+      <section className="rounded-3xl border border-white/70 bg-white/50 p-3 shadow-xl shadow-slate-900/5 backdrop-blur-md">
+        <div className="mb-3 flex items-center gap-2 px-1 text-xs font-bold uppercase text-slate-500">
+          <ListFilter size={14} />
+          <span>Post Type</span>
         </div>
-      )}
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {typeFilters.map((filter) => {
+            const active = typeFilter === filter.id;
+            return (
+              <button
+                key={filter.id}
+                type="button"
+                onClick={() => setTypeFilter(filter.id)}
+                className={`inline-flex min-h-10 shrink-0 items-center gap-2 rounded-2xl border px-3 text-xs font-bold transition-all ${
+                  active
+                    ? 'border-slate-950 bg-slate-950 text-white'
+                    : 'border-white bg-white/80 text-slate-700 hover:border-blue-200 hover:text-blue-700'
+                }`}
+              >
+                <span>{filter.label}</span>
+                <span className={`rounded-full px-2 py-0.5 text-[10px] ${active ? 'bg-white/15 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                  {counts.byType[filter.id]}
+                </span>
+              </button>
+            );
+          })}
+          <button
+            type="button"
+            onClick={() => setActiveTab('contributions')}
+            className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-2xl border border-emerald-300 bg-emerald-50 text-emerald-800 px-3 text-xs font-bold transition-all hover:bg-emerald-100"
+          >
+            <FileText size={14} />
+            <span>My Impact & Receipts</span>
+            <span className="rounded-full bg-emerald-200 text-emerald-900 px-2 py-0.5 text-[10px] font-black">
+              {contributionsList.length}
+            </span>
+          </button>
+        </div>
+      </section>
 
-      {/* Creation Selector Modal */}
-      <CreatePostModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onSelectType={handleCreateSelect}
-      />
+      <section className="rounded-3xl border border-white/70 bg-white/50 p-3 shadow-xl shadow-slate-900/5 backdrop-blur-md">
+        <div className="flex flex-col gap-3 px-2 py-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h3 className="text-sm font-black text-slate-900">Submission List</h3>
+            <p className="text-xs font-medium text-slate-500">{filteredPosts.length} post{filteredPosts.length === 1 ? '' : 's'} shown</p>
+          </div>
+          <button
+            type="button"
+            onClick={fetchAllMyPosts}
+            className="w-fit rounded-2xl border border-white bg-white/80 px-3 py-2 text-xs font-bold text-slate-700 shadow-sm transition-all hover:border-blue-200 hover:text-blue-700"
+          >
+            Refresh
+          </button>
+        </div>
+
+        {loading ? (
+          <div className="space-y-3 pt-2">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <PostRowSkeleton key={index} />
+            ))}
+          </div>
+        ) : posts.length === 0 ? (
+          <div className="flex min-h-72 flex-col items-center justify-center rounded-3xl bg-white/50 p-8 text-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-600">
+              <FileText size={22} />
+            </div>
+            <h3 className="mt-4 text-base font-black text-slate-900">No posts submitted yet</h3>
+            <p className="mt-1 max-w-sm text-sm font-medium text-slate-500">
+              Create your first opportunity, story, achievement, or mentorship offer.
+            </p>
+          </div>
+        ) : filteredPosts.length === 0 ? (
+          <div className="flex min-h-56 flex-col items-center justify-center rounded-3xl bg-white/50 p-8 text-center">
+            <AlertCircle className="text-slate-400" size={24} />
+            <h3 className="mt-3 text-sm font-black text-slate-900">No posts match these filters</h3>
+            <button
+              type="button"
+              onClick={() => {
+                setStatusFilter('ALL');
+                setTypeFilter('ALL');
+              }}
+              className="mt-3 text-xs font-bold text-slate-700 underline"
+            >
+              Clear filters
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-3 pt-2">
+            {filteredPosts.map((post) => {
+              const typeStyle = typeStyles[post.type];
+              const statusStyle = getStatusStyle(post.status);
+
+              return (
+                <article key={`${post.type}-${post.id}`} className="grid gap-4 rounded-3xl border border-white/80 bg-white/70 p-5 shadow-sm transition-all hover:bg-white/85 hover:shadow-md lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+                  <div className="min-w-0">
+                    <div className="mb-2 flex flex-wrap items-center gap-2">
+                      <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-black ${typeStyle.color}`}>
+                        {typeStyle.icon}
+                        {typeStyle.label}
+                      </span>
+                      <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-black ${statusStyle.color}`}>
+                        {statusStyle.icon}
+                        {statusStyle.label}
+                      </span>
+                      <span className="rounded-full bg-white/70 px-2.5 py-1 text-xs font-semibold text-slate-500">Submitted {formatDate(post.createdAt || post.date)}</span>
+                    </div>
+
+                    <h4 className="break-words text-sm font-black text-slate-950 sm:text-base">{post.title}</h4>
+                    <p className="mt-1 line-clamp-2 max-w-4xl break-words text-sm font-medium leading-relaxed text-slate-600">
+                      {post.description || 'No description added.'}
+                    </p>
+                    <div className="mt-2 flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-500">
+                      {post.meta && <span>{post.meta}</span>}
+                      {post.meta && <span className="text-slate-300">|</span>}
+                      <span>{statusStyle.note}</span>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => openManager(post.type)}
+                    className="inline-flex min-h-10 items-center justify-center gap-2 rounded-2xl border border-white bg-white/80 px-3 text-xs font-bold text-slate-700 shadow-sm transition-all hover:border-blue-200 hover:text-blue-700"
+                  >
+                    <Eye size={15} />
+                    <span>View</span>
+                  </button>
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </section>
     </div>
   );
 }

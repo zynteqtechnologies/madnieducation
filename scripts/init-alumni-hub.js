@@ -34,6 +34,40 @@ async function initTables() {
         "createdAt" TIMESTAMP DEFAULT NOW(),
         "updatedAt" TIMESTAMP DEFAULT NOW()
       );
+      CREATE TABLE IF NOT EXISTS "AlumniOfTheYear" (
+        "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        "schoolId" UUID REFERENCES "School"(id) ON DELETE CASCADE,
+        "alumniId" UUID REFERENCES "Alumni"(id) ON DELETE CASCADE NOT NULL,
+        "year" INTEGER NOT NULL,
+        "headline" VARCHAR(255) NOT NULL,
+        "reason" TEXT NOT NULL,
+        "highlights" TEXT[],
+        "totalFinancialAid" DECIMAL(12,2),
+        "studentsHelpedCount" INTEGER,
+        "jobsPostedCount" INTEGER,
+        "mentorshipsCount" INTEGER,
+        "mediaUrl" TEXT,
+        "awardedByUserId" UUID REFERENCES "User"(id) ON DELETE SET NULL,
+        "createdAt" TIMESTAMP DEFAULT NOW(),
+        "updatedAt" TIMESTAMP DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS "AlumniContribution" (
+        "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        "alumniId" UUID REFERENCES "Alumni"(id) ON DELETE CASCADE NOT NULL,
+        "schoolId" UUID REFERENCES "School"(id) ON DELETE CASCADE,
+        "contributionType" VARCHAR(50) NOT NULL,
+        "title" VARCHAR(255) NOT NULL,
+        "description" TEXT,
+        "amount" DECIMAL(12,2),
+        "quantity" VARCHAR(100),
+        "date" DATE DEFAULT NOW(),
+        "proofUrl" TEXT,
+        "status" VARCHAR(20) DEFAULT 'APPROVED',
+        "isPublic" BOOLEAN DEFAULT TRUE,
+        "createdAt" TIMESTAMP DEFAULT NOW(),
+        "updatedAt" TIMESTAMP DEFAULT NOW()
+      );
     `);
 
     console.log('Tables created successfully.');

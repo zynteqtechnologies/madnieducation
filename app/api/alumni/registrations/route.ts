@@ -1,11 +1,16 @@
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { getSessionFromCookies } from '@/lib/auth';
+import { ensureCareerTables } from '@/lib/ensureCareerTables';
 
 export async function GET(request: Request) {
   try {
+    await ensureCareerTables();
+
     const session = await getSessionFromCookies('ALUMNI');
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const alumniId = (session as any).alumniId || session.userId;
 
     const { searchParams } = new URL(request.url);
     const postType = (searchParams.get('postType') || '').toUpperCase();
@@ -20,13 +25,13 @@ export async function GET(request: Request) {
           `SELECT id, role AS title, "companyName" AS subtitle, type
            FROM "CareerOpportunity"
            WHERE id = $1 AND "alumniId" = $2`,
-          [postId, session.userId]
+          [postId, alumniId]
         )
       : await pool.query(
           `SELECT id, title, category AS subtitle, 'MENTORSHIP' AS type
            FROM "MentorshipOffer"
            WHERE id = $1 AND "alumniId" = $2`,
-          [postId, session.userId]
+          [postId, alumniId]
         );
 
     const post = postResult.rows[0];
@@ -39,7 +44,7 @@ export async function GET(request: Request) {
        FROM "OpportunityRegistration"
        WHERE "postType" = $1 AND "postId" = $2 AND "alumniId" = $3
        ORDER BY "createdAt" DESC`,
-      [postType, postId, session.userId]
+      [postType, postId, alumniId]
     );
 
     return NextResponse.json({ post, registrations: registrationsResult.rows });

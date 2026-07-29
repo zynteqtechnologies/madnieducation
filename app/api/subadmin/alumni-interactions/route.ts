@@ -11,9 +11,26 @@ export async function GET(request: Request) {
 
     // Fetch both Jobs and Mentorships for this sub-admin's school
     const jobsRes = await pool.query(`
-      SELECT c.*, a.name as "alumniName", a.email as "alumniEmail"
+      SELECT 
+        c.*, 
+        a.name as "alumniName", 
+        a.email as "alumniEmail",
+        COALESCE(i_int.interested_count, 0)::int as "interestedCount",
+        COALESCE(i_ref.referral_count, 0)::int as "referralCount"
       FROM "CareerOpportunity" c
       JOIN "Alumni" a ON c."alumniId" = a.id
+      LEFT JOIN (
+        SELECT "careerId", COUNT(*)::int as interested_count
+        FROM "CareerInterest"
+        WHERE "interestType" = 'INTERESTED'
+        GROUP BY "careerId"
+      ) i_int ON c.id = i_int."careerId"
+      LEFT JOIN (
+        SELECT "careerId", COUNT(*)::int as referral_count
+        FROM "CareerInterest"
+        WHERE "interestType" = 'REFERRAL_CONTACT'
+        GROUP BY "careerId"
+      ) i_ref ON c.id = i_ref."careerId"
       WHERE c."schoolId" = $1
       ORDER BY c."createdAt" DESC
     `, [session.schoolId]);

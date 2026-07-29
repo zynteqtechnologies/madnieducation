@@ -355,3 +355,41 @@ export const schoolPageContents = pgTable('SchoolPageContent', {
   createdAt: timestamp('createdAt').defaultNow(),
   updatedAt: timestamp('updatedAt').defaultNow(),
 });
+
+// Alumni of the Year Table
+export const alumniOfTheYear = pgTable('AlumniOfTheYear', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  schoolId: uuid('schoolId').references(() => schools.id, { onDelete: 'cascade' }),
+  alumniId: uuid('alumniId').references(() => alumni.id, { onDelete: 'cascade' }).notNull(),
+  year: integer('year').notNull(),
+  headline: varchar('headline', { length: 255 }).notNull(),
+  reason: text('reason').notNull(),
+  highlights: text('highlights').array(),
+  totalFinancialAid: decimal('totalFinancialAid', { precision: 12, scale: 2 }),
+  studentsHelpedCount: integer('studentsHelpedCount'),
+  jobsPostedCount: integer('jobsPostedCount'),
+  mentorshipsCount: integer('mentorshipsCount'),
+  mediaUrl: text('mediaUrl'),
+  awardedByUserId: text('awardedByUserId'),
+  createdAt: timestamp('createdAt').defaultNow(),
+  updatedAt: timestamp('updatedAt').defaultNow(),
+});
+
+// Alumni Contributions Table
+export const alumniContributions = pgTable('AlumniContribution', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  alumniId: uuid('alumniId').references(() => alumni.id, { onDelete: 'cascade' }).notNull(),
+  schoolId: uuid('schoolId').references(() => schools.id, { onDelete: 'cascade' }),
+  contributionType: varchar('contributionType', { length: 50 }).notNull(), // FINANCIAL, GOODS, MENTORSHIP, REFERRAL, EVENT
+  title: varchar('title', { length: 255 }).notNull(),
+  description: text('description'),
+  amount: decimal('amount', { precision: 12, scale: 2 }),
+  quantity: varchar('quantity', { length: 100 }),
+  date: date('date').defaultNow(),
+  proofUrl: text('proofUrl'),
+  status: varchar('status', { length: 20 }).default('APPROVED'),
+  isPublic: boolean('isPublic').default(true),
+  createdAt: timestamp('createdAt').defaultNow(),
+  updatedAt: timestamp('updatedAt').defaultNow(),
+});
+

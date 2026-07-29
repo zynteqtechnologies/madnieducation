@@ -10,7 +10,7 @@ export default function SubAdminEditEventPage() {
   const id = params?.id as string;
 
   return (
-    <DashboardLayout title="Edit Event" role="SUB_ADMIN" activeItem="Events">
+    <DashboardLayout title="Edit Event" role="SUB_ADMIN" activeItem="School Hub">
       <EditEventForm eventId={id} />
     </DashboardLayout>
   );

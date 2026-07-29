@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2, PieChart, Receipt, Heart, Calendar, CreditCard } from 'lucide-react';
+import { Download, Loader2, PieChart, Receipt, Heart, Calendar, CreditCard } from 'lucide-react';
 
 export default function AlumniDonationHistory() {
   const [transactions, setTransactions] = useState<any[]>([]);
@@ -93,23 +93,23 @@ export default function AlumniDonationHistory() {
             <div className="col-span-2 md:col-span-1 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-3xl p-6 text-white shadow-lg shadow-blue-500/20 relative overflow-hidden group">
                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 blur-[30px] rounded-full pointer-events-none group-hover:scale-150 transition-transform duration-700"></div>
                <p className="text-[10px] font-bold uppercase tracking-wider text-blue-100">Total Donated</p>
-               <h3 className="text-2xl font-black mt-2">₹{totalAmount.toLocaleString()}</h3>
+               <h3 className="text-2xl font-black mt-2">Rs. {totalAmount.toLocaleString()}</h3>
             </div>
             <div className="bg-white rounded-3xl p-6 shadow-md shadow-slate-200/50 border border-slate-100">
                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Zakat</p>
-               <h3 className="text-xl font-bold text-slate-800 mt-2">₹{zakat.toLocaleString()}</h3>
+               <h3 className="text-xl font-bold text-slate-800 mt-2">Rs. {zakat.toLocaleString()}</h3>
             </div>
             <div className="bg-white rounded-3xl p-6 shadow-md shadow-slate-200/50 border border-slate-100">
                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Sadka</p>
-               <h3 className="text-xl font-bold text-slate-800 mt-2">₹{sadka.toLocaleString()}</h3>
+               <h3 className="text-xl font-bold text-slate-800 mt-2">Rs. {sadka.toLocaleString()}</h3>
             </div>
             <div className="bg-white rounded-3xl p-6 shadow-md shadow-slate-200/50 border border-slate-100">
                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Lillah</p>
-               <h3 className="text-xl font-bold text-slate-800 mt-2">₹{lillah.toLocaleString()}</h3>
+               <h3 className="text-xl font-bold text-slate-800 mt-2">Rs. {lillah.toLocaleString()}</h3>
             </div>
             <div className="bg-white rounded-3xl p-6 shadow-md shadow-slate-200/50 border border-slate-100">
                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Projects</p>
-               <h3 className="text-xl font-bold text-slate-800 mt-2">₹{projects.toLocaleString()}</h3>
+               <h3 className="text-xl font-bold text-slate-800 mt-2">Rs. {projects.toLocaleString()}</h3>
             </div>
           </div>
 
@@ -130,6 +130,7 @@ export default function AlumniDonationHistory() {
                      <th className="p-4">Payment Mode</th>
                      <th className="p-4">School & Details</th>
                      <th className="p-4">Status</th>
+                     <th className="p-4 pr-8">Receipt</th>
                    </tr>
                  </thead>
                  <tbody className="divide-y divide-slate-100/50">
@@ -147,7 +148,7 @@ export default function AlumniDonationHistory() {
                          </span>
                        </td>
                        <td className="p-4 font-bold text-slate-800 whitespace-nowrap">
-                         ₹{Number(tx.amount).toLocaleString()}
+                         Rs. {Number(tx.amount).toLocaleString()}
                        </td>
                        <td className="p-4">
                          <div className="flex items-center text-xs font-semibold text-slate-600 bg-slate-100/80 px-2.5 py-1 rounded-md w-fit uppercase tracking-wider">
@@ -167,11 +168,27 @@ export default function AlumniDonationHistory() {
                            {tx.status}
                          </div>
                        </td>
+                       <td className="p-4 pr-8">
+                         <a
+                           href={`/api/public/download-receipt?id=${tx.id}`}
+                           target="_blank"
+                           rel="noreferrer"
+                           className="inline-flex min-h-9 items-center justify-center gap-2 rounded-xl border border-blue-100 bg-blue-50 px-3 text-xs font-bold text-blue-700 transition-colors hover:bg-blue-100"
+                         >
+                           <Download size={14} />
+                           <span>PDF</span>
+                         </a>
+                         {tx.razorpayPaymentId && (
+                           <p className="mt-1 max-w-32 truncate text-[10px] font-semibold text-slate-400">
+                             {tx.razorpayPaymentId}
+                           </p>
+                         )}
+                       </td>
                      </tr>
                    ))}
                    {filteredTx.length === 0 && (
                      <tr>
-                       <td colSpan={6} className="p-8 text-center text-sm font-semibold text-slate-500">
+                       <td colSpan={7} className="p-8 text-center text-sm font-semibold text-slate-500">
                          No contributions found for this financial year.
                        </td>
                      </tr>

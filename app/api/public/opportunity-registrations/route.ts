@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { createNotification } from '@/lib/notifications';
+import { ensureCareerTables } from '@/lib/ensureCareerTables';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -14,6 +15,8 @@ const isUuid = (value: unknown) =>
 
 export async function POST(request: Request) {
   try {
+    await ensureCareerTables();
+
     const { postType, postId, name, email, phoneNo, linkedInUrl } = await request.json();
     const normalizedPostType = typeof postType === 'string' ? postType.toUpperCase() : '';
 

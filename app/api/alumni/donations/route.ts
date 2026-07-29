@@ -19,6 +19,7 @@ export async function GET() {
         t."createdAt",
         t.status,
         t."paymentMode",
+        t."razorpayPaymentId",
         s."schoolName",
         CASE 
           WHEN t.type IN ('CONSTRUCTION', 'EVENT') THEN e.title

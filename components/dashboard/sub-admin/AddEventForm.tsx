@@ -96,7 +96,7 @@ export default function AddEventForm() {
       });
 
       if (res.ok) {
-        router.push('/subadmin/events');
+        router.push('/subadmin/school-hub?tab=events');
       } else {
         const data = await res.json();
         setError(data.error || 'Failed to create event');
@@ -113,7 +113,7 @@ export default function AddEventForm() {
       {/* Top Navigation */}
       <div className="mb-6">
         <Link
-          href="/subadmin/events"
+          href="/subadmin/school-hub?tab=events"
           className="inline-flex items-center text-xs font-bold text-slate-600 hover:text-[#18181b] transition-colors"
         >
           <ArrowLeft size={16} className="mr-2" />
@@ -304,7 +304,7 @@ export default function AddEventForm() {
           {/* Actions */}
           <div className="pt-4 flex items-center justify-end space-x-3 border-t border-slate-200">
             <Link
-              href="/subadmin/events"
+              href="/subadmin/school-hub?tab=events"
               className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all"
             >
               Cancel

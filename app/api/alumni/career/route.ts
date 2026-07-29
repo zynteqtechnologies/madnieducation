@@ -2,16 +2,42 @@ import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { getSessionFromCookies } from '@/lib/auth';
 import { createNotification } from '@/lib/notifications';
+import { ensureCareerTables } from '@/lib/ensureCareerTables';
 
 export async function GET(request: Request) {
   try {
+    await ensureCareerTables();
+
     const session = await getSessionFromCookies('ALUMNI');
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const result = await pool.query(
-      'SELECT * FROM "CareerOpportunity" WHERE "alumniId" = $1 ORDER BY "createdAt" DESC',
-      [session.userId]
-    );
+    const alumniId = (session as any).alumniId || session.userId;
+
+    const result = await pool.query(`
+      SELECT 
+        c.*,
+        COALESCE(i_int.interested_count, 0)::int as "interestedCount",
+        COALESCE(i_ref.referral_count, 0)::int as "referralCount",
+        CASE WHEN u_int.id IS NOT NULL THEN true ELSE false END as "userInterested",
+        CASE WHEN u_ref.id IS NOT NULL THEN true ELSE false END as "userReferral"
+      FROM "CareerOpportunity" c
+      LEFT JOIN (
+        SELECT "careerId", COUNT(*)::int as interested_count
+        FROM "CareerInterest"
+        WHERE "interestType" = 'INTERESTED'
+        GROUP BY "careerId"
+      ) i_int ON c.id = i_int."careerId"
+      LEFT JOIN (
+        SELECT "careerId", COUNT(*)::int as referral_count
+        FROM "CareerInterest"
+        WHERE "interestType" = 'REFERRAL_CONTACT'
+        GROUP BY "careerId"
+      ) i_ref ON c.id = i_ref."careerId"
+      LEFT JOIN "CareerInterest" u_int ON c.id = u_int."careerId" AND u_int."alumniId" = $1 AND u_int."interestType" = 'INTERESTED'
+      LEFT JOIN "CareerInterest" u_ref ON c.id = u_ref."careerId" AND u_ref."alumniId" = $1 AND u_ref."interestType" = 'REFERRAL_CONTACT'
+      WHERE c."alumniId" = $1
+      ORDER BY c."createdAt" DESC
+    `, [alumniId]);
 
     return NextResponse.json(result.rows);
   } catch (error) {
@@ -22,17 +48,36 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    await ensureCareerTables();
+
     const session = await getSessionFromCookies('ALUMNI');
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { type, companyName, companyLink, role, relation, description, category } = await request.json();
+    const alumniId = (session as any).alumniId || session.userId;
+    const body = await request.json();
+    const {
+      type,
+      companyName,
+      companyLink,
+      role,
+      relation,
+      description,
+      category,
+      location,
+      workMode,
+      salary,
+      duration,
+      experienceLevel,
+      applyLink,
+      deadline
+    } = body;
 
     if (!type || !companyName || !role) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
     // Get alumni's schoolId to associate with the post
-    const alumniRes = await pool.query('SELECT "schoolId" FROM "Alumni" WHERE id = $1', [session.userId]);
+    const alumniRes = await pool.query('SELECT "schoolId" FROM "Alumni" WHERE id = $1', [alumniId]);
     const schoolId = alumniRes.rows[0]?.schoolId;
 
     if (!schoolId) {
@@ -41,10 +86,28 @@ export async function POST(request: Request) {
 
     const result = await pool.query(`
       INSERT INTO "CareerOpportunity" (
-        "alumniId", "schoolId", "type", "companyName", "companyLink", "role", "relation", "description", "category", "status"
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'PENDING')
+        "alumniId", "schoolId", "type", "companyName", "companyLink", "role", "relation", "description", "category",
+        "location", "workMode", "salary", "duration", "experienceLevel", "applyLink", "deadline", "status"
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, 'PENDING')
       RETURNING *
-    `, [session.userId, schoolId, type, companyName, companyLink, role, relation, description, category]);
+    `, [
+      alumniId,
+      schoolId,
+      type,
+      companyName,
+      companyLink || null,
+      role,
+      relation || null,
+      description || null,
+      category || 'Engineering & Tech',
+      location || null,
+      workMode || 'ON_SITE',
+      salary || null,
+      duration || null,
+      experienceLevel || null,
+      applyLink || null,
+      deadline ? new Date(deadline) : null
+    ]);
 
     await createNotification({
       title: 'New career opening submitted',
@@ -52,7 +115,7 @@ export async function POST(request: Request) {
       type: 'CAREER',
       priority: 'NORMAL',
       actorRole: 'ALUMNI',
-      actorId: session.userId,
+      actorId: alumniId,
       schoolId,
       entityType: 'CareerOpportunity',
       entityId: result.rows[0].id,

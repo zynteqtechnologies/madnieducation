@@ -10,7 +10,7 @@ export default async function AddEventPage() {
   }
 
   return (
-    <DashboardLayout title="Add Event" role="SUB_ADMIN" activeItem="Events">
+    <DashboardLayout title="Add Event" role="SUB_ADMIN" activeItem="School Hub">
       <AddEventForm />
     </DashboardLayout>
   );
