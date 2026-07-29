@@ -2,7 +2,7 @@
 
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import AlumniContributions from '@/components/dashboard/alumni/AlumniContributions';
-import React, { useEffect, useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import { Heart, Briefcase, Handshake, GraduationCap, Calendar, Sparkles, Megaphone, ArrowUpRight, Award, Target, Flame, Users, Trophy, UserSearch } from 'lucide-react';
 import AlumniCareerHub from '@/components/dashboard/alumni/AlumniCareerHub';
 import AlumniMentorshipHub from '@/components/dashboard/alumni/AlumniMentorshipHub';
@@ -47,7 +47,7 @@ const REVERSE_TAB_MAP: Record<string, string> = {
   'Profile': 'profile',
 };
 
-export default function AlumniDashboard() {
+function AlumniDashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState('Dashboard');
@@ -404,5 +404,13 @@ export default function AlumniDashboard() {
     >
       {renderContent()}
     </DashboardLayout>
+  );
+}
+
+export default function AlumniDashboard() {
+  return (
+    <Suspense fallback={null}>
+      <AlumniDashboardContent />
+    </Suspense>
   );
 }
