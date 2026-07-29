@@ -27,7 +27,11 @@ interface Achievement {
   createdAt: string;
 }
 
-const AlumniAchievementHub = () => {
+interface AlumniAchievementHubProps {
+  hideHeader?: boolean;
+}
+
+const AlumniAchievementHub: React.FC<AlumniAchievementHubProps> = ({ hideHeader }) => {
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -224,20 +228,6 @@ const AlumniAchievementHub = () => {
         </div>
       ) : (
         <>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 pb-2 border-b border-slate-100/50">
-            <div className="space-y-1">
-              <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">Success Wall</h2>
-              <p className="text-xs text-slate-500 font-medium">Celebrate your milestones with the alma mater</p>
-            </div>
-            {!showForm && (
-              <button
-                onClick={() => setShowForm(true)}
-                className="flex items-center px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl font-bold text-xs shadow-md shadow-blue-500/10 hover:shadow-lg hover:shadow-blue-500/20 active:scale-95 transition-all"
-              >
-                <Plus size={16} className="mr-2" /> Share Success
-              </button>
-            )}
-          </div>
 
           {showForm && (
             <div className="bg-white/40 backdrop-blur-md p-8 md:p-10 rounded-[2rem] border border-white/60 shadow-xl shadow-slate-900/5 overflow-hidden animate-in zoom-in-95 duration-300">

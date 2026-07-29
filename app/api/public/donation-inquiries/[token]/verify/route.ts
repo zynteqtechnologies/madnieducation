@@ -18,11 +18,13 @@ export async function POST(req: Request, context: RouteContext) {
     await ensureDonationInquiryTable();
     await ensureDonationTransactionTable();
     const { token } = await context.params;
+    const body = await req.json();
     const {
       razorpay_order_id,
       razorpay_payment_id,
       razorpay_signature,
-    } = await req.json();
+    } = body;
+    const donorPan = body.donorPan ? String(body.donorPan).trim().toUpperCase() : null;
 
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
       return NextResponse.json({ error: 'Missing Razorpay payment response' }, { status: 400, headers: publicDonationHeaders });
@@ -128,11 +130,13 @@ export async function POST(req: Request, context: RouteContext) {
         }
       }
 
+      const finalPan = donorPan || inquiry.donorPan;
+
       await client.query(
         `UPDATE "DonationInquiry"
-         SET status = 'PAID', "razorpayPaymentId" = $1, "paymentMode" = $2, "paidAt" = NOW(), "updatedAt" = NOW()
-         WHERE id = $3`,
-        [razorpay_payment_id, paymentMode, inquiry.id]
+         SET status = 'PAID', "razorpayPaymentId" = $1, "paymentMode" = $2, "donorPan" = COALESCE($3, "donorPan"), "paidAt" = NOW(), "updatedAt" = NOW()
+         WHERE id = $4`,
+        [razorpay_payment_id, paymentMode, finalPan, inquiry.id]
       );
 
       await client.query('COMMIT');
@@ -144,16 +148,18 @@ export async function POST(req: Request, context: RouteContext) {
     }
 
     const receiptNo = `MDT-${new Date().getFullYear()}-${String(inquiry.id).slice(0, 8).toUpperCase()}`;
+    const finalPanForReceipt = donorPan || inquiry.donorPan;
     const receiptEmailSent = await sendDonationReceiptEmail({
       to: inquiry.donorEmail,
       donorName: inquiry.donorName,
-      donorPan: inquiry.donorPan,
+      donorPan: finalPanForReceipt,
       amount: Number(inquiry.amount),
       donationType: inquiry.type,
       campaignTitle: inquiry.campaignTitle || 'General donation',
       schoolName: inquiry.schoolName || 'Madni Education Trust',
       paymentId: razorpay_payment_id,
       receiptNo,
+      paymentMode,
     });
 
     await createNotification({

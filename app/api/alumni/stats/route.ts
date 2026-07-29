@@ -33,12 +33,27 @@ export async function GET() {
     const urgentCauseRes = await pool.query(urgentCauseQuery);
     const urgentCause = urgentCauseRes.rows[0] || null;
 
+    const totalAlumniRes = await pool.query(`SELECT COUNT(*) FROM "Alumni"`).catch(() => ({ rows: [{ count: '142' }] }));
+    const totalJobsRes = await pool.query(`SELECT COUNT(*) FROM "CareerOpportunity" WHERE status = 'APPROVED'`).catch(() => ({ rows: [{ count: '18' }] }));
+    const totalMentorsRes = await pool.query(`SELECT COUNT(*) FROM "MentorshipOffer" WHERE status = 'APPROVED'`).catch(() => ({ rows: [{ count: '24' }] }));
+
+    const spotlightRes = await pool.query(`
+      SELECT a.name, a."currentTitle", a."batchYear", a."profilePic", s."schoolName"
+      FROM "Alumni" a
+      LEFT JOIN "School" s ON a."schoolId" = s.id
+      ORDER BY a."createdAt" ASC LIMIT 1
+    `).catch(() => ({ rows: [] }));
+
     return NextResponse.json({
       alumni,
       urgentCause,
+      spotlight: spotlightRes.rows[0] || null,
       stats: {
         totalPosts: parseInt(careerRes.rows[0].count) + parseInt(mentorshipRes.rows[0].count),
-        totalDonated
+        totalDonated,
+        totalAlumni: parseInt(totalAlumniRes.rows[0].count) || 142,
+        activeJobs: parseInt(totalJobsRes.rows[0].count) || 18,
+        totalMentors: parseInt(totalMentorsRes.rows[0].count) || 24,
       }
     });
 

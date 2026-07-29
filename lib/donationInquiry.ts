@@ -182,6 +182,7 @@ export async function sendDonationReceiptEmail({
   schoolName,
   paymentId,
   receiptNo,
+  paymentMode,
 }: {
   to: string;
   donorName: string;
@@ -192,6 +193,7 @@ export async function sendDonationReceiptEmail({
   schoolName: string;
   paymentId: string;
   receiptNo: string;
+  paymentMode?: string | null;
 }) {
   if (!process.env.RESEND_API_KEY) return false;
 
@@ -200,6 +202,38 @@ export async function sendDonationReceiptEmail({
     timeStyle: 'short',
     timeZone: 'Asia/Kolkata',
   });
+
+  const formattedMode = paymentMode
+    ? paymentMode.toLowerCase() === 'upi'
+      ? 'UPI / QR Code'
+      : paymentMode.toLowerCase() === 'card'
+      ? 'Credit / Debit Card'
+      : paymentMode.toLowerCase() === 'netbanking'
+      ? 'Net Banking'
+      : paymentMode.toLowerCase() === 'wallet'
+      ? 'Digital Wallet'
+      : paymentMode.toUpperCase()
+    : 'Online Payment (Razorpay)';
+
+  let pdfBase64: string | null = null;
+  try {
+    const { generateReceiptPdf } = await import('@/lib/generateReceiptPdf');
+    const pdfBuffer = await generateReceiptPdf({
+      receiptNo,
+      paidAt,
+      donorName,
+      donorPan,
+      schoolName,
+      campaignTitle,
+      donationType,
+      amount,
+      paymentId,
+      paymentMode: formattedMode,
+    });
+    pdfBase64 = pdfBuffer.toString('base64');
+  } catch (pdfErr) {
+    console.error('Failed to generate PDF attachment for receipt:', pdfErr);
+  }
 
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
@@ -211,6 +245,14 @@ export async function sendDonationReceiptEmail({
       from: process.env.RESEND_FROM_EMAIL || 'Madni Education <no-reply@resend.dev>',
       to: [to],
       subject: `Madni Education Trust donation receipt ${receiptNo}`,
+      attachments: pdfBase64
+        ? [
+            {
+              filename: `Donation_Receipt_${receiptNo}.pdf`,
+              content: pdfBase64,
+            },
+          ]
+        : [],
       html: `
         <div style="font-family: Arial, sans-serif; background: #FAF8F4; padding: 28px;">
           <div style="max-width: 640px; margin: 0 auto; background: #fff; border: 2px solid #1A6B5A; border-radius: 16px; padding: 28px;">
@@ -228,10 +270,11 @@ export async function sendDonationReceiptEmail({
                 <tr><td style="padding: 10px 0; color: #555;">School</td><td style="padding: 10px 0; font-weight: 700;">${escapeHtml(schoolName)}</td></tr>
                 <tr><td style="padding: 10px 0; color: #555;">Purpose</td><td style="padding: 10px 0; font-weight: 700;">${escapeHtml(campaignTitle)} (${escapeHtml(donationType)})</td></tr>
                 <tr><td style="padding: 12px 0; color: #1A6B5A; font-weight: 800;">Amount Received</td><td style="padding: 12px 0; color: #1A6B5A; font-size: 22px; font-weight: 800;">Rs. ${amount.toLocaleString('en-IN')}</td></tr>
+                <tr><td style="padding: 10px 0; color: #555;">Payment Mode</td><td style="padding: 10px 0; font-weight: 700; color: #1A6B5A;">${escapeHtml(formattedMode)}</td></tr>
                 <tr><td style="padding: 10px 0; color: #555;">Razorpay Payment ID</td><td style="padding: 10px 0; font-weight: 700;">${escapeHtml(paymentId)}</td></tr>
               </tbody>
             </table>
-            <p style="font-size: 12px; color: #666; line-height: 1.6; background: #FFF8EC; padding: 12px; border-radius: 10px;">This is a computer-generated receipt. Please keep this email for your donation and 80G tax records.</p>
+            <p style="font-size: 12px; color: #666; line-height: 1.6; background: #FFF8EC; padding: 12px; border-radius: 10px;">This is a computer-generated receipt. Please find attached the official PDF receipt for your 80G tax records.</p>
           </div>
         </div>
       `,

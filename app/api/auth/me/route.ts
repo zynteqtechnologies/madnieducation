@@ -30,14 +30,23 @@ export async function GET() {
       // 2. Check Alumni Session
       session = await getSessionFromCookies('ALUMNI');
       if (session) {
-        // Fetch alumni name from Alumni table
-        const alumniRes = await pool.query('SELECT name FROM "Alumni" WHERE id = $1', [session.userId]);
-        const name = alumniRes.rows[0]?.name || 'Alumni';
+        // Fetch alumni details from Alumni table
+        const alumniRes = await pool.query(`
+          SELECT a.name, a."batchYear", a."profilePic", a."currentTitle", s."schoolName"
+          FROM "Alumni" a
+          LEFT JOIN "School" s ON a."schoolId" = s.id
+          WHERE a.id = $1
+        `, [session.userId]);
+        const alumniData = alumniRes.rows[0] || {};
 
         userData = {
-          name,
+          name: alumniData.name || 'Alumni',
           email: session.email,
-          role: 'ALUMNI'
+          role: 'ALUMNI',
+          batchYear: alumniData.batchYear || null,
+          profilePic: alumniData.profilePic || null,
+          currentTitle: alumniData.currentTitle || null,
+          schoolName: alumniData.schoolName || 'Madni Education Trust'
         };
       }
     }

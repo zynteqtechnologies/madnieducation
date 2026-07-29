@@ -5,7 +5,7 @@ import Image from 'next/image';
 import {
   Users, BookOpen, Trophy, Briefcase, GraduationCap, Handshake,
   Search, Mail, ExternalLink, Loader2, X, Star, Building2, User,
-  MessageCircle, Globe, ChevronRight, Award
+  MessageCircle, Globe, ChevronRight, Award, Copy, Check, Link2
 } from 'lucide-react';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -392,6 +392,66 @@ function ToppersList({ toppers }: { toppers: Topper[] }) {
   );
 }
 
+// ─── LinkedIn URL Panel ───────────────────────────────────────────────────────
+
+function LinkedInPanel({ url }: { url: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  // Extract readable handle from URL  (e.g. linkedin.com/in/bilal-shaikh)
+  const handle = url.replace(/^https?:\/\/(www\.)?linkedin\.com\/in\/?/i, '').replace(/\/$/, '') || url;
+
+  return (
+    <div className="mt-3 rounded-2xl border border-[#0a66c2]/20 bg-[#0a66c2]/5 p-3 space-y-2.5">
+      {/* Header row */}
+      <div className="flex items-center gap-2">
+        <span className="w-5 h-5 shrink-0 flex items-center justify-center">
+          <svg className="w-4 h-4 fill-[#0a66c2]" viewBox="0 0 24 24">
+            <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
+          </svg>
+        </span>
+        <p className="text-[10px] font-bold text-[#0a66c2] uppercase tracking-wide">LinkedIn Profile</p>
+      </div>
+
+      {/* URL Display */}
+      <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 overflow-hidden">
+        <Link2 size={11} className="text-slate-400 shrink-0" />
+        <span className="text-[10px] font-semibold text-slate-600 truncate flex-1">/{handle}</span>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex gap-2">
+        <button
+          onClick={handleCopy}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl text-[10px] font-bold border transition-all cursor-pointer ${
+            copied
+              ? 'bg-emerald-500 text-white border-emerald-500'
+              : 'bg-white text-slate-600 border-slate-200 hover:border-[#0a66c2] hover:text-[#0a66c2]'
+          }`}
+        >
+          {copied ? <Check size={11} /> : <Copy size={11} />}
+          <span>{copied ? 'Copied!' : 'Copy URL'}</span>
+        </button>
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-xl text-[10px] font-bold bg-[#0a66c2] hover:bg-[#004182] text-white border border-[#0a66c2] transition-all"
+        >
+          <ExternalLink size={11} />
+          <span>Open Profile</span>
+        </a>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function AlumniDirectory() {
@@ -570,29 +630,17 @@ export default function AlumniDirectory() {
                       <div className="flex items-center gap-2 text-slate-700 font-bold"><Briefcase size={12} className="text-blue-400" /><span className="truncate">{member.currentTitle || 'Graduate'}</span></div>
                     </div>
                     {member.currentBio && <p className="text-xs text-slate-500 italic line-clamp-2 leading-relaxed">"{member.currentBio}"</p>}
-                    <div className="flex items-center justify-between border-t border-slate-100 pt-4 mt-auto">
-                      <div className="flex gap-2">
-                        {member.linkedIn && (
-                          <a href={member.linkedIn} target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-xl bg-white border border-slate-200 hover:border-blue-200 text-slate-400 hover:text-[#0a66c2] flex items-center justify-center transition-all shadow-sm">
-                            <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" /></svg>
-                          </a>
-                        )}
-                        {member.workLink && (
-                          <a href={member.workLink} target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-xl bg-white border border-slate-200 hover:border-blue-200 text-slate-400 hover:text-blue-600 flex items-center justify-center transition-all shadow-sm">
-                            <Globe size={14} />
-                          </a>
-                        )}
-                        <a href={`mailto:${member.email}`} className="w-8 h-8 rounded-xl bg-white border border-slate-200 hover:border-blue-200 text-slate-400 hover:text-blue-600 flex items-center justify-center transition-all shadow-sm">
-                          <Mail size={14} />
-                        </a>
-                      </div>
-                      <button
-                        onClick={() => setContactItem({ item: { ...member, alumniId: member.id, alumniEmail: member.email, alumniName: member.name, schoolName: member.schoolName || '' }, type: 'general' })}
-                        className="flex items-center gap-1.5 px-4 py-2 bg-slate-800 hover:bg-blue-600 text-white rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all shadow-md"
+                    {/* LinkedIn URL Panel */}
+                    {member.linkedIn ? (
+                      <LinkedInPanel url={member.linkedIn} />
+                    ) : (
+                      <a
+                        href={`mailto:${member.email}`}
+                        className="w-full flex items-center justify-center gap-1.5 mt-3 px-4 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-xl text-[10px] font-bold uppercase tracking-wider border border-slate-200 transition-all"
                       >
-                        Connect <ChevronRight size={12} />
-                      </button>
-                    </div>
+                        <Mail size={11} /> Send Email
+                      </a>
+                    )}
                   </div>
                 ))}
               </div>

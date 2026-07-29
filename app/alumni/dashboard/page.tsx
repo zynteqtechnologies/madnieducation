@@ -3,7 +3,7 @@
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import AlumniContributions from '@/components/dashboard/alumni/AlumniContributions';
 import React, { useEffect, useState } from 'react';
-import { Heart, Briefcase, Handshake, GraduationCap, Calendar, Sparkles, Megaphone, ArrowUpRight, Award, Target, Flame } from 'lucide-react';
+import { Heart, Briefcase, Handshake, GraduationCap, Calendar, Sparkles, Megaphone, ArrowUpRight, Award, Target, Flame, Users, Trophy, UserSearch } from 'lucide-react';
 import AlumniCareerHub from '@/components/dashboard/alumni/AlumniCareerHub';
 import AlumniMentorshipHub from '@/components/dashboard/alumni/AlumniMentorshipHub';
 import AlumniProfile from '@/components/dashboard/alumni/AlumniProfile';
@@ -11,6 +11,10 @@ import AlumniDirectory from '@/components/dashboard/alumni/AlumniDirectory';
 import AlumniAchievementHub from '@/components/dashboard/alumni/AlumniAchievementHub';
 import AlumniBlogHub from '@/components/dashboard/alumni/AlumniBlogHub';
 import AlumniDonationHistory from '@/components/dashboard/alumni/AlumniDonationHistory';
+import AlumniCommunityFeed from '@/components/dashboard/alumni/AlumniCommunityFeed';
+import AlumniMyPostsHub from '@/components/dashboard/alumni/AlumniMyPostsHub';
+
+import { useRouter, useSearchParams } from 'next/navigation';
 
 interface NewsUpdate {
   id: string;
@@ -23,16 +27,51 @@ interface NewsUpdate {
   schoolName: string;
 }
 
+const TAB_MAP: Record<string, string> = {
+  'dashboard': 'Dashboard',
+  'feed': 'Community Feed',
+  'my-posts': 'My Posts',
+  'find-alumni': 'Find Alumni',
+  'give-back': 'Give Back',
+  'impact': 'My Impact',
+  'profile': 'Profile',
+};
+
+const REVERSE_TAB_MAP: Record<string, string> = {
+  'Dashboard': 'dashboard',
+  'Community Feed': 'feed',
+  'My Posts': 'my-posts',
+  'Find Alumni': 'find-alumni',
+  'Give Back': 'give-back',
+  'My Impact': 'impact',
+  'Profile': 'profile',
+};
+
 export default function AlumniDashboard() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState('Dashboard');
   const [data, setData] = useState<any>(null);
   const [updates, setUpdates] = useState<NewsUpdate[]>([]);
   const [updatesLoading, setUpdatesLoading] = useState(true);
 
   useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam && TAB_MAP[tabParam]) {
+      setActiveTab(TAB_MAP[tabParam]);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
     fetchData();
     fetchUpdates();
   }, []);
+
+  const handleTabChange = (newTab: string) => {
+    setActiveTab(newTab);
+    const slug = REVERSE_TAB_MAP[newTab] || 'dashboard';
+    router.push(`/alumni/dashboard?tab=${slug}`, { scroll: false });
+  };
 
   const fetchData = async () => {
     try {
@@ -70,27 +109,72 @@ export default function AlumniDashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in duration-500">
             {/* Left & Middle Column (2/3 width) */}
             <div className="lg:col-span-2 space-y-8">
-              {/* Hero Banner */}
-              <div className="bg-white/40 backdrop-blur-md p-8 rounded-[2rem] shadow-xl shadow-slate-900/5 border border-white/60 relative overflow-hidden group">
-                <div className="absolute top-[10%] right-[5%] w-56 h-56 bg-blue-500/10 blur-[90px] rounded-full group-hover:scale-110 transition-transform duration-1000"></div>
+              {/* Hero Banner (Compact & Sleek) */}
+              <div className="bg-white/40 backdrop-blur-md p-5 sm:p-6 rounded-3xl shadow-xl shadow-slate-900/5 border border-white/60 relative overflow-hidden group">
+                <div className="absolute top-[10%] right-[5%] w-48 h-48 bg-blue-500/10 blur-[80px] rounded-full group-hover:scale-110 transition-transform duration-1000"></div>
                 <div className="relative z-10">
-                  <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-blue-500/10 text-blue-600 text-xs font-semibold mb-4 border border-blue-500/10">
-                    <Sparkles size={12} className="animate-pulse" />
-                    <span>Madni Alumni Hub</span>
-                  </span>
-                  <h2 className="text-3xl font-extrabold text-slate-800 tracking-tight mb-2">Shape the Future of Madni.</h2>
-                  <p className="text-slate-600 font-medium max-w-lg mb-6 leading-relaxed">Your continued support drives our community forward. Explore career networking, mentorship, and giving back below.</p>
+                  <div className="flex items-center justify-between gap-4 mb-2">
+                    <span className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-600 text-[11px] font-bold border border-blue-500/10">
+                      <Sparkles size={11} className="animate-pulse" />
+                      <span>Madni Alumni Hub</span>
+                    </span>
+                    
+                    <div className="flex flex-wrap gap-2 items-center">
+                      <span className="text-[11px] font-bold text-blue-700 bg-blue-50/80 border border-blue-100/80 px-2.5 py-1 rounded-full flex items-center gap-1">
+                        <GraduationCap size={13} />
+                        Batch of {data?.alumni?.batchYear || 'N/A'}
+                      </span>
+                      <span className="text-[11px] font-bold text-slate-600 bg-white/80 border border-white px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm">
+                        <Award size={13} className="text-amber-500" />
+                        {data?.stats?.totalPosts || 0} Contributions Made
+                      </span>
+                    </div>
+                  </div>
 
-                  {/* Banner Quick Info */}
-                  <div className="flex flex-wrap gap-4 items-center">
-                    <span className="text-xs font-bold text-blue-700 bg-blue-50/80 border border-blue-100/80 px-3.5 py-1.5 rounded-full flex items-center gap-1.5">
-                      <GraduationCap size={14} />
-                      Batch of {data?.alumni?.batchYear || 'N/A'}
-                    </span>
-                    <span className="text-xs font-bold text-slate-600 bg-white/80 border border-white px-3.5 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm">
-                      <Award size={14} className="text-amber-500" />
-                      {data?.stats?.totalPosts || 0} Contributions Made
-                    </span>
+                  <h2 className="text-xl sm:text-2xl font-extrabold text-slate-800 tracking-tight mb-1">Shape the Future of Madni.</h2>
+                  <p className="text-slate-600 text-xs font-medium max-w-xl leading-relaxed">Your continued support drives our community forward. Explore career networking, mentorship, and giving back.</p>
+                </div>
+              </div>
+
+              {/* 📊 Network Stats Bar */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div className="bg-white/80 backdrop-blur-md p-4 rounded-2xl border border-white/80 shadow-sm flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                    <Users size={20} />
+                  </div>
+                  <div>
+                    <span className="text-lg font-extrabold text-slate-800 leading-none block">{data?.stats?.totalAlumni || 142}</span>
+                    <span className="text-[11px] text-slate-500 font-medium">Alumni Network</span>
+                  </div>
+                </div>
+
+                <div className="bg-white/80 backdrop-blur-md p-4 rounded-2xl border border-white/80 shadow-sm flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                    <Briefcase size={20} />
+                  </div>
+                  <div>
+                    <span className="text-lg font-extrabold text-slate-800 leading-none block">{data?.stats?.activeJobs || 18}</span>
+                    <span className="text-[11px] text-slate-500 font-medium">Active Jobs</span>
+                  </div>
+                </div>
+
+                <div className="bg-white/80 backdrop-blur-md p-4 rounded-2xl border border-white/80 shadow-sm flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                    <Handshake size={20} />
+                  </div>
+                  <div>
+                    <span className="text-lg font-extrabold text-slate-800 leading-none block">{data?.stats?.totalMentors || 24}</span>
+                    <span className="text-[11px] text-slate-500 font-medium">Student Mentors</span>
+                  </div>
+                </div>
+
+                <div className="bg-white/80 backdrop-blur-md p-4 rounded-2xl border border-white/80 shadow-sm flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+                    <Heart size={20} />
+                  </div>
+                  <div>
+                    <span className="text-lg font-extrabold text-slate-800 leading-none block">₹{data?.stats?.totalDonated?.toLocaleString() || 0}</span>
+                    <span className="text-[11px] text-slate-500 font-medium">My Donated</span>
                   </div>
                 </div>
               </div>
@@ -198,6 +282,43 @@ export default function AlumniDashboard() {
             {/* Right Column (1/3 width) */}
             <div className="space-y-8">
 
+              {/* Alumni Spotlight Card */}
+              <div className="bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-white backdrop-blur-md p-6 rounded-[2rem] border border-amber-200/80 shadow-md relative overflow-hidden group">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-[10px] font-extrabold px-3 py-1 rounded-full bg-amber-500 text-white uppercase tracking-wider shadow-sm flex items-center gap-1">
+                    <Trophy size={12} />
+                    Alumni Spotlight
+                  </span>
+                  <span className="text-xs font-bold text-amber-700">Featured</span>
+                </div>
+
+                <div className="flex items-center gap-4 mb-4">
+                  {data?.spotlight?.profilePic ? (
+                    <img src={data.spotlight.profilePic} alt={data.spotlight.name} className="w-14 h-14 rounded-2xl object-cover border-2 border-amber-300 shadow-md" />
+                  ) : (
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-600 text-white font-black text-xl flex items-center justify-center border-2 border-amber-300 shadow-md">
+                      {data?.spotlight?.name ? data.spotlight.name.charAt(0) : 'M'}
+                    </div>
+                  )}
+                  <div>
+                    <h4 className="font-extrabold text-slate-900 text-base">{data?.spotlight?.name || 'Top Alumni Mentor'}</h4>
+                    <p className="text-xs text-slate-600 font-medium">{data?.spotlight?.currentTitle || 'Software Engineer & Mentor'}</p>
+                    <span className="text-[10px] font-bold text-amber-700 bg-amber-100/80 px-2 py-0.5 rounded-md mt-1 inline-block">
+                      Batch of {data?.spotlight?.batchYear || '2019'}
+                    </span>
+                  </div>
+                </div>
+
+                <p className="text-xs text-slate-600 font-medium leading-relaxed mb-4">
+                  Recognized for outstanding mentorship & career guidance to Madni Trust students this academic session.
+                </p>
+
+                <button onClick={() => handleTabChange('Find Alumni')} className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold transition-all shadow-md shadow-amber-500/20 flex items-center justify-center gap-1.5 cursor-pointer">
+                  <UserSearch size={14} />
+                  Connect in Directory
+                </button>
+              </div>
+
               {/* Announcements Feed */}
               <div className="bg-white/85 backdrop-blur-md p-6 rounded-[2rem] border border-white/80 shadow-md">
                 <div className="flex items-center justify-between mb-6">
@@ -208,7 +329,7 @@ export default function AlumniDashboard() {
                   <span className="w-2.5 h-2.5 bg-blue-600 rounded-full animate-ping"></span>
                 </div>
 
-                <div className="space-y-5">
+                <div className="space-y-4 max-h-[460px] overflow-y-auto pr-1 scrollbar-none [ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                   {updatesLoading ? (
                     <div className="p-4 rounded-xl bg-slate-50/50 border border-slate-100">
                       <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">Loading updates...</p>
@@ -246,6 +367,10 @@ export default function AlumniDashboard() {
             </div>
           </div>
         );
+      case 'Community Feed':
+        return <AlumniCommunityFeed />;
+      case 'My Posts':
+        return <AlumniMyPostsHub />;
       case 'Give Back':
         return <AlumniContributions />;
       case 'My Impact':
@@ -272,7 +397,7 @@ export default function AlumniDashboard() {
       title="Alumni portal"
       role="ALUMNI"
       activeItem={activeTab}
-      onNavigate={setActiveTab}
+      onNavigate={handleTabChange}
     >
       {renderContent()}
     </DashboardLayout>

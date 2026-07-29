@@ -11,6 +11,7 @@ import {
 import { createNotification } from '@/lib/notifications';
 
 export async function POST(req: Request) {
+  // Public donation inquiry creation endpoint
   try {
     await ensureDonationInquiryTable();
 

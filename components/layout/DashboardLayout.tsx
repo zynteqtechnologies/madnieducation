@@ -38,9 +38,11 @@ import {
   Heart,
   PieChart,
   Newspaper,
-  FileText
+  FileText,
+  Plus
 } from 'lucide-react';
 import NotificationBell from './NotificationBell';
+import CreatePostModal from '../dashboard/alumni/CreatePostModal';
 
 interface DashboardLayoutProps {
   title: string;
@@ -55,6 +57,7 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [userData, setUserData] = useState<any>(null);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [internalActiveItem, setInternalActiveItem] = useState('Dashboard');
   const [greeting, setGreeting] = useState('Welcome back');
   const activeItem = externalActiveItem || internalActiveItem;
@@ -125,6 +128,8 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
 
   const menuItems = [
     { name: 'Dashboard', icon: <LayoutDashboard size={18} />, role: ['SUPER_ADMIN', 'SUB_ADMIN', 'ALUMNI'] },
+    { name: 'Community Feed', icon: <Sparkles size={18} />, role: ['ALUMNI'] },
+    { name: 'My Posts', icon: <Plus size={18} />, role: ['ALUMNI'] },
     { name: 'Find Alumni', icon: <UserSearch size={18} />, role: ['ALUMNI'] },
     { name: 'Give Back', icon: <Heart size={18} />, role: ['ALUMNI'] },
     { name: 'My Impact', icon: <PieChart size={18} />, role: ['ALUMNI'] },
@@ -139,10 +144,6 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
     { name: 'Accounts', icon: <Wallet size={18} />, role: ['SUB_ADMIN'] },
     { name: 'Donations', icon: <History size={18} />, role: ['SUB_ADMIN'] },
     { name: 'Students', icon: <Users size={18} />, role: ['SUPER_ADMIN', 'SUB_ADMIN'] },
-    { name: 'Careers', icon: <Briefcase size={18} />, role: ['ALUMNI'] },
-    { name: 'Mentorship', icon: <Handshake size={18} />, role: ['ALUMNI'] },
-    { name: 'Achievements', icon: <Trophy size={18} />, role: ['ALUMNI'] },
-    { name: 'Blogs', icon: <BookOpen size={18} />, role: ['ALUMNI'] },
     { name: 'Alumni', icon: <GraduationCap size={18} />, role: ['SUB_ADMIN'] },
     { name: 'Subadmins', icon: <UserCog size={18} />, role: ['SUPER_ADMIN'] },
     { name: 'Academic Years', icon: <Calendar size={18} />, role: ['SUPER_ADMIN'] },
@@ -232,6 +233,16 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
               >
                 <Menu size={16} />
               </button>
+
+              {(role as string) === 'ALUMNI' && (
+                <button
+                  onClick={() => setIsCreateModalOpen(true)}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold shadow-md shadow-blue-500/20 transition-all hover:scale-[1.03] active:scale-[0.97] cursor-pointer"
+                >
+                  <Plus size={15} />
+                  <span className="hidden sm:inline">Create</span>
+                </button>
+              )}
 
               <NotificationBell role={role} variant="subadmin" />
 
@@ -611,6 +622,13 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
           background-size: 16px 16px, 100% 100%;
         }
       `}</style>
+      <CreatePostModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSelectType={() => {
+          handleNavigate('My Posts');
+        }}
+      />
     </div>
   );
 }

@@ -107,25 +107,6 @@ export default function AlumniCareerHub() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-700">
-      
-      {/* Header section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-2 border-b border-slate-100/50">
-        <div className="space-y-1">
-          <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight flex items-center">
-             <Briefcase className="mr-3 text-blue-600" size={28} />
-             Professional Opportunities
-          </h2>
-          <p className="text-xs text-slate-500 font-medium ml-1">Empower your fellow alumni and students</p>
-        </div>
-        {!showForm && (
-          <button 
-            onClick={() => setShowForm(true)}
-            className="flex items-center justify-center px-6 py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-2xl font-bold text-xs shadow-md shadow-blue-500/10 hover:shadow-lg hover:shadow-blue-500/20 active:scale-95 transition-all"
-          >
-            <Plus size={16} className="mr-2" /> Share Opportunity
-          </button>
-        )}
-      </div>
 
       {/* Filter Chips */}
       {!showForm && (
