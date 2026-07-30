@@ -148,6 +148,7 @@ export default function AlumniMyPostsHub() {
   const [activeTab, setActiveTab] = useState<ManagerTab>('all');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
   const [typeFilter, setTypeFilter] = useState<PostTypeFilter>('ALL');
+  const [initialCareerType, setInitialCareerType] = useState<'JOB' | 'INTERNSHIP'>('JOB');
   const [isSubmenuOpen, setIsSubmenuOpen] = useState(false);
   const [autoOpenForm, setAutoOpenForm] = useState(false);
   const [userData, setUserData] = useState<any>(null);
@@ -273,14 +274,23 @@ export default function AlumniMyPostsHub() {
     return matchesStatus && matchesType;
   });
 
-  const handleCreateSelect = (type: 'achievement' | 'story' | 'job' | 'mentorship') => {
+  const handleCreateSelect = (type: 'achievement' | 'story' | 'job' | 'internship' | 'mentorship') => {
     setAutoOpenForm(true);
     setIsSubmenuOpen(false);
 
-    if (type === 'achievement') setActiveTab('achievements');
-    else if (type === 'story') setActiveTab('blogs');
-    else if (type === 'job') setActiveTab('careers');
-    else setActiveTab('mentorship');
+    if (type === 'achievement') {
+      setActiveTab('achievements');
+    } else if (type === 'story') {
+      setActiveTab('blogs');
+    } else if (type === 'job') {
+      setInitialCareerType('JOB');
+      setActiveTab('careers');
+    } else if (type === 'internship') {
+      setInitialCareerType('INTERNSHIP');
+      setActiveTab('careers');
+    } else if (type === 'mentorship') {
+      setActiveTab('mentorship');
+    }
   };
 
   const openManager = (postType: MyPost['type']) => {
@@ -289,7 +299,11 @@ export default function AlumniMyPostsHub() {
     if (postType === 'ACHIEVEMENT') setActiveTab('achievements');
     else if (postType === 'STORY') setActiveTab('blogs');
     else if (postType === 'MENTORSHIP') setActiveTab('mentorship');
-    else setActiveTab('careers');
+    else {
+      if (postType === 'INTERNSHIP') setInitialCareerType('INTERNSHIP');
+      else setInitialCareerType('JOB');
+      setActiveTab('careers');
+    }
   };
 
   const returnToTracker = () => {
@@ -326,7 +340,7 @@ export default function AlumniMyPostsHub() {
         <button onClick={returnToTracker} className="rounded-2xl border border-white bg-white/70 px-4 py-2 text-xs font-bold text-slate-600 shadow-sm hover:text-slate-950">
           Back to My Posts
         </button>
-        <AlumniCareerHub autoOpenForm={autoOpenForm} />
+        <AlumniCareerHub autoOpenForm={autoOpenForm} initialType={initialCareerType} />
       </div>
     );
   }
@@ -527,10 +541,64 @@ export default function AlumniMyPostsHub() {
         })}
       </section>
 
-      <section className="rounded-3xl border border-white/70 bg-white/50 p-3 shadow-xl shadow-slate-900/5 backdrop-blur-md">
-        <div className="mb-3 flex items-center gap-2 px-1 text-xs font-bold uppercase text-slate-500">
-          <ListFilter size={14} />
-          <span>Post Type</span>
+      <section className="rounded-3xl border border-white/70 bg-white/50 p-4 shadow-xl shadow-slate-900/5 backdrop-blur-md">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2 px-1">
+          <div className="flex items-center gap-2 text-xs font-bold uppercase text-slate-500">
+            <ListFilter size={14} />
+            <span>Post Type</span>
+          </div>
+
+          {/* Quick Action Button for active filter */}
+          {typeFilter === 'JOB' && (
+            <button
+              type="button"
+              onClick={() => handleCreateSelect('job')}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-extrabold text-white shadow-sm hover:bg-emerald-700 transition-all cursor-pointer"
+            >
+              <Plus size={14} />
+              <span>+ Post New Job</span>
+            </button>
+          )}
+          {typeFilter === 'INTERNSHIP' && (
+            <button
+              type="button"
+              onClick={() => handleCreateSelect('internship')}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-teal-600 px-3 py-1.5 text-xs font-extrabold text-white shadow-sm hover:bg-teal-700 transition-all cursor-pointer"
+            >
+              <Plus size={14} />
+              <span>+ Post New Internship</span>
+            </button>
+          )}
+          {typeFilter === 'MENTORSHIP' && (
+            <button
+              type="button"
+              onClick={() => handleCreateSelect('mentorship')}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3 py-1.5 text-xs font-extrabold text-white shadow-sm hover:bg-indigo-700 transition-all cursor-pointer"
+            >
+              <Plus size={14} />
+              <span>+ Offer Mentorship</span>
+            </button>
+          )}
+          {typeFilter === 'STORY' && (
+            <button
+              type="button"
+              onClick={() => handleCreateSelect('story')}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-sky-600 px-3 py-1.5 text-xs font-extrabold text-white shadow-sm hover:bg-sky-700 transition-all cursor-pointer"
+            >
+              <Plus size={14} />
+              <span>+ Add Story / Blog</span>
+            </button>
+          )}
+          {typeFilter === 'ACHIEVEMENT' && (
+            <button
+              type="button"
+              onClick={() => handleCreateSelect('achievement')}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-amber-500 px-3 py-1.5 text-xs font-extrabold text-white shadow-sm hover:bg-amber-600 transition-all cursor-pointer"
+            >
+              <Plus size={14} />
+              <span>+ Add Achievement</span>
+            </button>
+          )}
         </div>
         <div className="flex gap-2 overflow-x-auto pb-1">
           {typeFilters.map((filter) => {
@@ -572,13 +640,70 @@ export default function AlumniMyPostsHub() {
             <h3 className="text-sm font-black text-slate-900">Submission List</h3>
             <p className="text-xs font-medium text-slate-500">{filteredPosts.length} post{filteredPosts.length === 1 ? '' : 's'} shown</p>
           </div>
-          <button
-            type="button"
-            onClick={fetchAllMyPosts}
-            className="w-fit rounded-2xl border border-white bg-white/80 px-3 py-2 text-xs font-bold text-slate-700 shadow-sm transition-all hover:border-blue-200 hover:text-blue-700"
-          >
-            Refresh
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            {typeFilter === 'JOB' && (
+              <button
+                type="button"
+                onClick={() => handleCreateSelect('job')}
+                className="inline-flex items-center gap-1.5 rounded-2xl bg-emerald-600 px-3 py-2 text-xs font-extrabold text-white shadow-sm hover:bg-emerald-700 cursor-pointer"
+              >
+                <Plus size={14} />
+                <span>+ Post New Job</span>
+              </button>
+            )}
+
+            {typeFilter === 'INTERNSHIP' && (
+              <button
+                type="button"
+                onClick={() => handleCreateSelect('internship')}
+                className="inline-flex items-center gap-1.5 rounded-2xl bg-teal-600 px-3 py-2 text-xs font-extrabold text-white shadow-sm hover:bg-teal-700 cursor-pointer"
+              >
+                <Plus size={14} />
+                <span>+ Post New Internship</span>
+              </button>
+            )}
+
+            {typeFilter === 'MENTORSHIP' && (
+              <button
+                type="button"
+                onClick={() => handleCreateSelect('mentorship')}
+                className="inline-flex items-center gap-1.5 rounded-2xl bg-indigo-600 px-3 py-2 text-xs font-extrabold text-white shadow-sm hover:bg-indigo-700 cursor-pointer"
+              >
+                <Plus size={14} />
+                <span>+ Offer Mentorship</span>
+              </button>
+            )}
+
+            {typeFilter === 'STORY' && (
+              <button
+                type="button"
+                onClick={() => handleCreateSelect('story')}
+                className="inline-flex items-center gap-1.5 rounded-2xl bg-sky-600 px-3 py-2 text-xs font-extrabold text-white shadow-sm hover:bg-sky-700 cursor-pointer"
+              >
+                <Plus size={14} />
+                <span>+ Add Story / Blog</span>
+              </button>
+            )}
+
+            {typeFilter === 'ACHIEVEMENT' && (
+              <button
+                type="button"
+                onClick={() => handleCreateSelect('achievement')}
+                className="inline-flex items-center gap-1.5 rounded-2xl bg-amber-500 px-3 py-2 text-xs font-extrabold text-white shadow-sm hover:bg-amber-600 cursor-pointer"
+              >
+                <Plus size={14} />
+                <span>+ Add Achievement</span>
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={fetchAllMyPosts}
+              className="w-fit rounded-2xl border border-white bg-white/80 px-3 py-2 text-xs font-bold text-slate-700 shadow-sm transition-all hover:border-blue-200 hover:text-blue-700 cursor-pointer"
+            >
+              Refresh
+            </button>
+          </div>
         </div>
 
         {loading ? (
@@ -589,13 +714,56 @@ export default function AlumniMyPostsHub() {
           </div>
         ) : posts.length === 0 ? (
           <div className="flex min-h-72 flex-col items-center justify-center rounded-3xl bg-white/50 p-8 text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-600">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
               <FileText size={22} />
             </div>
             <h3 className="mt-4 text-base font-black text-slate-900">No posts submitted yet</h3>
-            <p className="mt-1 max-w-sm text-sm font-medium text-slate-500">
-              Create your first opportunity, story, achievement, or mentorship offer.
+            <p className="mt-1 max-w-md text-sm font-medium text-slate-500">
+              Create your first opportunity, story, achievement, or mentorship offer on dedicated pages.
             </p>
+
+            <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+              <button
+                type="button"
+                onClick={() => handleCreateSelect('job')}
+                className="inline-flex items-center gap-1.5 rounded-2xl bg-emerald-600 px-3.5 py-2 text-xs font-extrabold text-white shadow-sm hover:bg-emerald-700 cursor-pointer"
+              >
+                <Briefcase size={14} />
+                <span>+ Post Job</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleCreateSelect('internship')}
+                className="inline-flex items-center gap-1.5 rounded-2xl bg-teal-600 px-3.5 py-2 text-xs font-extrabold text-white shadow-sm hover:bg-teal-700 cursor-pointer"
+              >
+                <GraduationCap size={14} />
+                <span>+ Post Internship</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleCreateSelect('achievement')}
+                className="inline-flex items-center gap-1.5 rounded-2xl bg-amber-500 px-3.5 py-2 text-xs font-extrabold text-white shadow-sm hover:bg-amber-600 cursor-pointer"
+              >
+                <Trophy size={14} />
+                <span>+ Add Achievement</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleCreateSelect('story')}
+                className="inline-flex items-center gap-1.5 rounded-2xl bg-sky-600 px-3.5 py-2 text-xs font-extrabold text-white shadow-sm hover:bg-sky-700 cursor-pointer"
+              >
+                <BookOpen size={14} />
+                <span>+ Share Story</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleCreateSelect('mentorship')}
+                className="inline-flex items-center gap-1.5 rounded-2xl bg-indigo-600 px-3.5 py-2 text-xs font-extrabold text-white shadow-sm hover:bg-indigo-700 cursor-pointer"
+              >
+                <Handshake size={14} />
+                <span>+ Offer Mentorship</span>
+              </button>
+            </div>
           </div>
         ) : filteredPosts.length === 0 ? (
           <div className="flex min-h-56 flex-col items-center justify-center rounded-3xl bg-white/50 p-8 text-center">

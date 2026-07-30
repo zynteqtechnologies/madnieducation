@@ -63,16 +63,20 @@ interface CareerPost {
 
 interface AlumniCareerHubProps {
   autoOpenForm?: boolean;
+  initialType?: 'JOB' | 'INTERNSHIP';
 }
 
-export default function AlumniCareerHub({ autoOpenForm }: AlumniCareerHubProps) {
+export default function AlumniCareerHub({ autoOpenForm, initialType = 'JOB' }: AlumniCareerHubProps) {
   const [posts, setPosts] = useState<CareerPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(Boolean(autoOpenForm));
 
   useEffect(() => {
     if (autoOpenForm) setShowForm(true);
-  }, [autoOpenForm]);
+    if (initialType) {
+      setFormData((prev) => ({ ...prev, type: initialType }));
+    }
+  }, [autoOpenForm, initialType]);
 
   const [formData, setFormData] = useState({
     type: 'JOB',
