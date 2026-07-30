@@ -351,7 +351,7 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
           {/* Minimalist Bottom Dock (Alumni Portal Only - 100% Mobile Responsive) */}
           {role === 'ALUMNI' && (
             <div className="fixed bottom-3 sm:bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center justify-center pointer-events-none w-full max-w-[94vw] sm:max-w-lg px-2 sm:px-4">
-              <div className="flex items-center space-x-1 sm:space-x-1.5 bg-white/75 sm:bg-white/40 backdrop-blur-xl border border-white/80 shadow-2xl rounded-full px-3 sm:px-4 py-1.5 sm:py-2 pointer-events-auto transition-all overflow-x-auto no-scrollbar max-w-full">
+              <div className="flex items-center space-x-1 sm:space-x-1.5 bg-white/75 sm:bg-white/40 backdrop-blur-xl border border-white/80 shadow-2xl rounded-full px-3 sm:px-4 py-1.5 sm:py-2 pointer-events-auto transition-all overflow-visible max-w-full">
                 {menuItems.map((item) => {
                   const isActive = activeItem === item.name;
                   return (
@@ -363,6 +363,8 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
 
                       <button
                         onClick={() => handleNavigate(item.name)}
+                        aria-label={item.name}
+                        title={item.name}
                         className={`w-9 h-9 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition-all duration-300 relative ${isActive
                           ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30 scale-105'
                           : 'text-slate-600 hover:text-slate-900 hover:bg-white/30 hover:scale-105'
@@ -384,6 +386,8 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
                   </div>
                   <button
                     onClick={handleLogout}
+                    aria-label="Logout"
+                    title="Logout"
                     className="w-9 h-9 sm:w-11 sm:h-11 rounded-full flex items-center justify-center text-slate-600 hover:text-red-600 hover:bg-white/30 hover:scale-105 transition-all duration-300"
                   >
                     <LogOut size={16} />
