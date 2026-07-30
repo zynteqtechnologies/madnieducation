@@ -409,7 +409,7 @@ export default function AlumniMyPostsHub() {
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-5 pb-16 animate-in fade-in duration-300">
       {/* Alumni of the Year Spotlight Banner */}
-      {aoyWinner && (
+      {/* {aoyWinner && (
         <section className="relative overflow-hidden rounded-3xl border border-amber-200/80 bg-amber-50/70 p-5 shadow-xl shadow-slate-900/5 backdrop-blur-md">
           <div className="relative z-10 flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
             <div className="flex min-w-0 items-start gap-4">
@@ -465,7 +465,7 @@ export default function AlumniMyPostsHub() {
             )}
           </div>
         </section>
-      )}
+      )} */}
 
       <section className="relative overflow-visible rounded-3xl border border-white/60 bg-white/40 p-5 shadow-xl shadow-slate-900/5 backdrop-blur-md sm:p-6">
         <div className="relative z-10 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -514,9 +514,8 @@ export default function AlumniMyPostsHub() {
               key={status.id}
               type="button"
               onClick={() => setStatusFilter(status.id)}
-              className={`rounded-3xl border p-4 text-left shadow-lg shadow-slate-900/5 backdrop-blur-md transition-all ${
-                active ? 'border-slate-950 bg-slate-950 text-white' : `${style.color} hover:border-slate-300`
-              }`}
+              className={`rounded-3xl border p-4 text-left shadow-lg shadow-slate-900/5 backdrop-blur-md transition-all ${active ? 'border-slate-950 bg-slate-950 text-white' : `${style.color} hover:border-slate-300`
+                }`}
             >
               <div className="flex items-center justify-between gap-3">
                 <span className="text-xs font-bold uppercase">{status.label}</span>
@@ -541,11 +540,10 @@ export default function AlumniMyPostsHub() {
                 key={filter.id}
                 type="button"
                 onClick={() => setTypeFilter(filter.id)}
-                className={`inline-flex min-h-10 shrink-0 items-center gap-2 rounded-2xl border px-3 text-xs font-bold transition-all ${
-                  active
+                className={`inline-flex min-h-10 shrink-0 items-center gap-2 rounded-2xl border px-3 text-xs font-bold transition-all ${active
                     ? 'border-slate-950 bg-slate-950 text-white'
                     : 'border-white bg-white/80 text-slate-700 hover:border-blue-200 hover:text-blue-700'
-                }`}
+                  }`}
               >
                 <span>{filter.label}</span>
                 <span className={`rounded-full px-2 py-0.5 text-[10px] ${active ? 'bg-white/15 text-white' : 'bg-slate-100 text-slate-600'}`}>
