@@ -7,13 +7,13 @@ import {
   Plus,
   Trash2,
   Edit3,
-  ShieldCheck,
   X,
   Loader2,
   ChevronRight,
   IndianRupee,
   Activity
 } from 'lucide-react';
+import { usePortalDialog } from '@/components/ui/PortalDialog';
 
 interface Standard {
   id: string;
@@ -34,9 +34,9 @@ export default function StandardManagement() {
   const [standards, setStandards] = useState<Standard[]>([]);
   const [academicYears, setAcademicYears] = useState<AcademicYear[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingStandard, setEditingStandard] = useState<Standard | null>(null);
+  const { dialog, confirmDialog, showAlert } = usePortalDialog();
 
   // Form State
   const [formData, setFormData] = useState({
@@ -68,9 +68,9 @@ export default function StandardManagement() {
       const res = await fetch('/api/subadmin/standards');
       const data = await res.json();
       if (res.ok) setStandards(data);
-      else setError(data.error);
+      else showAlert({ title: 'Load failed', message: data.error || 'Unable to load academic standards.', variant: 'danger' });
     } catch (err) {
-      setError('Connection failure.');
+      showAlert({ title: 'Connection failure', message: 'Unable to load academic standards.', variant: 'danger' });
     } finally {
       setLoading(false);
     }
@@ -79,7 +79,6 @@ export default function StandardManagement() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
 
     try {
       const res = await fetch('/api/subadmin/standards', {
@@ -99,17 +98,22 @@ export default function StandardManagement() {
         fetchStandards();
       } else {
         const data = await res.json();
-        setError(data.error);
+        showAlert({ title: 'Save failed', message: data.error || 'Academic standard could not be saved.', variant: 'danger' });
       }
     } catch (err) {
-      setError('Network synchronization error.');
+      showAlert({ title: 'Network synchronization error', message: 'Academic standard could not be saved.', variant: 'danger' });
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Permanently remove this academic standard?')) return;
+    if (!(await confirmDialog({
+      title: 'Remove this academic standard?',
+      message: 'This standard will be permanently removed from the class setup.',
+      confirmText: 'Remove standard',
+      variant: 'danger',
+    }))) return;
     try {
       const res = await fetch('/api/subadmin/standards', {
         method: 'DELETE',
@@ -118,7 +122,7 @@ export default function StandardManagement() {
       });
       if (res.ok) fetchStandards();
     } catch (err) {
-      alert('Deletion sequence failed.');
+      showAlert({ title: 'Deletion failed', message: 'The academic standard could not be removed.', variant: 'danger' });
     }
   };
 
@@ -145,6 +149,7 @@ export default function StandardManagement() {
   };
 
   return (
+    <>
     <div className="lg:h-full lg:overflow-hidden flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-4 duration-700">
 
       {/* Header Row */}
@@ -162,21 +167,14 @@ export default function StandardManagement() {
         </button>
       </div>
 
-      {error && (
-        <div className="p-3 bg-rose-50 border border-rose-100 rounded-md flex items-center space-x-3 text-rose-700 text-xs font-semibold shrink-0">
-          <ShieldCheck size={14} />
-          <p>{error}</p>
-        </div>
-      )}
-
       {/* Standards List Container */}
       <div className="bg-white rounded-md border border-slate-100 shadow-sm overflow-hidden flex-1 min-h-0 flex flex-col">
         <div className="overflow-auto custom-scrollbar flex-1">
           <table className="w-full text-left border-collapse text-[11px] min-w-[800px]">
             <thead className="bg-slate-50 sticky top-0 z-20 border-b border-slate-100">
               <tr>
-                <th className="px-6 py-4 text-[#dac48b] font-bold uppercase tracking-wider">Grade Identity</th>
-                <th className="px-6 py-4 text-[#dac48b] font-bold uppercase tracking-wider">Tuition Fees</th>
+                <th className="px-6 py-4 text-[#dac48b] font-bold uppercase tracking-wider">Standards</th>
+                <th className="px-6 py-4 text-[#dac48b] font-bold uppercase tracking-wider">Annual Fees</th>
                 <th className="px-6 py-4 text-[#dac48b] font-bold uppercase tracking-wider text-center">Academic Year</th>
                 <th className="px-6 py-4 text-[#dac48b] font-bold uppercase tracking-wider text-right pr-8">Actions</th>
               </tr>
@@ -235,7 +233,7 @@ export default function StandardManagement() {
           <div className="bg-[#FAF7F0] w-full max-w-md rounded-md shadow-2xl p-8 relative border border-[#E6DFD3]">
             <div className="flex justify-between items-center mb-6">
               <div>
-                <h3 className="text-lg font-bold text-slate-900 tracking-tight">{editingStandard ? 'Update Grade Context' : 'Define Standard'}</h3>
+                <h3 className="text-lg font-bold text-slate-900 tracking-tight">{editingStandard ? 'Update Standard' : 'Define Standard'}</h3>
                 <p className="text-slate-500 text-xs font-medium mt-0.5 uppercase tracking-wide">Institutional academic control center</p>
               </div>
               <button onClick={() => setShowAddForm(false)} className="p-1.5 text-slate-400 hover:text-slate-900 transition-colors"><X size={18} /></button>
@@ -270,7 +268,7 @@ export default function StandardManagement() {
               )}
 
               <div className="space-y-1">
-                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide ml-1">Tuition fees (Annual)</label>
+                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide ml-1">Annual fees</label>
                 <div className="relative group">
                   <IndianRupee size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#dac48b] transition-colors" />
                   <input type="number" required value={formData.fees} onChange={e => setFormData({ ...formData, fees: e.target.value })} className="w-full pl-10 pr-4 py-2 rounded-md outline-none focus:ring-2 focus:ring-[#dac48b]/20 text-sm transition-all" placeholder="0.00" />
@@ -306,5 +304,7 @@ export default function StandardManagement() {
       )}
 
     </div>
+    {dialog}
+    </>
   );
 }

@@ -27,24 +27,34 @@ export async function GET() {
     const result = await pool.query(statsQuery, [session.schoolId]);
     const stats = result.rows[0];
 
-    const recentTransactionsQuery = `
-      SELECT id, amount, "donorName", type, "createdAt"
-      FROM "Transaction"
-      WHERE "schoolId" = $1
-      ORDER BY "createdAt" DESC
-      LIMIT 6
-    `;
-    const recentTransactions = await pool.query(recentTransactionsQuery, [session.schoolId]);
+	    const recentTransactionsQuery = `
+	      SELECT id, amount, "donorName", type, "createdAt"
+	      FROM "Transaction"
+	      WHERE "schoolId" = $1
+	      ORDER BY "createdAt" DESC
+	      LIMIT 10
+	    `;
+	    const recentTransactions = await pool.query(recentTransactionsQuery, [session.schoolId]);
 
-    return NextResponse.json({
+	    const academicYearQuery = `
+	      SELECT label
+	      FROM "AcademicYear"
+	      WHERE "isActive" = true
+	      ORDER BY "createdAt" DESC
+	      LIMIT 1
+	    `;
+	    const academicYear = await pool.query(academicYearQuery);
+	
+	    return NextResponse.json({
       totalStudents: parseInt(stats.totalStudents) || 0,
       activeStandards: parseInt(stats.activeStandards) || 0,
       totalDonations: parseFloat(stats.totalDonations) || 0,
-      constructionDonations: parseFloat(stats.constructionDonations) || 0,
-      financialAidDonations: parseFloat(stats.financialAidDonations) || 0,
-      totalFeesPotential: parseFloat(stats.totalFeesPotential) || 0,
-      recentTransactions: recentTransactions.rows
-    });
+	      constructionDonations: parseFloat(stats.constructionDonations) || 0,
+	      financialAidDonations: parseFloat(stats.financialAidDonations) || 0,
+	      totalFeesPotential: parseFloat(stats.totalFeesPotential) || 0,
+	      activeAcademicYear: academicYear.rows[0]?.label || null,
+	      recentTransactions: recentTransactions.rows
+	    });
 
   } catch (error: any) {
     console.error('Failed to fetch subadmin stats:', error);

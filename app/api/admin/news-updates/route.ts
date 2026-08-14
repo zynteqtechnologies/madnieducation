@@ -3,6 +3,7 @@ import pool from '@/lib/db';
 import { getSessionFromCookies } from '@/lib/auth';
 import { createNotification } from '@/lib/notifications';
 import { broadcastEmailToAlumni } from '@/lib/notifyAlumniByEmail';
+import { logActivity } from '@/lib/monitoring';
 
 function canManage(session: any) {
   return session?.role === 'SUPER_ADMIN' || session?.role === 'SUB_ADMIN';
@@ -112,6 +113,23 @@ export async function POST(request: Request) {
       audiences,
     });
 
+    if (session.role === 'SUB_ADMIN') {
+      await logActivity({
+        schoolId,
+        actorRole: 'SUB_ADMIN',
+        actorId: session.userId,
+        actorEmail: session.email,
+        category: 'UPDATE',
+        action: 'NEWS_UPDATE_PUBLISHED',
+        title: 'Campus update published',
+        message: title,
+        status: 'SUCCESS',
+        entityType: 'NewsUpdate',
+        entityId: result.rows[0].id,
+        link: '/subadmin/school-hub?tab=updates',
+      });
+    }
+
     if (schoolId) {
       broadcastEmailToAlumni({
         schoolId,
@@ -121,6 +139,11 @@ export async function POST(request: Request) {
         date: publishDate || new Date().toISOString().split('T')[0],
         category: category || 'Announcement',
         imageUrl: imageUrl || null,
+        sourceRole: session.role === 'SUPER_ADMIN' ? 'SUPER_ADMIN' : 'SUB_ADMIN',
+        sourceId: session.userId,
+        sourceName: session.email,
+        relatedEntityType: 'NewsUpdate',
+        relatedEntityId: result.rows[0].id,
       }).catch((err) => console.error('Error broadcasting news update email:', err));
     }
 

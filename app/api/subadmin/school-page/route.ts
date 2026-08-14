@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { getSessionFromCookies } from '@/lib/auth';
 import { createNotification } from '@/lib/notifications';
+import { logActivity } from '@/lib/monitoring';
 import { ensureSchoolPageColumns } from '@/lib/ensureSchoolPageColumns';
 
 const emptyContent = {
@@ -182,6 +183,20 @@ export async function PUT(request: Request) {
         entityId: session.schoolId,
       link: '/superadmin/school',
         audiences: [{ type: 'ROLE', recipientRole: 'SUPER_ADMIN' }],
+      });
+      await logActivity({
+        schoolId: session.schoolId,
+        actorRole: 'SUB_ADMIN',
+        actorId: session.userId,
+        actorEmail: session.email,
+        category: 'SCHOOL_PAGE',
+        action: 'SCHOOL_PAGE_UPDATED',
+        title: 'School page updated',
+        message: 'Public school page content was updated.',
+        status: 'SUCCESS',
+        entityType: 'SchoolPageContent',
+        entityId: session.schoolId,
+        link: '/subadmin/school-hub?tab=school-page',
       });
     } catch (_) {}
 

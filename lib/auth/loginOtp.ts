@@ -1,0 +1,149 @@
+import crypto from 'crypto';
+import { redis } from '@/lib/redis';
+import { logEmail } from '@/lib/monitoring';
+import type { UserRole } from '@/lib/auth';
+
+const OTP_TTL_SECONDS = 5 * 60;
+const OTP_ATTEMPT_LIMIT = 5;
+
+type LoginOtpInput = {
+  role: UserRole;
+  email: string;
+  schoolId?: string | null;
+  userId?: string | null;
+  name?: string | null;
+};
+
+export function normalizeLoginEmail(email: string) {
+  return String(email || '').trim().toLowerCase();
+}
+
+export async function startLoginOtp(input: LoginOtpInput) {
+  const email = normalizeLoginEmail(input.email);
+  const otp = String(crypto.randomInt(100000, 999999));
+  const otpKey = getOtpKey(input.role, email);
+  const attemptsKey = getAttemptsKey(input.role, email);
+  const subject = `${otp} is your Madni Education login OTP`;
+
+  await redis.set(otpKey, JSON.stringify({ otp, email, role: input.role }), { ex: OTP_TTL_SECONDS });
+  await redis.del(attemptsKey);
+
+  if (!process.env.RESEND_API_KEY) {
+    await logEmail({
+      schoolId: input.schoolId,
+      alumniId: input.role === 'ALUMNI' ? input.userId : null,
+      recipientEmail: email,
+      recipientRole: input.role,
+      sourceRole: 'SYSTEM',
+      emailType: 'LOGIN_OTP',
+      subject,
+      status: 'SKIPPED',
+      relatedEntityType: input.role === 'ALUMNI' ? 'Alumni' : 'User',
+      relatedEntityId: input.userId,
+      errorMessage: 'RESEND_API_KEY not configured',
+    });
+    throw new Error('Email OTP service is not configured.');
+  }
+
+  try {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: process.env.RESEND_FROM_EMAIL || 'Madni Education <no-reply@resend.dev>',
+        to: [email],
+        subject,
+        html: buildLoginOtpEmail({ otp, role: input.role, name: input.name }),
+      }),
+    });
+
+    await logEmail({
+      schoolId: input.schoolId,
+      alumniId: input.role === 'ALUMNI' ? input.userId : null,
+      recipientEmail: email,
+      recipientRole: input.role,
+      sourceRole: 'SYSTEM',
+      emailType: 'LOGIN_OTP',
+      subject,
+      status: res.ok ? 'SENT' : 'FAILED',
+      relatedEntityType: input.role === 'ALUMNI' ? 'Alumni' : 'User',
+      relatedEntityId: input.userId,
+      errorMessage: res.ok ? null : `Resend returned ${res.status}`,
+    });
+
+    if (!res.ok) throw new Error('Failed to send login OTP.');
+  } catch (error) {
+    await redis.del(otpKey);
+    throw error;
+  }
+}
+
+export async function verifyLoginOtp(role: UserRole, emailInput: string, otpInput: string) {
+  const email = normalizeLoginEmail(emailInput);
+  const otp = String(otpInput || '').trim();
+  const otpKey = getOtpKey(role, email);
+  const attemptsKey = getAttemptsKey(role, email);
+  const attempts = await redis.incr(attemptsKey);
+
+  if (attempts === 1) {
+    await redis.expire(attemptsKey, OTP_TTL_SECONDS);
+  }
+
+  if (attempts > OTP_ATTEMPT_LIMIT) {
+    return { ok: false, error: 'Too many wrong OTP attempts. Please request a new OTP.' };
+  }
+
+  const stored = await redis.get(otpKey);
+  if (!stored) return { ok: false, error: 'OTP expired. Please login again.' };
+
+  try {
+    const parsed = JSON.parse(stored);
+    if (parsed.otp !== otp) return { ok: false, error: 'Invalid OTP.' };
+  } catch {
+    return { ok: false, error: 'Invalid OTP session.' };
+  }
+
+  await redis.del(otpKey);
+  await redis.del(attemptsKey);
+  return { ok: true };
+}
+
+function getOtpKey(role: UserRole, email: string) {
+  return `login-otp:${role}:${email}`;
+}
+
+function getAttemptsKey(role: UserRole, email: string) {
+  return `login-otp-attempts:${role}:${email}`;
+}
+
+function buildLoginOtpEmail({ otp, role, name }: { otp: string; role: UserRole; name?: string | null }) {
+  const portalName = role === 'SUPER_ADMIN' ? 'Superadmin Portal' : role === 'SUB_ADMIN' ? 'Subadmin Portal' : 'Alumni Portal';
+  return `
+    <div style="font-family: Arial, sans-serif; background: #f4f7f6; padding: 28px;">
+      <div style="max-width: 520px; margin: 0 auto; background: #ffffff; border: 1px solid #dbe7e4; border-radius: 16px; overflow: hidden;">
+        <div style="background: #1A6B5A; color: #ffffff; padding: 24px; text-align: center;">
+          <h2 style="margin: 0; font-size: 20px;">MADNI EDUCATION TRUST</h2>
+          <p style="margin: 6px 0 0; color: #c5e8df; font-size: 13px;">${portalName} secure login</p>
+        </div>
+        <div style="padding: 28px; color: #1f2937;">
+          <p style="margin: 0 0 14px; font-size: 15px;">As-salamu alaykum${name ? `, <strong>${escapeHtml(name)}</strong>` : ''}.</p>
+          <p style="margin: 0 0 18px; color: #4b5563; font-size: 14px; line-height: 1.6;">Use this one-time password to complete your login. It expires in 5 minutes.</p>
+          <div style="font-size: 34px; letter-spacing: 8px; font-weight: 800; color: #1A6B5A; background: #EAF4F0; border-radius: 12px; padding: 18px; text-align: center;">${otp}</div>
+          <p style="margin: 18px 0 0; color: #718096; font-size: 12px;">If you did not request this login, please ignore this email.</p>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}

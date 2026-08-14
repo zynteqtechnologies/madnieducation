@@ -10,9 +10,9 @@ import {
   School as SchoolIcon,
   Phone,
   MapPin,
-  ShieldCheck,
   Loader2
 } from 'lucide-react';
+import { usePortalDialog } from '@/components/ui/PortalDialog';
 
 interface SubAdmin {
   id: string;
@@ -28,7 +28,7 @@ interface SubAdmin {
 export default function SubAdminManagement() {
   const [subadmins, setSubadmins] = useState<SubAdmin[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const { dialog, confirmDialog, showAlert } = usePortalDialog();
 
   useEffect(() => {
     fetchData();
@@ -36,24 +36,28 @@ export default function SubAdminManagement() {
 
   const fetchData = async () => {
     setLoading(true);
-    setError('');
     try {
       const res = await fetch('/api/admin/subadmins');
       const data = await res.json();
       if (res.ok) {
         setSubadmins(data);
       } else {
-        setError(data.error || 'Failed to sync roster.');
+        showAlert({ title: 'Load failed', message: data.error || 'Failed to sync roster.', variant: 'danger' });
       }
     } catch (err) {
-      setError('Communication error.');
+      showAlert({ title: 'Communication error', message: 'Unable to load sub-admin roster.', variant: 'danger' });
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('De-provision this officer?')) return;
+    if (!(await confirmDialog({
+      title: 'De-provision this officer?',
+      message: 'This sub-admin account will lose access to the dashboard.',
+      confirmText: 'De-provision',
+      variant: 'danger',
+    }))) return;
     try {
       const res = await fetch('/api/admin/subadmins', {
         method: 'DELETE',
@@ -62,11 +66,12 @@ export default function SubAdminManagement() {
       });
       if (res.ok) fetchData();
     } catch (err) {
-      alert('Delete failed.');
+      showAlert({ title: 'Delete failed', message: 'The officer could not be removed. Please try again.', variant: 'danger' });
     }
   };
 
   return (
+    <>
     <div className="space-y-4 animate-in fade-in duration-500">
 
       {/* Page Actions */}
@@ -79,13 +84,6 @@ export default function SubAdminManagement() {
           <span>Provision Sub-admin</span>
         </Link>
       </div>
-
-      {error && (
-        <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl flex items-center space-x-3 text-rose-700 text-sm">
-          <ShieldCheck size={18} />
-          <p>{error}</p>
-        </div>
-      )}
 
       {/* Officers Table */}
       <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden mt-8">
@@ -169,5 +167,7 @@ export default function SubAdminManagement() {
       </div>
 
     </div>
+    {dialog}
+    </>
   );
 }

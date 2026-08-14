@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Loader2, Heart, Award, ShieldAlert } from 'lucide-react';
+import { Loader2, Heart } from 'lucide-react';
+import { usePortalDialog } from '@/components/ui/PortalDialog';
 
 interface NeedyData {
   id: string;
@@ -20,7 +21,7 @@ interface NeedyData {
 export default function FinancialAidCoverage() {
   const [data, setData] = useState<NeedyData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const { dialog, showAlert } = usePortalDialog();
 
   useEffect(() => {
     async function fetchNeedyAnalytics() {
@@ -30,10 +31,10 @@ export default function FinancialAidCoverage() {
           const result = await res.json();
           setData(result);
         } else {
-          setError('Failed to load coverage statistics');
+          showAlert({ title: 'Load failed', message: 'Failed to load coverage statistics.', variant: 'danger' });
         }
       } catch (err) {
-        setError('Failed to connect to server');
+        showAlert({ title: 'Connection failed', message: 'Failed to connect to server.', variant: 'danger' });
       } finally {
         setLoading(false);
       }
@@ -46,15 +47,6 @@ export default function FinancialAidCoverage() {
       <div className="bg-white p-6 md:p-10 rounded-md shadow-sm min-h-[340px] flex flex-col items-center justify-center space-y-4">
         <Loader2 className="animate-spin text-[#dac48b]" size={36} />
         <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">Analyzing Coverage...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="bg-white p-6 md:p-10 rounded-md shadow-sm min-h-[340px] flex flex-col items-center justify-center text-center">
-        <ShieldAlert size={40} className="text-rose-500/70 mb-4" />
-        <p className="text-sm font-bold text-slate-700">{error}</p>
       </div>
     );
   }
@@ -105,6 +97,7 @@ export default function FinancialAidCoverage() {
   const lillahCoverageRate = lillahRequired > 0 ? Math.round((lillahPaid / lillahRequired) * 100) : 0;
 
   return (
+    <>
     <div className="bg-white p-4 rounded-md shadow-sm flex flex-col gap-3 overflow-hidden">
       <div className="flex items-start justify-between gap-3">
         <h4 className="text-base font-bold text-slate-900 flex items-center leading-tight min-w-0">
@@ -177,5 +170,7 @@ export default function FinancialAidCoverage() {
         </div>
       </div>
     </div>
+    {dialog}
+    </>
   );
 }

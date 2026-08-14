@@ -14,10 +14,10 @@ import {
   Hash,
   X,
   Loader2,
-  ShieldCheck,
   MoreVertical,
   ChevronRight
 } from 'lucide-react';
+import { usePortalDialog } from '@/components/ui/PortalDialog';
 
 interface Trust {
   id: string;
@@ -35,7 +35,7 @@ interface Trust {
 export default function TrustManagement() {
   const [trusts, setTrusts] = useState<Trust[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const { dialog, confirmDialog, showAlert } = usePortalDialog();
 
   useEffect(() => {
     fetchTrusts();
@@ -47,9 +47,9 @@ export default function TrustManagement() {
       const res = await fetch('/api/admin/trusts');
       const data = await res.json();
       if (res.ok) setTrusts(data);
-      else setError(data.error);
+      else showAlert({ title: 'Load failed', message: data.error || 'Unable to load trusts.', variant: 'danger' });
     } catch (err) {
-      setError('Communication failed.');
+      showAlert({ title: 'Communication failed', message: 'Unable to load trusts.', variant: 'danger' });
     } finally {
       setLoading(false);
     }
@@ -57,7 +57,12 @@ export default function TrustManagement() {
 
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this trust?')) return;
+    if (!(await confirmDialog({
+      title: 'Delete this trust?',
+      message: 'This trust record will be removed from the admin registry.',
+      confirmText: 'Delete trust',
+      variant: 'danger',
+    }))) return;
     try {
       const res = await fetch('/api/admin/trusts', {
         method: 'DELETE',
@@ -66,12 +71,13 @@ export default function TrustManagement() {
       });
       if (res.ok) fetchTrusts();
     } catch (err) {
-      alert('Delete failed.');
+      showAlert({ title: 'Delete failed', message: 'The trust could not be deleted. Please try again.', variant: 'danger' });
     }
   };
 
 
   return (
+    <>
     <div className="space-y-4 animate-in fade-in duration-500">
 
       <div className="flex justify-end pt-2">
@@ -83,13 +89,6 @@ export default function TrustManagement() {
           <span>New trust</span>
         </Link>
       </div>
-
-      {error && (
-        <div className="p-4 bg-rose-50 border border-rose-100 rounded-md flex items-center space-x-3 text-rose-700 text-sm">
-          <ShieldCheck size={18} />
-          <p>{error}</p>
-        </div>
-      )}
 
       <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden mt-8">
         <div className="overflow-x-auto">
@@ -185,5 +184,7 @@ export default function TrustManagement() {
 
 
     </div>
+    {dialog}
+    </>
   );
 }

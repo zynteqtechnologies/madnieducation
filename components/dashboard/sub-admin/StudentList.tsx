@@ -3,18 +3,14 @@
 import React, { useState, useEffect } from 'react';
 import StudentDetailsModal from '../../ui/StudentDetailsModal';
 import { 
-  Users, 
   Search, 
   Filter, 
-  BookOpen, 
   Download,
-  MoreVertical,
-  Edit2,
   Trash2,
   Eye,
-  Loader2,
-  AlertCircle
+  Loader2
 } from 'lucide-react';
+import { usePortalDialog } from '@/components/ui/PortalDialog';
 
 interface Student {
   id: string;
@@ -44,7 +40,7 @@ export default function StudentList() {
   const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const { dialog, showAlert } = usePortalDialog();
   
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -81,10 +77,10 @@ export default function StudentList() {
         const data = await res.json();
         setStudents(data);
       } else {
-        setError('Failed to load students');
+        showAlert({ title: 'Load failed', message: 'Failed to load students.', variant: 'danger' });
       }
     } catch (err) {
-      setError('Network communication error');
+      showAlert({ title: 'Network communication error', message: 'Failed to load students.', variant: 'danger' });
     } finally {
       setLoading(false);
     }
@@ -103,6 +99,7 @@ export default function StudentList() {
   }, [searchQuery, selectedStandardId]);
 
   return (
+    <>
     <div className="lg:h-full lg:overflow-hidden flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-4 duration-700">
       
       {/* Header & Controls Card */}
@@ -255,5 +252,7 @@ export default function StudentList() {
       )}
 
     </div>
+    {dialog}
+    </>
   );
 }

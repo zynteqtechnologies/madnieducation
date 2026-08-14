@@ -8,23 +8,23 @@ import {
   CheckCircle2,
   Loader2,
   ArrowRight,
-  AlertCircle,
   IndianRupee,
   Table,
   Save,
   Trash2,
   RefreshCcw
 } from 'lucide-react';
+import { usePortalDialog } from '@/components/ui/PortalDialog';
 
 export default function SetupWizard() {
   const [step, setStep] = useState(1);
   const [createdStandardId, setCreatedStandardId] = useState('');
+  const { dialog, showAlert } = usePortalDialog();
 
   // ---------- Step 1 State ----------
   const [formData, setFormData] = useState({ standardName: '', division: '', stream: '', fees: '', batchYear: '' });
   const [academicYears, setAcademicYears] = useState<any[]>([]);
   const [loading1, setLoading1] = useState(false);
-  const [error1, setError1] = useState('');
 
   // ---------- Step 2 State ----------
   const [file, setFile] = useState<File | null>(null);
@@ -32,7 +32,6 @@ export default function SetupWizard() {
   const [headers, setHeaders] = useState<string[]>([]);
   const [loading2, setLoading2] = useState(false);
   const [importing, setImporting] = useState(false);
-  const [error2, setError2] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -52,11 +51,10 @@ export default function SetupWizard() {
   const handleCreateStandard = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.standardName || !formData.batchYear || !formData.fees) {
-      setError1('Please fill all required fields before proceeding');
+      showAlert({ title: 'Missing details', message: 'Please fill all required fields before proceeding.', variant: 'danger' });
       return;
     }
     setLoading1(true);
-    setError1('');
 
     try {
       const res = await fetch('/api/subadmin/standards', {
@@ -69,10 +67,10 @@ export default function SetupWizard() {
         setCreatedStandardId(data.id);
         setStep(2);
       } else {
-        setError1(data.error || 'Failed to create standard');
+        showAlert({ title: 'Class setup failed', message: data.error || 'Failed to create standard.', variant: 'danger' });
       }
     } catch (err) {
-      setError1('Network error occurred while saving the configuration');
+      showAlert({ title: 'Network error', message: 'Network error occurred while saving the configuration.', variant: 'danger' });
     } finally {
       setLoading1(false);
     }
@@ -82,7 +80,6 @@ export default function SetupWizard() {
   const handleUpload = async () => {
     if (!file) return;
     setLoading2(true);
-    setError2('');
 
     const form = new FormData();
     form.append('file', file);
@@ -98,10 +95,10 @@ export default function SetupWizard() {
         setHeaders(data.headers);
         setPreviewData(data.students);
       } else {
-        setError2(data.error);
+        showAlert({ title: 'Analysis failed', message: data.error || 'The roster file could not be analyzed.', variant: 'danger' });
       }
     } catch (err) {
-      setError2('Communication failed. Check your network.');
+      showAlert({ title: 'Communication failed', message: 'Check your network and try again.', variant: 'danger' });
     } finally {
       setLoading2(false);
     }
@@ -110,7 +107,6 @@ export default function SetupWizard() {
   const handleSaveStudents = async () => {
     if (previewData.length === 0 || !createdStandardId) return;
     setImporting(true);
-    setError2('');
 
     try {
       const res = await fetch('/api/subadmin/students/bulk', {
@@ -123,13 +119,14 @@ export default function SetupWizard() {
       });
 
       if (res.ok) {
+        showAlert({ title: 'Setup finalized', message: 'Class and student registry have been synchronized successfully.', variant: 'success' });
         setStep(3);
       } else {
         const data = await res.json();
-        setError2(data.error);
+        showAlert({ title: 'Import failed', message: data.error || 'Failed to save students.', variant: 'danger' });
       }
     } catch (err) {
-      setError2('Failed to save students.');
+      showAlert({ title: 'Import failed', message: 'Failed to save students.', variant: 'danger' });
     } finally {
       setImporting(false);
     }
@@ -151,6 +148,7 @@ export default function SetupWizard() {
   };
 
   return (
+    <>
     <div className="py-4 lg:h-full lg:overflow-hidden flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-4 duration-700">
 
       {/* Premium Header Card */}
@@ -182,8 +180,8 @@ export default function SetupWizard() {
 
             <div className="relative z-10 flex justify-between">
               {[
-                { id: 1, title: 'Grade Config', icon: <Layers size={18} /> },
-                { id: 2, title: 'Student Roster', icon: <FileUp size={18} /> },
+                { id: 1, title: 'Add Standard', icon: <Layers size={18} /> },
+                { id: 2, title: 'Upload Data', icon: <FileUp size={18} /> },
                 { id: 3, title: 'Finalization', icon: <CheckCircle2 size={18} /> }
               ].map((s) => {
                 const isActive = step === s.id;
@@ -228,17 +226,10 @@ export default function SetupWizard() {
               <p className="text-slate-500 mt-1 text-sm font-medium">Fill in the details for this new class before adding students.</p>
             </div>
 
-            {error1 && (
-              <div className="p-3 bg-rose-50 border border-rose-100 rounded-md flex items-center space-x-3 text-rose-700 text-xs font-bold text-center justify-center">
-                <AlertCircle size={14} />
-                <p>{error1}</p>
-              </div>
-            )}
-
             <form onSubmit={handleCreateStandard} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide ml-1">Grade Level (e.g., 10th)</label>
+                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide ml-1">Standard (e.g., 10th)</label>
                   <input type="text" required value={formData.standardName} onChange={e => setFormData({ ...formData, standardName: e.target.value })} className="w-full px-4 py-2.5 rounded-md outline-none focus:ring-2 focus:ring-[#dac48b]/20 focus:bg-white text-sm transition-all" />
                 </div>
 
@@ -282,7 +273,7 @@ export default function SetupWizard() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide ml-1">Base Tuition</label>
+                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide ml-1">Annual Fees</label>
                   <div className="relative group">
                     <IndianRupee size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#dac48b] transition-colors" />
                     <input type="number" required value={formData.fees} onChange={e => setFormData({ ...formData, fees: e.target.value })} className="w-full pl-10 pr-4 py-2.5 rounded-md outline-none focus:ring-2 focus:ring-[#dac48b]/20 focus:bg-white text-sm transition-all" />
@@ -310,17 +301,10 @@ export default function SetupWizard() {
                 <h2 className="text-xl font-bold text-slate-800">Upload Student Roster</h2>
                 <p className="text-sm text-slate-500 mt-1 font-medium mb-8">You are uploading exactly into: <strong className="text-slate-800">{formData.standardName} {formData.stream ? `(${formData.stream})` : ''} {formData.division && `- ${formData.division}`} - {formData.batchYear}</strong></p>
 
-                {error2 && (
-                  <div className="p-3 bg-rose-50 border border-rose-100 rounded-md flex items-center space-x-3 text-rose-700 text-xs font-bold mb-4 text-left">
-                    <AlertCircle size={14} />
-                    <p>{error2}</p>
-                  </div>
-                )}
-
                 <input
                   type="file"
                   ref={fileInputRef}
-                  onChange={e => { if (e.target.files) { setFile(e.target.files[0]); setError2(''); } }}
+                  onChange={e => { if (e.target.files) setFile(e.target.files[0]); }}
                   accept=".xlsx,.xls"
                   className="hidden"
                 />
@@ -361,12 +345,6 @@ export default function SetupWizard() {
                     </button>
                   </div>
                 </div>
-
-                {error2 && (
-                  <div className="p-3 bg-rose-50 border border-rose-100 rounded-md flex items-center space-x-3 text-rose-700 text-xs font-bold">
-                    <AlertCircle size={14} /> <p>{error2}</p>
-                  </div>
-                )}
 
                 <div className="bg-white rounded-md border border-slate-100 shadow-sm overflow-hidden">
                   <div className="max-h-[400px] overflow-auto custom-scrollbar">
@@ -427,5 +405,7 @@ export default function SetupWizard() {
       </div>
     </div>
   </div>
+  {dialog}
+  </>
   );
 }

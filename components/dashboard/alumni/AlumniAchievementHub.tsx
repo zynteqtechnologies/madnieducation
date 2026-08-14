@@ -258,7 +258,7 @@ const AlumniAchievementHub: React.FC<AlumniAchievementHubProps> = ({ hideHeader,
               </div>
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-1.5">
-                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider ml-1">Achievement Title</label>
+                  <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider ml-1">Achievement Title</label>
                   <input
                     type="text"
                     required
@@ -270,7 +270,7 @@ const AlumniAchievementHub: React.FC<AlumniAchievementHubProps> = ({ hideHeader,
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider ml-1">Context & Description</label>
+                  <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider ml-1">Context & Description</label>
                   <textarea
                     rows={4}
                     required
@@ -283,7 +283,7 @@ const AlumniAchievementHub: React.FC<AlumniAchievementHubProps> = ({ hideHeader,
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider ml-1">Recognition Date</label>
+                    <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider ml-1">Recognition Date</label>
                     <input
                       type="date"
                       value={formData.date ?? ''}
@@ -292,7 +292,7 @@ const AlumniAchievementHub: React.FC<AlumniAchievementHubProps> = ({ hideHeader,
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider ml-1">Sector / Category</label>
+                    <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider ml-1">Sector / Category</label>
                     <input
                       type="text"
                       placeholder="e.g. Professional, Academic Excellence"
@@ -305,7 +305,7 @@ const AlumniAchievementHub: React.FC<AlumniAchievementHubProps> = ({ hideHeader,
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider ml-1">Proof Attachment Type</label>
+                    <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider ml-1">Proof Attachment Type</label>
                     <div className="flex space-x-4 bg-white/50 p-1.5 rounded-2xl border border-slate-200/80">
                         <button
                             type="button"
@@ -324,7 +324,7 @@ const AlumniAchievementHub: React.FC<AlumniAchievementHubProps> = ({ hideHeader,
                     </div>
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider ml-1">
+                    <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider ml-1">
                         {formData.mediaType === 'IMAGE' ? 'Select Proof File (Photo/Certificate)' : 'Video Reference URL'}
                     </label>
                     {formData.mediaType === 'IMAGE' ? (

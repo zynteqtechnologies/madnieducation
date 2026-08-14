@@ -11,9 +11,9 @@ import {
   Building2,
   Users,
   Layers,
-  ShieldCheck,
   Loader2
 } from 'lucide-react';
+import { usePortalDialog } from '@/components/ui/PortalDialog';
 
 interface SchoolData {
   id: string;
@@ -39,7 +39,7 @@ interface SchoolData {
 export default function SchoolManagement() {
   const [schools, setSchools] = useState<SchoolData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const { dialog, confirmDialog, showAlert } = usePortalDialog();
 
   useEffect(() => {
     fetchSchools();
@@ -47,24 +47,28 @@ export default function SchoolManagement() {
 
   const fetchSchools = async () => {
     setLoading(true);
-    setError('');
     try {
       const res = await fetch('/api/admin/schools');
       const data = await res.json();
       if (res.ok) {
         setSchools(data);
       } else {
-        setError(data.error || 'Failed to fetch registry data.');
+        showAlert({ title: 'Load failed', message: data.error || 'Failed to fetch registry data.', variant: 'danger' });
       }
     } catch (err) {
-      setError('Connection failure.');
+      showAlert({ title: 'Connection failure', message: 'Unable to load school registry.', variant: 'danger' });
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this school record?')) return;
+    if (!(await confirmDialog({
+      title: 'Delete this school record?',
+      message: 'This school and its registry details will be removed.',
+      confirmText: 'Delete school',
+      variant: 'danger',
+    }))) return;
     try {
       const res = await fetch('/api/admin/schools', {
         method: 'DELETE',
@@ -73,11 +77,12 @@ export default function SchoolManagement() {
       });
       if (res.ok) fetchSchools();
     } catch (err) {
-      alert('Action aborted.');
+      showAlert({ title: 'Action aborted', message: 'The school could not be deleted. Please try again.', variant: 'danger' });
     }
   };
 
   return (
+    <>
     <div className="space-y-4 animate-in fade-in duration-500">
 
       <div className="flex justify-end pt-2">
@@ -89,13 +94,6 @@ export default function SchoolManagement() {
           <span>New school</span>
         </Link>
       </div>
-
-      {error && (
-        <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl flex items-center space-x-3 text-rose-700 text-sm">
-          <ShieldCheck size={18} />
-          <p>{error}</p>
-        </div>
-      )}
 
       <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden mt-8">
         <div className="overflow-x-auto">
@@ -189,5 +187,7 @@ export default function SchoolManagement() {
       </div>
 
     </div>
+    {dialog}
+    </>
   );
 }

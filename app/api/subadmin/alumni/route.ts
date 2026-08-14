@@ -3,6 +3,7 @@ import pool from '@/lib/db';
 import { getSessionFromCookies, hashPassword } from '@/lib/auth';
 import { ensureAlumniFeaturedColumn } from '@/lib/ensureAlumniFeaturedColumn';
 import { createNotification } from '@/lib/notifications';
+import { logActivity, logEmail } from '@/lib/monitoring';
 import crypto from 'crypto';
 
 export async function GET(request: Request) {
@@ -105,6 +106,20 @@ export async function PATCH(request: Request) {
         entityId: id,
         link: '/superadmin/school',
         audiences: [{ type: 'ROLE', recipientRole: 'SUPER_ADMIN' }],
+      });
+      await logActivity({
+        schoolId: session.schoolId,
+        actorRole: 'SUB_ADMIN',
+        actorId: session.userId,
+        actorEmail: session.email,
+        category: 'ALUMNI',
+        action: 'FEATURED_ALUMNI_SELECTED',
+        title: 'Featured alumni selected',
+        message: `${result.rows[0].name} was selected for the public impact section.`,
+        status: 'SUCCESS',
+        entityType: 'Alumni',
+        entityId: id,
+        link: '/subadmin/alumni',
       });
     }
 
@@ -242,14 +257,60 @@ export async function POST(request: Request) {
             `,
           }),
         });
-        if (resendRes.ok) emailSent = true;
-      } catch (err) {
-        console.error('Error dispatching alumni authorization email via Resend:', err);
-      }
-    }
+	        if (resendRes.ok) emailSent = true;
+          await logEmail({
+            schoolId: session.schoolId,
+            alumniId: result.rows[0].id,
+            recipientEmail: gmailId,
+            recipientRole: 'ALUMNI',
+            sourceRole: 'SUB_ADMIN',
+            sourceId: session.userId,
+            sourceName: session.email,
+            emailType: 'ALUMNI_CREDENTIALS',
+            subject: `Welcome to ${schoolName} Alumni Network - Account Credentials`,
+            status: resendRes.ok ? 'SENT' : 'FAILED',
+            relatedEntityType: 'Alumni',
+            relatedEntityId: result.rows[0].id,
+            errorMessage: resendRes.ok ? null : `Resend returned ${resendRes.status}`,
+          });
+	      } catch (err) {
+	        console.error('Error dispatching alumni authorization email via Resend:', err);
+          await logEmail({
+            schoolId: session.schoolId,
+            alumniId: result.rows[0].id,
+            recipientEmail: gmailId,
+            recipientRole: 'ALUMNI',
+            sourceRole: 'SUB_ADMIN',
+            sourceId: session.userId,
+            sourceName: session.email,
+            emailType: 'ALUMNI_CREDENTIALS',
+            subject: `Welcome to ${schoolName} Alumni Network - Account Credentials`,
+            status: 'FAILED',
+            relatedEntityType: 'Alumni',
+            relatedEntityId: result.rows[0].id,
+            errorMessage: err instanceof Error ? err.message : 'Failed to send email',
+          });
+	      }
+	    } else {
+        await logEmail({
+          schoolId: session.schoolId,
+          alumniId: result.rows[0].id,
+          recipientEmail: gmailId,
+          recipientRole: 'ALUMNI',
+          sourceRole: 'SUB_ADMIN',
+          sourceId: session.userId,
+          sourceName: session.email,
+          emailType: 'ALUMNI_CREDENTIALS',
+          subject: `Welcome to ${schoolName} Alumni Network - Account Credentials`,
+          status: 'SKIPPED',
+          relatedEntityType: 'Alumni',
+          relatedEntityId: result.rows[0].id,
+          errorMessage: 'RESEND_API_KEY not configured',
+        });
+	    }
 
     // Return plain password + emailSent status to subadmin
-    await createNotification({
+	    await createNotification({
       title: 'New alumni account authorized',
       message: `${studentName} was added to the alumni portal.`,
       type: 'MONITORING',
@@ -263,8 +324,24 @@ export async function POST(request: Request) {
       audiences: [
         { type: 'ROLE', recipientRole: 'SUPER_ADMIN' },
         { type: 'DIRECT', recipientRole: 'ALUMNI', recipientId: result.rows[0].id },
-      ],
-    });
+	      ],
+	    });
+
+      await logActivity({
+        schoolId: session.schoolId,
+        actorRole: 'SUB_ADMIN',
+        actorId: session.userId,
+        actorEmail: session.email,
+        category: 'ALUMNI',
+        action: 'ALUMNI_ACCOUNT_AUTHORIZED',
+        title: 'New alumni account authorized',
+        message: `${studentName} was added to the alumni portal.`,
+        status: 'SUCCESS',
+        entityType: 'Alumni',
+        entityId: result.rows[0].id,
+        link: '/subadmin/alumni',
+        metadata: { emailSent },
+      });
 
     return NextResponse.json({
       ...result.rows[0],

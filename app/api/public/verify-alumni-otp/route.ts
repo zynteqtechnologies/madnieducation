@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
+import { logEmail } from '@/lib/monitoring';
+import { checkRateLimit, rateLimitResponse } from '@/lib/security/rateLimit';
 
 const otpStore = new Map<string, { otp: string; expiresAt: number }>();
 
@@ -11,6 +13,9 @@ const headers = {
 
 export async function POST(req: Request) {
   try {
+    const limit = await checkRateLimit(req, 'otp');
+    if (!limit.allowed) return rateLimitResponse(limit.retryAfter);
+
     const { email, otp, action } = await req.json();
 
     if (!email || typeof email !== 'string') {
@@ -74,9 +79,49 @@ export async function POST(req: Request) {
             }),
           });
           if (resendRes.ok) emailSent = true;
+          await logEmail({
+            schoolId: alumni.schoolId,
+            alumniId: alumni.id,
+            recipientEmail: cleanEmail,
+            recipientRole: 'ALUMNI',
+            sourceRole: 'SYSTEM',
+            emailType: 'OTP',
+            subject: `${generatedOtp} is your Madni Education Trust OTP`,
+            status: resendRes.ok ? 'SENT' : 'FAILED',
+            relatedEntityType: 'Alumni',
+            relatedEntityId: alumni.id,
+            errorMessage: resendRes.ok ? null : `Resend returned ${resendRes.status}`,
+          });
         } catch (resendErr) {
           console.error('Resend email error:', resendErr);
+          await logEmail({
+            schoolId: alumni.schoolId,
+            alumniId: alumni.id,
+            recipientEmail: cleanEmail,
+            recipientRole: 'ALUMNI',
+            sourceRole: 'SYSTEM',
+            emailType: 'OTP',
+            subject: `${generatedOtp} is your Madni Education Trust OTP`,
+            status: 'FAILED',
+            relatedEntityType: 'Alumni',
+            relatedEntityId: alumni.id,
+            errorMessage: resendErr instanceof Error ? resendErr.message : 'Failed to send OTP email',
+          });
         }
+      } else {
+        await logEmail({
+          schoolId: alumni.schoolId,
+          alumniId: alumni.id,
+          recipientEmail: cleanEmail,
+          recipientRole: 'ALUMNI',
+          sourceRole: 'SYSTEM',
+          emailType: 'OTP',
+          subject: `${generatedOtp} is your Madni Education Trust OTP`,
+          status: 'SKIPPED',
+          relatedEntityType: 'Alumni',
+          relatedEntityId: alumni.id,
+          errorMessage: 'RESEND_API_KEY not configured',
+        });
       }
 
       return NextResponse.json({

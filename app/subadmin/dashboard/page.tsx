@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import FinancialAidCoverage from '@/components/dashboard/sub-admin/FinancialAidCoverage';
 import {
@@ -10,6 +11,7 @@ import {
   Calendar,
   ArrowUpRight,
   Landmark,
+  Mail,
 } from 'lucide-react';
 
 export default function SubAdminDashboard() {
@@ -112,9 +114,20 @@ function OverviewTab({ stats }: { stats: any }) {
           <h2 className="text-lg font-bold text-slate-900 tracking-tight">Dashboard Overview</h2>
           <p className="text-xs text-slate-500 font-medium uppercase tracking-wide">School Overview</p>
         </div>
-        <div className="flex items-center space-x-2 bg-slate-100 px-3 py-1.5 rounded-md border border-slate-200/50">
-          <Calendar size={13} className="text-[#67C090]" />
-          <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Academic Session 2026-27</span>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+          <Link
+            href="/subadmin/email-automation"
+            className="inline-flex items-center justify-center gap-2 rounded-md bg-[#1b4a50] px-3 py-2 text-xs font-bold uppercase tracking-wide text-white shadow-sm hover:bg-[#143d43] transition-colors"
+          >
+            <Mail size={13} />
+            Email Automation
+          </Link>
+	          <div className="flex items-center space-x-2 bg-slate-100 px-3 py-1.5 rounded-md border border-slate-200/50">
+	            <Calendar size={13} className="text-[#67C090]" />
+	            <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
+	              Academic Session {stats?.activeAcademicYear || 'Not Set'}
+	            </span>
+	          </div>
         </div>
       </div>
 
@@ -305,5 +318,3 @@ function OverviewTab({ stats }: { stats: any }) {
 }
 
 /* ─── Other tab section components ────────── */
-
-

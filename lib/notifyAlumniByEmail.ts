@@ -1,4 +1,5 @@
 import pool from '@/lib/db';
+import { logEmail } from '@/lib/monitoring';
 
 interface BroadcastNotificationPayload {
   schoolId: string;
@@ -8,11 +9,30 @@ interface BroadcastNotificationPayload {
   date?: string | null;
   category?: string | null;
   imageUrl?: string | null;
+  sourceRole?: 'SUPER_ADMIN' | 'SUB_ADMIN' | 'SYSTEM';
+  sourceId?: string | null;
+  sourceName?: string | null;
+  relatedEntityType?: string | null;
+  relatedEntityId?: string | null;
 }
 
 export async function broadcastEmailToAlumni(payload: BroadcastNotificationPayload) {
   if (!process.env.RESEND_API_KEY) {
     console.log('RESEND_API_KEY not configured, skipping alumni broadcast email');
+    await logEmail({
+      schoolId: payload.schoolId,
+      recipientEmail: 'school-alumni-broadcast',
+      recipientRole: 'ALUMNI',
+      sourceRole: payload.sourceRole || 'SUB_ADMIN',
+      sourceId: payload.sourceId || null,
+      sourceName: payload.sourceName || null,
+      emailType: payload.type,
+      subject: payload.title,
+      status: 'SKIPPED',
+      relatedEntityType: payload.relatedEntityType || payload.type,
+      relatedEntityId: payload.relatedEntityId || null,
+      errorMessage: 'RESEND_API_KEY not configured',
+    });
     return;
   }
 
@@ -22,7 +42,7 @@ export async function broadcastEmailToAlumni(payload: BroadcastNotificationPaylo
     // Fetch school name and all registered alumni emails for this school
     const [schoolRes, alumniRes] = await Promise.all([
       pool.query('SELECT "schoolName" FROM "School" WHERE id = $1', [schoolId]),
-      pool.query('SELECT name, email FROM "Alumni" WHERE "schoolId" = $1 AND email IS NOT NULL', [schoolId]),
+      pool.query('SELECT id, name, email FROM "Alumni" WHERE "schoolId" = $1 AND email IS NOT NULL', [schoolId]),
     ]);
 
     const schoolName = schoolRes.rows[0]?.schoolName || 'Madni Education Trust School';
@@ -113,7 +133,7 @@ export async function broadcastEmailToAlumni(payload: BroadcastNotificationPaylo
     `;
 
     // Resend batch / single payload dispatches
-    await fetch('https://api.resend.com/emails', {
+    const resendRes = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
@@ -127,8 +147,41 @@ export async function broadcastEmailToAlumni(payload: BroadcastNotificationPaylo
       }),
     });
 
+    await Promise.all(recipientEmails.map((email) => {
+      const alumnus = alumniList.find((item) => item.email.trim().toLowerCase() === email);
+      return logEmail({
+        schoolId,
+        alumniId: alumnus?.id || null,
+        recipientEmail: email,
+        recipientRole: 'ALUMNI',
+        sourceRole: payload.sourceRole || 'SUB_ADMIN',
+        sourceId: payload.sourceId || null,
+        sourceName: payload.sourceName || null,
+        emailType: type,
+        subject,
+        status: resendRes.ok ? 'SENT' : 'FAILED',
+        relatedEntityType: payload.relatedEntityType || type,
+        relatedEntityId: payload.relatedEntityId || null,
+        errorMessage: resendRes.ok ? null : `Resend returned ${resendRes.status}`,
+      });
+    }));
+
     console.log(`Dispatched ${type} broadcast email to ${recipientEmails.length} alumni for ${schoolName}`);
   } catch (error) {
     console.error('Error broadcasting alumni email:', error);
+    await logEmail({
+      schoolId: payload.schoolId,
+      recipientEmail: 'school-alumni-broadcast',
+      recipientRole: 'ALUMNI',
+      sourceRole: payload.sourceRole || 'SUB_ADMIN',
+      sourceId: payload.sourceId || null,
+      sourceName: payload.sourceName || null,
+      emailType: payload.type,
+      subject: payload.title,
+      status: 'FAILED',
+      relatedEntityType: payload.relatedEntityType || payload.type,
+      relatedEntityId: payload.relatedEntityId || null,
+      errorMessage: error instanceof Error ? error.message : 'Broadcast email failed',
+    });
   }
 }

@@ -9,7 +9,6 @@ import {
   Camera,
   Save,
   Loader2,
-  CheckCircle2,
   FileText,
   ExternalLink,
   ShieldAlert,
@@ -18,11 +17,12 @@ import {
   Building2
 } from 'lucide-react';
 import Image from 'next/image';
+import { usePortalDialog } from '@/components/ui/PortalDialog';
 
 export default function AlumniProfile() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+  const { dialog, showAlert } = usePortalDialog();
 
   const [profile, setProfile] = useState({
     name: '',
@@ -69,7 +69,6 @@ export default function AlumniProfile() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    setMessage(null);
 
     const formData = new FormData();
     formData.append('name', profile.name);
@@ -89,13 +88,17 @@ export default function AlumniProfile() {
       if (res.ok) {
         const updated = await res.json();
         setProfile(updated);
-        setMessage({ type: 'success', text: 'Professional profile synchronized successfully!' });
+        showAlert({
+          title: 'Profile synchronized',
+          message: 'Professional profile synchronized successfully.',
+          variant: 'success',
+        });
       } else {
         const err = await res.json();
-        setMessage({ type: 'error', text: err.error || 'Synchronization failed' });
+        showAlert({ title: 'Synchronization failed', message: err.error || 'Professional profile could not be updated.', variant: 'danger' });
       }
     } catch (err) {
-      setMessage({ type: 'error', text: 'Network transition error' });
+      showAlert({ title: 'Network transition error', message: 'Please check your connection and try again.', variant: 'danger' });
     } finally {
       setSaving(false);
     }
@@ -111,6 +114,7 @@ export default function AlumniProfile() {
   }
 
   return (
+    <>
     <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
 
       {/* Page Header */}
@@ -120,15 +124,6 @@ export default function AlumniProfile() {
           <p className="text-xs text-slate-500 font-medium">Manage and share your global institutional profile</p>
         </div>
 
-        {message && (
-          <div className={`px-4 py-2.5 rounded-full flex items-center space-x-2 text-xs font-semibold shadow-sm border animate-in slide-in-from-top-2 duration-300 ${message.type === 'success'
-            ? 'bg-emerald-50 text-emerald-700 border-emerald-100/60'
-            : 'bg-rose-50 text-rose-700 border-rose-100/60'
-            }`}>
-            {message.type === 'success' ? <CheckCircle2 size={14} className="text-emerald-600" /> : <ShieldAlert size={14} className="text-rose-600" />}
-            <span>{message.text}</span>
-          </div>
-        )}
       </div>
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -315,5 +310,7 @@ export default function AlumniProfile() {
       </form>
 
     </div>
+    {dialog}
+    </>
   );
 }

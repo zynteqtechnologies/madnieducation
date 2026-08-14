@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Mail, Lock, ArrowRight, Loader2, ShieldCheck, GraduationCap, Users, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, ArrowRight, Loader2, GraduationCap, Users, Eye, EyeOff, ShieldCheck } from 'lucide-react';
+import { usePortalDialog } from '@/components/ui/PortalDialog';
 
 interface LoginFormProps {
   roleName: string;
@@ -16,10 +17,14 @@ export default function LoginForm({ roleName, loginEndpoint, accentColor, roleIc
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [otpStep, setOtpStep] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [verifiedEmail, setVerifiedEmail] = useState('');
+  const [verifiedRole, setVerifiedRole] = useState('');
   const router = useRouter();
+  const { dialog, showAlert } = usePortalDialog();
 
   useEffect(() => {
     setIsLoaded(true);
@@ -28,7 +33,6 @@ export default function LoginForm({ roleName, loginEndpoint, accentColor, roleIc
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
 
     try {
       const res = await fetch(loginEndpoint, {
@@ -38,13 +42,62 @@ export default function LoginForm({ roleName, loginEndpoint, accentColor, roleIc
       });
 
       const data = await res.json();
+      if (data.requiresOtp) {
+        setOtpStep(true);
+        setVerifiedEmail(data.email || email);
+        setVerifiedRole(data.role);
+        showAlert({
+          title: 'OTP sent',
+          message: data.message || 'Enter the OTP sent to your registered email.',
+          variant: 'success',
+        });
+      } else if (data.success) {
+        router.push(data.redirectTo);
+      } else {
+        showAlert({
+          title: 'Login failed',
+          message: data.error || 'The credentials you entered are incorrect.',
+          variant: 'danger',
+        });
+      }
+    } catch (err) {
+      showAlert({
+        title: 'Connection error',
+        message: 'System encountered a connection error. Please try again.',
+        variant: 'danger',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOtpSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const res = await fetch('/api/auth/verify-login-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: verifiedEmail, role: verifiedRole, otp }),
+      });
+
+      const data = await res.json();
       if (data.success) {
         router.push(data.redirectTo);
       } else {
-        setError(data.error || 'The credentials you entered are incorrect.');
+        showAlert({
+          title: 'OTP verification failed',
+          message: data.error || 'Please enter the correct OTP.',
+          variant: 'danger',
+        });
       }
-    } catch (err) {
-      setError('System encountered a connection error. Please try again.');
+    } catch {
+      showAlert({
+        title: 'Connection error',
+        message: 'System encountered a connection error. Please try again.',
+        variant: 'danger',
+      });
     } finally {
       setLoading(false);
     }
@@ -102,6 +155,7 @@ export default function LoginForm({ roleName, loginEndpoint, accentColor, roleIc
   const colors = getAccentColors();
 
   return (
+    <>
     <div className={`flex min-h-screen bg-white transition-opacity duration-1000 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
 
       {/* Visual Workspace Side */}
@@ -167,15 +221,33 @@ export default function LoginForm({ roleName, loginEndpoint, accentColor, roleIc
             <p className="text-slate-500 font-medium">Please enter your {roleName.toLowerCase()} details below.</p>
           </div>
 
-          {error && (
-            <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl flex items-start space-x-3 text-rose-700 text-sm animate-in fade-in duration-500">
-              <ShieldCheck className="w-5 h-5 mt-0.5 flex-shrink-0" />
-              <p className="font-medium">{error}</p>
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
+	          <form onSubmit={otpStep ? handleOtpSubmit : handleSubmit} className="space-y-6">
+              {otpStep ? (
+                <div className="space-y-5">
+                  <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${colors.light} ${colors.text}`}>
+                    <ShieldCheck size={22} />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-slate-900 tracking-tight">Verify your email</h3>
+                    <p className="mt-1 text-sm font-medium text-slate-500">Enter the 6-digit OTP sent to {verifiedEmail}.</p>
+                  </div>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={6}
+                    required
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    className={`w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none transition-all duration-200 ${colors.ring} ${colors.border} text-center text-2xl font-black tracking-[0.35em] text-slate-900`}
+                    placeholder="000000"
+                  />
+                  <button type="button" onClick={() => { setOtpStep(false); setOtp(''); }} className={`text-xs font-bold ${colors.text} hover:opacity-80`}>
+                    Use another email
+                  </button>
+                </div>
+              ) : (
+                <>
+	            <div className="space-y-2">
               <label className="text-[11px] font-semibold text-slate-400 tracking-wide ml-1">Work Email</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-300">
@@ -216,10 +288,12 @@ export default function LoginForm({ roleName, loginEndpoint, accentColor, roleIc
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
-              </div>
-            </div>
+	              </div>
+	            </div>
+                </>
+              )}
 
-            <button
+	            <button
               type="submit"
               disabled={loading}
               className={`w-full py-4 rounded-2xl text-white font-semibold text-lg shadow-lg ${colors.bg} ${colors.hover} transition-all active:scale-[0.99] flex items-center justify-center space-x-3 disabled:opacity-50 disabled:cursor-not-allowed`}
@@ -227,11 +301,11 @@ export default function LoginForm({ roleName, loginEndpoint, accentColor, roleIc
               {loading ? (
                 <>
                   <Loader2 className="animate-spin" size={20} />
-                  <span>Verifying...</span>
+	                  <span>{otpStep ? 'Checking OTP...' : 'Verifying...'}</span>
                 </>
               ) : (
                 <>
-                  <span>Sign In</span>
+	                  <span>{otpStep ? 'Verify OTP' : 'Sign In'}</span>
                   <ArrowRight size={20} />
                 </>
               )}
@@ -252,5 +326,7 @@ export default function LoginForm({ roleName, loginEndpoint, accentColor, roleIc
         </div>
       </div>
     </div>
+    {dialog}
+    </>
   );
 }

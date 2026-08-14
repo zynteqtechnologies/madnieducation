@@ -8,6 +8,8 @@ import {
   sendDonationReceiptEmail,
 } from '@/lib/donationInquiry';
 import { createNotification } from '@/lib/notifications';
+import { logEmail } from '@/lib/monitoring';
+import { checkRateLimit, rateLimitResponse } from '@/lib/security/rateLimit';
 
 type RouteContext = {
   params: Promise<{ token: string }>;
@@ -15,6 +17,9 @@ type RouteContext = {
 
 export async function POST(req: Request, context: RouteContext) {
   try {
+    const limit = await checkRateLimit(req, 'payment');
+    if (!limit.allowed) return rateLimitResponse(limit.retryAfter);
+
     await ensureDonationInquiryTable();
     await ensureDonationTransactionTable();
     const { token } = await context.params;
@@ -160,6 +165,19 @@ export async function POST(req: Request, context: RouteContext) {
       paymentId: razorpay_payment_id,
       receiptNo,
       paymentMode,
+    });
+
+    await logEmail({
+      schoolId: inquiry.schoolId,
+      recipientEmail: inquiry.donorEmail,
+      recipientRole: 'PUBLIC',
+      sourceRole: 'SYSTEM',
+      emailType: 'DONATION_RECEIPT',
+      subject: `Madni Education Trust donation receipt ${receiptNo}`,
+      status: receiptEmailSent ? 'SENT' : 'FAILED',
+      relatedEntityType: 'DonationInquiry',
+      relatedEntityId: inquiry.id,
+      errorMessage: receiptEmailSent ? null : 'Donation receipt email was not sent',
     });
 
     await createNotification({

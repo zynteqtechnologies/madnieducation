@@ -17,6 +17,7 @@ import {
   AlertTriangle,
   Sparkles
 } from 'lucide-react';
+import { usePortalDialog } from '@/components/ui/PortalDialog';
 
 interface School { id: string; schoolName: string; }
 interface Standard { id: string; standardName: string; division: string; schoolId: string; }
@@ -46,6 +47,7 @@ export default function PromotionHub({ schoolId: propSchoolId, isAdmin = false }
   const [isLoading, setIsLoading] = useState(false);
   const [isPromoting, setIsPromoting] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const { dialog, showAlert } = usePortalDialog();
   
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 15;
@@ -124,7 +126,11 @@ export default function PromotionHub({ schoolId: propSchoolId, isAdmin = false }
   const handlePromote = async (status: 'PROMOTED' | 'REPEATING' | 'DROPPED' | 'GRADUATED') => {
     if (selectedStudents.length === 0) return;
     if (status !== 'DROPPED' && status !== 'GRADUATED' && (!targetStandard || !targetYear)) {
-      alert('Please select target standard and year');
+      showAlert({
+        title: 'Select target class',
+        message: 'Please select both the target standard and academic year before promotion.',
+        variant: 'danger',
+      });
       return;
     }
 
@@ -164,10 +170,10 @@ export default function PromotionHub({ schoolId: propSchoolId, isAdmin = false }
       });
 
       if (res.ok) {
-        alert('Promotion processed successfully');
+        showAlert({ title: 'Promotion processed', message: 'Selected student records were updated successfully.', variant: 'success' });
         loadStudents();
       } else {
-        alert('Promotion failed');
+        showAlert({ title: 'Promotion failed', message: 'The promotion request could not be completed.', variant: 'danger' });
       }
     } catch (err) {
       console.error('Promotion error:', err);
@@ -218,6 +224,7 @@ export default function PromotionHub({ schoolId: propSchoolId, isAdmin = false }
   const currentStudentData = filteredStudents.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
 
   return (
+    <>
     <div className="lg:h-full lg:overflow-hidden flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* Premium Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white px-5 py-3 rounded-md border border-slate-200 shadow-sm shrink-0">
@@ -500,5 +507,7 @@ export default function PromotionHub({ schoolId: propSchoolId, isAdmin = false }
         </div>
       </div>
     </div>
+    {dialog}
+    </>
   );
 }

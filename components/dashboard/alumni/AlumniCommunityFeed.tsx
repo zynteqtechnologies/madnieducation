@@ -89,6 +89,15 @@ function getItemBadge(item: FeedItem) {
   }
 }
 
+function getPreviewText(text: string, expanded: boolean) {
+  const normalized = String(text || 'No details added.').trim();
+  if (expanded || normalized.length <= 150) {
+    return { text: normalized, canToggle: normalized.length > 150 };
+  }
+
+  return { text: `${normalized.slice(0, 150).trim()}...`, canToggle: true };
+}
+
 function FeedCardSkeleton() {
   return (
     <article className="animate-pulse rounded-3xl border border-white/80 bg-white/70 p-5 shadow-sm">
@@ -132,6 +141,7 @@ export default function AlumniCommunityFeed({ onOpenCreateModal }: AlumniCommuni
   const [trendingTopics, setTrendingTopics] = useState<any[]>([]);
   const [interestedState, setInterestedState] = useState<Record<string, 'interested' | 'have_people' | null>>({});
   const [suggestedAlumni, setSuggestedAlumni] = useState<any[]>([]);
+  const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     fetchFeed(1, true);
@@ -251,35 +261,39 @@ export default function AlumniCommunityFeed({ onOpenCreateModal }: AlumniCommuni
     }));
   };
 
+  const toggleExpanded = (id: string) => {
+    setExpandedItems((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
   const openCreate = () => {
     if (onOpenCreateModal) {
       onOpenCreateModal();
       return;
     }
-    setIsSubmenuOpen(!isSubmenuOpen);
+    router.push('/alumni/dashboard?tab=my-posts');
   };
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-5 pb-16 animate-in fade-in duration-300">
-      <section className="relative overflow-visible rounded-3xl border border-white/60 bg-white/40 p-5 shadow-xl shadow-slate-900/5 backdrop-blur-md sm:p-6">
-        <div className="relative z-10 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+	    <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 pb-28 sm:gap-5 sm:pb-16 animate-in fade-in duration-300">
+	      <section className="relative overflow-visible rounded-3xl border border-white/60 bg-white/40 p-4 shadow-xl shadow-slate-900/5 backdrop-blur-md sm:p-6">
+	        <div className="relative z-10 flex flex-col gap-3 sm:gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <span className="inline-flex w-fit items-center gap-1.5 rounded-full border border-blue-500/10 bg-blue-500/10 px-2.5 py-0.5 text-[11px] font-bold text-blue-600">
               <Sparkles size={11} className="animate-pulse" />
               Madni Alumni Hub
             </span>
-            <h2 className="mt-2 text-xl font-extrabold tracking-tight text-slate-800 sm:text-2xl">Community Feed</h2>
-            <p className="mt-1 max-w-xl text-xs font-medium leading-relaxed text-slate-600">
+	            <h2 className="mt-2 text-lg font-extrabold tracking-tight text-slate-800 sm:text-2xl">Community Feed</h2>
+	            <p className="mt-1 max-w-xl text-[11px] font-medium leading-relaxed text-slate-600 sm:text-xs">
               See approved stories, achievements, mentorship offers, and opportunities shared by Madni alumni.
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+	          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
               onClick={handleRefresh}
               disabled={refreshing}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white bg-white/80 text-slate-600 shadow-sm transition-all hover:text-blue-600 disabled:opacity-60"
+	              className="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-white bg-white/80 text-slate-600 shadow-sm transition-all hover:text-blue-600 disabled:opacity-60 sm:h-10 sm:w-10"
               title="Refresh feed"
             >
               <RotateCw size={16} className={refreshing ? 'animate-spin' : ''} />
@@ -289,7 +303,7 @@ export default function AlumniCommunityFeed({ onOpenCreateModal }: AlumniCommuni
               <button
                 type="button"
                 onClick={openCreate}
-                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-2xl bg-blue-600 px-4 text-xs font-extrabold text-white shadow-md shadow-blue-500/20 transition-all hover:bg-blue-700"
+	                className="inline-flex min-h-9 items-center justify-center gap-2 rounded-2xl bg-blue-600 px-3 text-[11px] font-extrabold text-white shadow-md shadow-blue-500/20 transition-all hover:bg-blue-700 sm:min-h-10 sm:px-4 sm:text-xs"
               >
                 <Plus size={15} />
                 <span>Create Post</span>
@@ -304,8 +318,8 @@ export default function AlumniCommunityFeed({ onOpenCreateModal }: AlumniCommuni
         </div>
       </section>
 
-      <section className="rounded-3xl border border-white/70 bg-white/50 p-3 shadow-xl shadow-slate-900/5 backdrop-blur-md">
-        <div className="flex gap-2 overflow-x-auto pb-1">
+	      <section className="rounded-3xl border border-white/70 bg-white/50 p-2.5 shadow-xl shadow-slate-900/5 backdrop-blur-md sm:p-3">
+	        <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {filters.map((tab) => {
             const Icon = tab.icon;
             const active = filter === tab.id;
@@ -314,7 +328,7 @@ export default function AlumniCommunityFeed({ onOpenCreateModal }: AlumniCommuni
                 key={tab.id}
                 type="button"
                 onClick={() => setFilter(tab.id)}
-                className={`inline-flex min-h-10 shrink-0 items-center gap-2 rounded-2xl border px-3 text-xs font-bold transition-all ${
+	                className={`inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-2xl border px-3 text-[11px] font-bold transition-all sm:min-h-10 sm:gap-2 sm:text-xs ${
                   active
                     ? 'border-slate-950 bg-slate-950 text-white'
                     : 'border-white bg-white/80 text-slate-600 hover:border-blue-200 hover:text-blue-700'
@@ -329,7 +343,7 @@ export default function AlumniCommunityFeed({ onOpenCreateModal }: AlumniCommuni
       </section>
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <main className="min-w-0 space-y-4">
+	        <main className="min-w-0 space-y-3 sm:space-y-4">
           {loading ? (
             <div className="space-y-4">
               {Array.from({ length: 4 }).map((_, index) => (
@@ -360,16 +374,18 @@ export default function AlumniCommunityFeed({ onOpenCreateModal }: AlumniCommuni
                 const isLiked = likes[item.id] ?? Boolean(item.userLiked);
                 const currentLikes = likeCounts[item.id] ?? (item.likeCount || 0);
                 const currentViews = viewCounts[item.id] ?? (item.viewCount || 0);
-                const isOpportunity = item.itemType === 'job' || item.itemType === 'internship';
-                const interested = interestedState[item.id];
+	                const isOpportunity = item.itemType === 'job' || item.itemType === 'internship';
+	                const interested = interestedState[item.id];
+	                const expanded = Boolean(expandedItems[item.id]);
+	                const preview = getPreviewText(item.content, expanded);
 
                 return (
                   <article
                     key={item.id}
-                    className="group rounded-3xl border border-white/80 bg-white/70 p-4 shadow-lg shadow-slate-900/5 backdrop-blur-md transition-all hover:bg-white/85 hover:shadow-xl sm:p-5"
+	                    className="group rounded-3xl border border-white/80 bg-white/70 p-3.5 shadow-lg shadow-slate-900/5 backdrop-blur-md transition-all hover:bg-white/85 hover:shadow-xl sm:p-5"
                   >
-                    <div className="grid grid-cols-[auto_minmax(0,1fr)] gap-3">
-                      <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-2xl border border-white bg-blue-50 shadow-sm">
+	                    <div className="grid grid-cols-[auto_minmax(0,1fr)] gap-2.5 sm:gap-3">
+	                      <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-2xl border border-white bg-blue-50 shadow-sm sm:h-11 sm:w-11">
                         {item.profilePic ? (
                           <img src={item.profilePic} alt={item.alumniName} className="h-full w-full object-cover" />
                         ) : (
@@ -398,17 +414,26 @@ export default function AlumniCommunityFeed({ onOpenCreateModal }: AlumniCommuni
                           </span>
                         </div>
 
-                        <div className="mt-3 space-y-2">
-                          <h4 className="break-words text-base font-black leading-snug text-slate-900 transition-colors group-hover:text-blue-700">
-                            {item.title}
-                          </h4>
-                          <p className="whitespace-pre-line break-words text-sm font-medium leading-relaxed text-slate-600">
-                            {item.content || 'No details added.'}
-                          </p>
-                        </div>
+	                        <div className="mt-2.5 space-y-1.5 sm:mt-3 sm:space-y-2">
+	                          <h4 className="break-words text-[15px] font-black leading-snug text-slate-900 transition-colors group-hover:text-blue-700 sm:text-base">
+	                            {item.title}
+	                          </h4>
+	                          <p className="whitespace-pre-line break-words text-[13px] font-medium leading-relaxed text-slate-600 sm:text-sm">
+	                            {preview.text}
+	                          </p>
+	                          {preview.canToggle && (
+	                            <button
+	                              type="button"
+	                              onClick={() => toggleExpanded(item.id)}
+	                              className="text-[12px] font-black text-blue-600 hover:text-blue-700"
+	                            >
+	                              {expanded ? 'Show less' : 'Read more'}
+	                            </button>
+	                          )}
+	                        </div>
 
                         {item.mediaUrl && (
-                          <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200/70 bg-slate-100">
+	                          <div className="mt-3 overflow-hidden rounded-2xl border border-slate-200/70 bg-slate-100 sm:mt-4">
                             <div className="aspect-video max-h-[360px] w-full">
                               <img src={item.mediaUrl} alt={item.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]" />
                             </div>
@@ -416,7 +441,7 @@ export default function AlumniCommunityFeed({ onOpenCreateModal }: AlumniCommuni
                         )}
 
                         {isOpportunity && (
-                          <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+	                          <div className="mt-3 grid grid-cols-1 gap-2 sm:mt-4 sm:grid-cols-2">
                             <button
                               type="button"
                               onClick={() => toggleInterest(item.id, 'interested')}
@@ -454,7 +479,7 @@ export default function AlumniCommunityFeed({ onOpenCreateModal }: AlumniCommuni
                           </div>
                         )}
 
-                        <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3 text-xs font-semibold text-slate-500">
+	                        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-2.5 text-xs font-semibold text-slate-500 sm:mt-4 sm:pt-3">
                           <button
                             type="button"
                             onClick={() => toggleLike(item.id, item.itemType)}

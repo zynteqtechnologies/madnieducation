@@ -1,12 +1,17 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import NeedyAnalytics from '@/components/dashboard/sub-admin/NeedyAnalytics';
 import CostManagement from '@/components/dashboard/sub-admin/CostManagement';
 
 export default function SubAdminAccountsPage() {
   const [activeTab, setActiveTab] = useState<'sponsorships' | 'projects'>('sponsorships');
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('tab') === 'projects') setActiveTab('projects');
+  }, []);
   return (
     <DashboardLayout title="Accounts" role="SUB_ADMIN" activeItem="Accounts">
       <div className="py-4 lg:h-full lg:overflow-hidden flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-4 duration-700">

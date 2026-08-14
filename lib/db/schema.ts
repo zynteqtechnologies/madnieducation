@@ -174,6 +174,66 @@ export const opportunityRegistrations = pgTable('OpportunityRegistration', {
   createdAt: timestamp('createdAt').defaultNow(),
 });
 
+// CSR Inquiry Table
+export const csrInquiries = pgTable('CsrInquiry', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  companyName: varchar('companyName', { length: 255 }).notNull(),
+  contactPerson: varchar('contactPerson', { length: 255 }).notNull(),
+  email: varchar('email', { length: 255 }).notNull(),
+  phone: varchar('phone', { length: 50 }),
+  category: varchar('category', { length: 120 }).notNull(),
+  budgetRange: varchar('budgetRange', { length: 120 }),
+  message: text('message'),
+  source: varchar('source', { length: 30 }).default('PUBLIC').notNull(),
+  status: varchar('status', { length: 30 }).default('PENDING').notNull(),
+  schoolId: uuid('schoolId').references(() => schools.id, { onDelete: 'set null' }),
+  schoolName: varchar('schoolName', { length: 255 }),
+  referredByAlumniId: uuid('referredByAlumniId').references(() => alumni.id, { onDelete: 'set null' }),
+  referredByAlumniName: varchar('referredByAlumniName', { length: 255 }),
+  referredByAlumniEmail: varchar('referredByAlumniEmail', { length: 255 }),
+  notes: text('notes'),
+  createdAt: timestamp('createdAt', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updatedAt', { withTimezone: true }).defaultNow(),
+});
+
+// Alumni invite and approval flow for old students
+export const alumniInvites = pgTable('AlumniInvite', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  token: text('token').unique().notNull(),
+  email: varchar('email', { length: 255 }),
+  schoolId: uuid('schoolId').notNull().references(() => schools.id, { onDelete: 'cascade' }),
+  schoolName: varchar('schoolName', { length: 255 }),
+  batchYear: varchar('batchYear', { length: 100 }),
+  message: text('message'),
+  status: varchar('status', { length: 30 }).default('SENT').notNull(),
+  createdBy: uuid('createdBy').references(() => users.id, { onDelete: 'set null' }),
+  expiresAt: timestamp('expiresAt', { withTimezone: true }).notNull(),
+  usedAt: timestamp('usedAt', { withTimezone: true }),
+  createdAt: timestamp('createdAt', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updatedAt', { withTimezone: true }).defaultNow(),
+});
+
+export const alumniRegistrationRequests = pgTable('AlumniRegistrationRequest', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  inviteId: uuid('inviteId').references(() => alumniInvites.id, { onDelete: 'set null' }),
+  schoolId: uuid('schoolId').notNull().references(() => schools.id, { onDelete: 'cascade' }),
+  schoolName: varchar('schoolName', { length: 255 }),
+  name: varchar('name', { length: 255 }).notNull(),
+  email: varchar('email', { length: 255 }).notNull(),
+  phone: varchar('phone', { length: 50 }),
+  batchYear: varchar('batchYear', { length: 100 }),
+  currentTitle: varchar('currentTitle', { length: 255 }),
+  currentBio: text('currentBio'),
+  linkedIn: text('linkedIn'),
+  status: varchar('status', { length: 30 }).default('PENDING').notNull(),
+  reviewedBy: uuid('reviewedBy').references(() => users.id, { onDelete: 'set null' }),
+  reviewedAt: timestamp('reviewedAt', { withTimezone: true }),
+  alumniId: uuid('alumniId').references(() => alumni.id, { onDelete: 'set null' }),
+  rejectionReason: text('rejectionReason'),
+  createdAt: timestamp('createdAt', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updatedAt', { withTimezone: true }).defaultNow(),
+});
+
 // Expense Table
 export const expenses = pgTable('Expense', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -392,4 +452,3 @@ export const alumniContributions = pgTable('AlumniContribution', {
   createdAt: timestamp('createdAt').defaultNow(),
   updatedAt: timestamp('updatedAt').defaultNow(),
 });
-

@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Loader2, ShieldCheck, X } from 'lucide-react';
+import { Loader2, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { usePortalDialog } from '@/components/ui/PortalDialog';
 
 interface TrustFormProps {
   initialData?: any;
@@ -13,8 +14,8 @@ interface TrustFormProps {
 
 export default function TrustForm({ initialData, onSubmitSuccess, onCancel, isEdit = false }: TrustFormProps) {
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   const router = useRouter();
+  const { dialog, showAlert } = usePortalDialog();
 
   const [formData, setFormData] = useState({
     trustName: '',
@@ -43,7 +44,6 @@ export default function TrustForm({ initialData, onSubmitSuccess, onCancel, isEd
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
 
     const payload = {
       ...formData,
@@ -61,20 +61,26 @@ export default function TrustForm({ initialData, onSubmitSuccess, onCancel, isEd
       });
 
       if (res.ok) {
+        await showAlert({
+          title: isEdit ? 'Trust updated' : 'Trust registered',
+          message: 'Trust record has been synchronized successfully.',
+          variant: 'success',
+        });
         if (onSubmitSuccess) onSubmitSuccess();
         else router.push('/superadmin/trust');
       } else {
         const data = await res.json();
-        setError(data.error || 'Operation failed.');
+        showAlert({ title: 'Operation failed', message: data.error || 'Trust record could not be saved.', variant: 'danger' });
       }
     } catch (err) {
-      setError('Network error occurred.');
+      showAlert({ title: 'Network error', message: 'Trust record could not be saved.', variant: 'danger' });
     } finally {
       setLoading(false);
     }
   };
 
   return (
+    <>
     <div className="bg-white w-full max-w-4xl mx-auto rounded-2xl shadow-sm border border-slate-100 p-8">
       <div className="flex justify-between items-center mb-8">
         <h3 className="text-xl font-semibold text-slate-900">{isEdit ? 'Update Trust Record' : 'Register New Trust'}</h3>
@@ -84,13 +90,6 @@ export default function TrustForm({ initialData, onSubmitSuccess, onCancel, isEd
           </button>
         )}
       </div>
-
-      {error && (
-        <div className="mb-6 p-4 bg-rose-50 border border-rose-100 rounded-xl flex items-center space-x-3 text-rose-700 text-sm">
-          <ShieldCheck size={18} />
-          <p>{error}</p>
-        </div>
-      )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -185,5 +184,7 @@ export default function TrustForm({ initialData, onSubmitSuccess, onCancel, isEd
         </div>
       </form>
     </div>
+    {dialog}
+    </>
   );
 }

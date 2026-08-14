@@ -3,7 +3,7 @@
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import AlumniContributions from '@/components/dashboard/alumni/AlumniContributions';
 import React, { Suspense, useEffect, useState } from 'react';
-import { Heart, Briefcase, Handshake, GraduationCap, Calendar, Sparkles, Megaphone, ArrowUpRight, Award, Target, Flame, Users, Trophy, UserSearch } from 'lucide-react';
+import { Heart, Briefcase, Handshake, GraduationCap, Calendar, Sparkles, Megaphone, ArrowUpRight, Award, Target, Flame, Users, Trophy, UserSearch, Building2, CheckCircle2, Clock, FileText, X } from 'lucide-react';
 import AlumniCareerHub from '@/components/dashboard/alumni/AlumniCareerHub';
 import AlumniMentorshipHub from '@/components/dashboard/alumni/AlumniMentorshipHub';
 import AlumniProfile from '@/components/dashboard/alumni/AlumniProfile';
@@ -13,6 +13,7 @@ import AlumniBlogHub from '@/components/dashboard/alumni/AlumniBlogHub';
 import AlumniDonationHistory from '@/components/dashboard/alumni/AlumniDonationHistory';
 import AlumniCommunityFeed from '@/components/dashboard/alumni/AlumniCommunityFeed';
 import AlumniMyPostsHub from '@/components/dashboard/alumni/AlumniMyPostsHub';
+import AlumniCSRHub from '@/components/dashboard/alumni/AlumniCSRHub';
 
 import { useRouter, useSearchParams } from 'next/navigation';
 
@@ -33,6 +34,7 @@ const TAB_MAP: Record<string, string> = {
   'my-posts': 'My Posts',
   'find-alumni': 'Find Alumni',
   'give-back': 'Give Back',
+  'csr': 'CSR Referrals',
   'impact': 'My Impact',
   'profile': 'Profile',
 };
@@ -43,6 +45,7 @@ const REVERSE_TAB_MAP: Record<string, string> = {
   'My Posts': 'my-posts',
   'Find Alumni': 'find-alumni',
   'Give Back': 'give-back',
+  'CSR Referrals': 'csr',
   'My Impact': 'impact',
   'Profile': 'profile',
 };
@@ -54,6 +57,7 @@ function AlumniDashboardContent() {
   const [data, setData] = useState<any>(null);
   const [updates, setUpdates] = useState<NewsUpdate[]>([]);
   const [updatesLoading, setUpdatesLoading] = useState(true);
+  const [selectedSpotlight, setSelectedSpotlight] = useState<any>(null);
 
   useEffect(() => {
     const tabParam = searchParams.get('tab');
@@ -104,37 +108,107 @@ function AlumniDashboardContent() {
 
   const renderContent = () => {
     switch (activeTab) {
-      case 'Dashboard':
+      case 'Dashboard': {
+        const pendingItems = [
+          { label: 'Blogs', value: data?.pending?.blogs || 0 },
+          { label: 'Achievements', value: data?.pending?.achievements || 0 },
+          { label: 'Careers', value: data?.pending?.career || 0 },
+          { label: 'Mentorship', value: data?.pending?.mentorship || 0 },
+          { label: 'CSR', value: data?.pending?.csr || 0 },
+        ].filter((item) => item.value > 0);
+        const summaryCards = [
+          { label: 'Total Posts', value: data?.stats?.totalPosts || 0, icon: <FileText size={18} />, wrap: 'bg-blue-50 text-blue-600' },
+          { label: 'Achievements', value: data?.summary?.achievements || 0, icon: <Award size={18} />, wrap: 'bg-amber-50 text-amber-600' },
+          { label: 'Career Posts', value: data?.summary?.careerPosts || 0, icon: <Briefcase size={18} />, wrap: 'bg-emerald-50 text-emerald-600' },
+          { label: 'Mentorship', value: data?.summary?.mentorshipOffers || 0, icon: <Handshake size={18} />, wrap: 'bg-purple-50 text-purple-600' },
+          { label: 'CSR Referrals', value: data?.summary?.csrReferrals || 0, icon: <Building2 size={18} />, wrap: 'bg-cyan-50 text-cyan-600' },
+          { label: 'Donated', value: `Rs. ${(data?.summary?.donations || 0).toLocaleString()}`, icon: <Heart size={18} />, wrap: 'bg-rose-50 text-rose-600' },
+        ];
         return (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in duration-500">
             {/* Left & Middle Column (2/3 width) */}
             <div className="lg:col-span-2 space-y-8">
               {/* Hero Banner (Compact & Sleek) */}
-              <div className="bg-white/40 backdrop-blur-md p-5 sm:p-6 rounded-3xl shadow-xl shadow-slate-900/5 border border-white/60 relative overflow-hidden group">
-                <div className="absolute top-[10%] right-[5%] w-48 h-48 bg-blue-500/10 blur-[80px] rounded-full group-hover:scale-110 transition-transform duration-1000"></div>
-                <div className="relative z-10">
-                  <div className="flex items-center justify-between gap-4 mb-2">
-                    <span className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-600 text-[11px] font-bold border border-blue-500/10">
-                      <Sparkles size={11} className="animate-pulse" />
-                      <span>Madni Alumni Hub</span>
-                    </span>
-                    
-                    <div className="flex flex-wrap gap-2 items-center">
-                      <span className="text-[11px] font-bold text-blue-700 bg-blue-50/80 border border-blue-100/80 px-2.5 py-1 rounded-full flex items-center gap-1">
-                        <GraduationCap size={13} />
-                        Batch of {data?.alumni?.batchYear || 'N/A'}
-                      </span>
-                      <span className="text-[11px] font-bold text-slate-600 bg-white/80 border border-white px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm">
-                        <Award size={13} className="text-amber-500" />
-                        {data?.stats?.totalPosts || 0} Contributions Made
-                      </span>
-                    </div>
-                  </div>
+	              <div className="bg-white/40 backdrop-blur-md p-4 sm:p-6 rounded-3xl shadow-xl shadow-slate-900/5 border border-white/60 relative overflow-hidden group">
+	                <div className="absolute top-[10%] right-[5%] w-48 h-48 bg-blue-500/10 blur-[80px] rounded-full group-hover:scale-110 transition-transform duration-1000"></div>
+	                <div className="relative z-10">
+	                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 sm:gap-4 mb-3">
+	                    <span className="inline-flex w-fit max-w-full items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-600 text-[10px] sm:text-[11px] font-bold border border-blue-500/10 leading-tight">
+	                      <Sparkles size={11} className="animate-pulse" />
+	                      <span>Madni Alumni Hub</span>
+		                    </span>
+		                    <div className="flex flex-wrap gap-1.5 sm:gap-2 items-center">
+	                      <span className="text-[10px] sm:text-[11px] font-bold text-blue-700 bg-blue-50/80 border border-blue-100/80 px-2.5 py-1 rounded-full inline-flex items-center gap-1 leading-tight">
+	                        <GraduationCap size={12} className="shrink-0" />
+	                        <span>Batch of {data?.alumni?.batchYear || 'N/A'}</span>
+	                      </span>
+	                      <span className="text-[10px] sm:text-[11px] font-bold text-slate-600 bg-white/80 border border-white px-2.5 py-1 rounded-full inline-flex items-center gap-1 shadow-sm leading-tight">
+	                        <Award size={12} className="text-amber-500 shrink-0" />
+	                        <span>{data?.stats?.totalPosts || 0} Contributions Made</span>
+	                      </span>
+	                    </div>
+	                  </div>
 
-                  <h2 className="text-xl sm:text-2xl font-extrabold text-slate-800 tracking-tight mb-1">Shape the Future of Madni.</h2>
-                  <p className="text-slate-600 text-xs font-medium max-w-xl leading-relaxed">Your continued support drives our community forward. Explore career networking, mentorship, and giving back.</p>
-                </div>
-              </div>
+	                  <h2 className="text-lg sm:text-2xl font-extrabold text-slate-800 tracking-tight mb-1 leading-snug">Shape the Future of Madni.</h2>
+		                  <p className="text-slate-600 text-[11px] sm:text-xs font-medium max-w-xl leading-relaxed">Your continued support drives our community forward. Explore career networking, mentorship, and giving back.</p>
+		                </div>
+		              </div>
+
+	              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+	                <div className="bg-white/85 backdrop-blur-md p-5 rounded-2xl border border-white/80 shadow-sm">
+	                  <div className="flex items-start justify-between gap-4 mb-3">
+	                    <div>
+	                      <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
+	                        <CheckCircle2 size={17} className="text-blue-600" />
+	                        Profile Completion
+	                      </h3>
+	                      <p className="text-[11px] font-medium text-slate-500 mt-1">Complete your profile to improve alumni discovery.</p>
+	                    </div>
+	                    <span className="text-lg font-black text-blue-700">{data?.profileCompletion || 0}%</span>
+	                  </div>
+	                  <div className="h-2.5 rounded-full bg-slate-100 overflow-hidden">
+	                    <div className="h-full rounded-full bg-blue-600 transition-all" style={{ width: `${Math.min(100, data?.profileCompletion || 0)}%` }} />
+	                  </div>
+	                  <button onClick={() => setActiveTab('Profile')} className="mt-4 w-full rounded-xl bg-blue-50 text-blue-700 py-2.5 text-xs font-black hover:bg-blue-100">
+	                    Complete Profile
+	                  </button>
+	                </div>
+
+	                <div className="bg-white/85 backdrop-blur-md p-5 rounded-2xl border border-white/80 shadow-sm">
+	                  <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
+	                    <Clock size={17} className="text-amber-500" />
+	                    Pending Approvals
+	                  </h3>
+	                  {pendingItems.length === 0 ? (
+	                    <div className="mt-4 rounded-xl bg-emerald-50 border border-emerald-100 px-4 py-3">
+	                      <p className="text-xs font-black text-emerald-700">Everything is clear</p>
+	                      <p className="text-[11px] font-medium text-emerald-600 mt-1">No posts are waiting for approval.</p>
+	                    </div>
+	                  ) : (
+	                    <div className="mt-4 flex flex-wrap gap-2">
+	                      {pendingItems.map((item) => (
+	                        <span key={item.label} className="rounded-full bg-amber-50 border border-amber-100 px-3 py-1.5 text-[11px] font-black text-amber-700">
+	                          {item.label}: {item.value}
+	                        </span>
+	                      ))}
+	                    </div>
+	                  )}
+	                </div>
+	              </div>
+
+	              <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+	                {summaryCards.map((card) => (
+	                  <div key={card.label} className="bg-white/80 backdrop-blur-md p-4 rounded-2xl border border-white/80 shadow-sm flex items-center gap-3 min-w-0">
+	                    <div className={`w-10 h-10 rounded-xl ${card.wrap} flex items-center justify-center shrink-0`}>
+	                      {card.icon}
+	                    </div>
+	                    <div className="min-w-0">
+	                      <span className="text-lg font-extrabold text-slate-800 leading-none block truncate">{card.value}</span>
+	                      <span className="text-[11px] text-slate-500 font-medium">{card.label}</span>
+	                    </div>
+	                  </div>
+	                ))}
+	              </div>
 
               {/* 📊 Network Stats Bar */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -143,7 +217,7 @@ function AlumniDashboardContent() {
                     <Users size={20} />
                   </div>
                   <div>
-                    <span className="text-lg font-extrabold text-slate-800 leading-none block">{data?.stats?.totalAlumni || 142}</span>
+	                    <span className="text-lg font-extrabold text-slate-800 leading-none block">{data?.stats?.totalAlumni || 0}</span>
                     <span className="text-[11px] text-slate-500 font-medium">Alumni Network</span>
                   </div>
                 </div>
@@ -153,7 +227,7 @@ function AlumniDashboardContent() {
                     <Briefcase size={20} />
                   </div>
                   <div>
-                    <span className="text-lg font-extrabold text-slate-800 leading-none block">{data?.stats?.activeJobs || 18}</span>
+	                    <span className="text-lg font-extrabold text-slate-800 leading-none block">{data?.stats?.activeJobs || 0}</span>
                     <span className="text-[11px] text-slate-500 font-medium">Active Jobs</span>
                   </div>
                 </div>
@@ -163,7 +237,7 @@ function AlumniDashboardContent() {
                     <Handshake size={20} />
                   </div>
                   <div>
-                    <span className="text-lg font-extrabold text-slate-800 leading-none block">{data?.stats?.totalMentors || 24}</span>
+	                    <span className="text-lg font-extrabold text-slate-800 leading-none block">{data?.stats?.totalMentors || 0}</span>
                     <span className="text-[11px] text-slate-500 font-medium">Student Mentors</span>
                   </div>
                 </div>
@@ -180,7 +254,7 @@ function AlumniDashboardContent() {
               </div>
 
               {/* Main Quick Action Modules */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <button
                   onClick={() => setActiveTab('Careers')}
                   className="bg-white/80 backdrop-blur-sm p-6 rounded-2xl border border-white/80 hover:border-blue-500 hover:scale-[1.02] hover:shadow-xl hover:shadow-blue-900/5 transition-all duration-300 text-left group"
@@ -220,9 +294,23 @@ function AlumniDashboardContent() {
                     Give Back
                     <ArrowUpRight size={14} className="opacity-0 group-hover:opacity-100 transition-opacity translate-x-[-4px] group-hover:translate-x-0" />
                   </h4>
-                  <p className="text-xs text-slate-500 mt-1.5 leading-relaxed font-medium">Sponsor infrastructure and help develop institutional facilities.</p>
-                </button>
-              </div>
+	                  <p className="text-xs text-slate-500 mt-1.5 leading-relaxed font-medium">Sponsor infrastructure and help develop institutional facilities.</p>
+	                </button>
+
+	                <button
+	                  onClick={() => setActiveTab('CSR Referrals')}
+	                  className="bg-white/80 backdrop-blur-sm p-6 rounded-2xl border border-white/80 hover:border-blue-500 hover:scale-[1.02] hover:shadow-xl hover:shadow-blue-900/5 transition-all duration-300 text-left group"
+	                >
+	                  <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-4 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
+	                    <Building2 className="group-hover:scale-110 transition-transform" size={22} />
+	                  </div>
+	                  <h4 className="font-bold text-slate-900 text-base flex items-center gap-1">
+	                    CSR Referrals
+	                    <ArrowUpRight size={14} className="opacity-0 group-hover:opacity-100 transition-opacity translate-x-[-4px] group-hover:translate-x-0" />
+	                  </h4>
+	                  <p className="text-xs text-slate-500 mt-1.5 leading-relaxed font-medium">Refer companies that may support Madni schools through CSR.</p>
+	                </button>
+	              </div>
 
               {/* Action Cards (Moved from Right Column for Balance) */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -283,43 +371,64 @@ function AlumniDashboardContent() {
             <div className="space-y-8">
 
               {/* Alumni Spotlight Card */}
-              <div className="bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-white backdrop-blur-md p-6 rounded-[2rem] border border-amber-200/80 shadow-md relative overflow-hidden group">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-[10px] font-extrabold px-3 py-1 rounded-full bg-amber-500 text-white uppercase tracking-wider shadow-sm flex items-center gap-1">
+              <div className="relative overflow-hidden rounded-[2rem] border border-amber-200/80 bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-white p-4 shadow-md backdrop-blur-md sm:p-6">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <span className="flex items-center gap-1 rounded-full bg-amber-500 px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider text-white shadow-sm">
                     <Trophy size={12} />
                     Alumni Spotlight
                   </span>
-                  <span className="text-xs font-bold text-amber-700">Featured</span>
+                  <span className="text-xs font-bold text-amber-700">Top 3</span>
                 </div>
 
-                <div className="flex items-center gap-4 mb-4">
-                  {data?.spotlight?.profilePic ? (
-                    <img src={data.spotlight.profilePic} alt={data.spotlight.name} className="w-14 h-14 rounded-2xl object-cover border-2 border-amber-300 shadow-md" />
-                  ) : (
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-600 text-white font-black text-xl flex items-center justify-center border-2 border-amber-300 shadow-md">
-                      {data?.spotlight?.name ? data.spotlight.name.charAt(0) : 'M'}
-                    </div>
-                  )}
-                  <div>
-                    <h4 className="font-extrabold text-slate-900 text-base">{data?.spotlight?.name || 'Top Alumni Mentor'}</h4>
-                    <p className="text-xs text-slate-600 font-medium">{data?.spotlight?.currentTitle || 'Software Engineer & Mentor'}</p>
-                    <span className="text-[10px] font-bold text-amber-700 bg-amber-100/80 px-2 py-0.5 rounded-md mt-1 inline-block">
-                      Batch of {data?.spotlight?.batchYear || '2019'}
-                    </span>
-                  </div>
+                <div className="space-y-3">
+                  {(data?.spotlights?.length ? data.spotlights : [data?.spotlight].filter(Boolean)).slice(0, 3).map((spotlight: any, index: number) => (
+                    <button
+                      key={spotlight.id || `${spotlight.name}-${index}`}
+                      type="button"
+                      onClick={() => setSelectedSpotlight(spotlight)}
+                      className="group/spotlight w-full rounded-2xl border border-amber-100/80 bg-white/75 p-3 text-left shadow-sm transition-all hover:border-amber-200 hover:bg-white"
+                    >
+                      <div className="flex items-center gap-3">
+                        {spotlight?.profilePic ? (
+                          <img src={spotlight.profilePic} alt={spotlight.name} className="h-12 w-12 shrink-0 rounded-2xl border-2 border-amber-300 object-cover shadow-md" />
+                        ) : (
+                          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border-2 border-amber-300 bg-gradient-to-tr from-amber-500 to-amber-600 text-lg font-black text-white shadow-md">
+                            {spotlight?.name ? spotlight.name.charAt(0) : 'M'}
+                          </div>
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <h4 className="break-words text-sm font-extrabold text-slate-900 group-hover/spotlight:text-amber-700">{spotlight?.name || 'Madni Alumni'}</h4>
+                          <p className="line-clamp-1 text-xs font-medium text-slate-600">{spotlight?.headline || spotlight?.currentTitle || 'Community contributor'}</p>
+                          <span className="mt-1 inline-block rounded-md bg-amber-100/80 px-2 py-0.5 text-[10px] font-bold text-amber-700">
+                            Batch of {spotlight?.batchYear || 'Alumni'}
+                          </span>
+                        </div>
+                        <ArrowUpRight size={15} className="shrink-0 text-amber-600" />
+                      </div>
+                    </button>
+                  ))}
                 </div>
 
-                <p className="text-xs text-slate-600 font-medium leading-relaxed mb-4">
-                  Recognized for outstanding mentorship & career guidance to Madni Trust students this academic session.
-                </p>
-
-                <button onClick={() => handleTabChange('Find Alumni')} className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold transition-all shadow-md shadow-amber-500/20 flex items-center justify-center gap-1.5 cursor-pointer">
+                <button onClick={() => handleTabChange('Find Alumni')} className="mt-4 flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-amber-500 py-2.5 text-xs font-bold text-white shadow-md shadow-amber-500/20 transition-all hover:bg-amber-600">
                   <UserSearch size={14} />
                   Connect in Directory
                 </button>
               </div>
 
-              {/* Announcements Feed */}
+	              {data?.upcomingMeet && (
+	                <div className="bg-white/85 backdrop-blur-md p-6 rounded-[2rem] border border-blue-100 shadow-md">
+	                  <div className="flex items-center justify-between gap-3 mb-3">
+	                    <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
+	                      <Calendar size={18} className="text-blue-600" />
+	                      <span>Latest Meet Invite</span>
+	                    </h3>
+	                    <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-black text-blue-700">Email Sent</span>
+	                  </div>
+	                  <p className="text-sm font-black text-slate-900 leading-snug">{data.upcomingMeet.subject}</p>
+	                  <p className="text-[11px] font-medium text-slate-500 mt-2">Check your email inbox for the Google Meet link and timing.</p>
+	                </div>
+		              )}
+		              {/* Announcements Feed */}
               <div className="bg-white/85 backdrop-blur-md p-6 rounded-[2rem] border border-white/80 shadow-md">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
@@ -370,12 +479,15 @@ function AlumniDashboardContent() {
             </div>
           </div>
         );
+      }
       case 'Community Feed':
         return <AlumniCommunityFeed />;
       case 'My Posts':
         return <AlumniMyPostsHub />;
       case 'Give Back':
         return <AlumniContributions />;
+      case 'CSR Referrals':
+        return <AlumniCSRHub />;
       case 'My Impact':
         return <AlumniDonationHistory />;
       case 'Careers':
@@ -403,6 +515,63 @@ function AlumniDashboardContent() {
       onNavigate={handleTabChange}
     >
       {renderContent()}
+      {selectedSpotlight && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-xl animate-in fade-in duration-200">
+          <div className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-[2rem] border border-white/70 bg-white/95 p-5 shadow-2xl sm:p-6">
+            <button
+              type="button"
+              onClick={() => setSelectedSpotlight(null)}
+              className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500 shadow-sm transition-all hover:text-slate-900"
+              aria-label="Close alumni spotlight"
+            >
+              <X size={16} />
+            </button>
+
+            <div className="pr-10">
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-500 px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider text-white shadow-sm">
+                <Trophy size={12} />
+                Alumni Spotlight
+              </span>
+              <h3 className="mt-4 text-xl font-black tracking-tight text-slate-950">{selectedSpotlight.name}</h3>
+              <p className="mt-1 text-sm font-bold text-amber-700">{selectedSpotlight.headline || selectedSpotlight.currentTitle || 'Madni alumni contributor'}</p>
+            </div>
+
+            <div className="mt-5 flex items-center gap-4 rounded-3xl border border-amber-100 bg-amber-50/60 p-4">
+              {selectedSpotlight.profilePic ? (
+                <img src={selectedSpotlight.profilePic} alt={selectedSpotlight.name} className="h-16 w-16 shrink-0 rounded-2xl border-2 border-amber-300 object-cover shadow-md" />
+              ) : (
+                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border-2 border-amber-300 bg-gradient-to-tr from-amber-500 to-amber-600 text-2xl font-black text-white shadow-md">
+                  {selectedSpotlight.name?.charAt(0) || 'M'}
+                </div>
+              )}
+              <div className="min-w-0">
+                <p className="break-words text-sm font-black text-slate-900">{selectedSpotlight.currentTitle || 'Alumni'}</p>
+                <p className="mt-1 text-xs font-semibold text-slate-600">{selectedSpotlight.schoolName || 'Madni Education Trust'}</p>
+                <p className="mt-1 text-[11px] font-bold text-amber-700">Batch of {selectedSpotlight.batchYear || 'Alumni'}</p>
+              </div>
+            </div>
+
+            <div className="mt-5">
+              <h4 className="text-[11px] font-black uppercase tracking-wider text-slate-500">Why they are spotlighted</h4>
+              <p className="mt-2 whitespace-pre-wrap text-sm font-medium leading-relaxed text-slate-700">
+                {selectedSpotlight.reason || 'Recognized for meaningful contribution, mentorship, and continued connection with the Madni alumni community.'}
+              </p>
+            </div>
+
+            {Array.isArray(selectedSpotlight.highlights) && selectedSpotlight.highlights.length > 0 && (
+              <div className="mt-5 space-y-2">
+                <h4 className="text-[11px] font-black uppercase tracking-wider text-slate-500">Highlights</h4>
+                {selectedSpotlight.highlights.slice(0, 3).map((highlight: string, index: number) => (
+                  <div key={`${highlight}-${index}`} className="flex gap-2 rounded-2xl border border-slate-100 bg-slate-50/80 p-3 text-xs font-bold text-slate-700">
+                    <CheckCircle2 size={14} className="mt-0.5 shrink-0 text-emerald-600" />
+                    <span className="break-words">{highlight}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }

@@ -9,10 +9,15 @@ import {
   sendDonationPayLinkEmail,
 } from '@/lib/donationInquiry';
 import { createNotification } from '@/lib/notifications';
+import { logEmail } from '@/lib/monitoring';
+import { checkRateLimit, rateLimitResponse } from '@/lib/security/rateLimit';
 
 export async function POST(req: Request) {
   // Public donation inquiry creation endpoint
   try {
+    const limit = await checkRateLimit(req, 'payment');
+    if (!limit.allowed) return rateLimitResponse(limit.retryAfter);
+
     await ensureDonationInquiryTable();
 
     const body = await req.json();
@@ -103,6 +108,19 @@ export async function POST(req: Request) {
       campaignTitle: campaignTitle || 'General donation',
       schoolName: schoolName || 'Madni Education Trust',
       paymentLink,
+    });
+
+    await logEmail({
+      schoolId,
+      recipientEmail: donorEmail,
+      recipientRole: 'PUBLIC',
+      sourceRole: 'SYSTEM',
+      emailType: 'DONATION_PAYMENT_LINK',
+      subject: 'Your secure Madni Education donation payment link',
+      status: emailSent ? 'SENT' : 'FAILED',
+      relatedEntityType: 'DonationInquiry',
+      relatedEntityId: result.rows[0].id,
+      errorMessage: emailSent ? null : 'Donation payment link email was not sent',
     });
 
     await createNotification({

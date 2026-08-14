@@ -266,7 +266,7 @@ export default function AlumniCareerHub({ autoOpenForm, initialType = 'JOB' }: A
                 <h4 className="text-xs font-extrabold text-blue-600 uppercase tracking-wider border-b border-slate-200/60 pb-2">1. Position & Company</h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                    <div className="space-y-1.5">
-                      <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">Opportunity Type *</label>
+                      <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider ml-1">Opportunity Type *</label>
                       <select 
                         value={formData.type}
                         onChange={e => setFormData({...formData, type: e.target.value})}
@@ -277,7 +277,7 @@ export default function AlumniCareerHub({ autoOpenForm, initialType = 'JOB' }: A
                       </select>
                    </div>
                    <div className="space-y-1.5">
-                      <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">Designation / Role Title *</label>
+                      <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider ml-1">Designation / Role Title *</label>
                       <input 
                         type="text" 
                         required
@@ -288,7 +288,7 @@ export default function AlumniCareerHub({ autoOpenForm, initialType = 'JOB' }: A
                       />
                    </div>
                    <div className="space-y-1.5">
-                      <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">Company Name *</label>
+                      <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider ml-1">Company Name *</label>
                       <input 
                         type="text" 
                         required
@@ -306,7 +306,7 @@ export default function AlumniCareerHub({ autoOpenForm, initialType = 'JOB' }: A
                 <h4 className="text-xs font-extrabold text-blue-600 uppercase tracking-wider border-b border-slate-200/60 pb-2">2. Location, Compensation & Schedule</h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                    <div className="space-y-1.5">
-                      <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">Workplace Mode</label>
+                      <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider ml-1">Workplace Mode</label>
                       <select 
                         value={formData.workMode}
                         onChange={e => setFormData({...formData, workMode: e.target.value as any})}
@@ -319,7 +319,7 @@ export default function AlumniCareerHub({ autoOpenForm, initialType = 'JOB' }: A
                    </div>
 
                    <div className="space-y-1.5">
-                      <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">Job Location / City</label>
+                      <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider ml-1">Job Location / City</label>
                       <input 
                         type="text" 
                         placeholder="e.g. Mumbai, Surat, Remote"
@@ -330,7 +330,7 @@ export default function AlumniCareerHub({ autoOpenForm, initialType = 'JOB' }: A
                    </div>
 
                    <div className="space-y-1.5">
-                      <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">Salary / Stipend Range</label>
+                      <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider ml-1">Salary / Stipend Range</label>
                       <input 
                         type="text" 
                         placeholder={formData.type === 'INTERNSHIP' ? 'e.g. ₹15,000 / month' : 'e.g. ₹4.5 LPA - ₹6.5 LPA'}
@@ -344,7 +344,7 @@ export default function AlumniCareerHub({ autoOpenForm, initialType = 'JOB' }: A
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
                    {formData.type === 'INTERNSHIP' && (
                      <div className="space-y-1.5">
-                        <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">Internship Duration</label>
+                        <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider ml-1">Internship Duration</label>
                         <input 
                           type="text" 
                           placeholder="e.g. 3 Months, 6 Months"
@@ -356,7 +356,7 @@ export default function AlumniCareerHub({ autoOpenForm, initialType = 'JOB' }: A
                    )}
 
                    <div className="space-y-1.5">
-                      <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">Experience Level Required</label>
+                      <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider ml-1">Experience Level Required</label>
                       <select 
                         value={formData.experienceLevel}
                         onChange={e => setFormData({...formData, experienceLevel: e.target.value})}
@@ -370,7 +370,7 @@ export default function AlumniCareerHub({ autoOpenForm, initialType = 'JOB' }: A
                    </div>
 
                    <div className="space-y-1.5">
-                      <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">Application Deadline</label>
+                      <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider ml-1">Application Deadline</label>
                       <input 
                         type="date" 
                         value={formData.deadline}
@@ -386,7 +386,7 @@ export default function AlumniCareerHub({ autoOpenForm, initialType = 'JOB' }: A
                 <h4 className="text-xs font-extrabold text-blue-600 uppercase tracking-wider border-b border-slate-200/60 pb-2">3. Direct Apply Links & Referral Info</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                    <div className="space-y-1.5">
-                      <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">Direct Apply Link or HR Email</label>
+                      <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider ml-1">Direct Apply Link or HR Email</label>
                       <input 
                         type="text" 
                         placeholder="e.g. https://company.com/careers OR hr@company.com"
@@ -396,7 +396,7 @@ export default function AlumniCareerHub({ autoOpenForm, initialType = 'JOB' }: A
                       />
                    </div>
                    <div className="space-y-1.5">
-                      <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">Company Website Link</label>
+                      <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider ml-1">Company Website Link</label>
                       <input 
                         type="url" 
                         placeholder="https://company.com"
@@ -408,7 +408,7 @@ export default function AlumniCareerHub({ autoOpenForm, initialType = 'JOB' }: A
                 </div>
 
                 <div className="space-y-1.5">
-                   <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">Your Relation / Referral Assistance</label>
+                   <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider ml-1">Your Relation / Referral Assistance</label>
                    <input 
                      type="text" 
                      placeholder="e.g. Employee at company, can refer candidates directly to hiring manager"
@@ -421,7 +421,7 @@ export default function AlumniCareerHub({ autoOpenForm, initialType = 'JOB' }: A
              
              {/* 4. Description */}
              <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">Role Description & Key Requirements</label>
+                <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider ml-1">Role Description & Key Requirements</label>
                 <textarea 
                   rows={4}
                   placeholder="Mention responsibilities, required skills, eligibility..."

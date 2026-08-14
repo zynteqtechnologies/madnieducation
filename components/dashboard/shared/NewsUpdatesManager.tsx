@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Calendar, CheckCircle2, Edit3, Image as ImageIcon, Loader2, Megaphone, Plus, Trash2, X } from 'lucide-react';
+import { usePortalDialog } from '@/components/ui/PortalDialog';
 
 type Role = 'SUPER_ADMIN' | 'SUB_ADMIN';
 
@@ -42,7 +43,7 @@ export default function NewsUpdatesManager({ role }: { role: Role }) {
   const [form, setForm] = useState(emptyForm);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState('');
+  const { dialog, confirmDialog, showAlert } = usePortalDialog();
 
   useEffect(() => {
     fetchUpdates();
@@ -54,9 +55,9 @@ export default function NewsUpdatesManager({ role }: { role: Role }) {
       const res = await fetch('/api/admin/news-updates');
       const data = await res.json();
       if (res.ok) setUpdates(Array.isArray(data) ? data : []);
-      else setError(data.error || 'Unable to load updates');
+      else showAlert({ title: 'Load failed', message: data.error || 'Unable to load updates.', variant: 'danger' });
     } catch {
-      setError('Unable to load updates');
+      showAlert({ title: 'Communication failed', message: 'Unable to load updates.', variant: 'danger' });
     } finally {
       setLoading(false);
     }
@@ -77,7 +78,6 @@ export default function NewsUpdatesManager({ role }: { role: Role }) {
   const submitUpdate = async (event: React.FormEvent) => {
     event.preventDefault();
     setSubmitting(true);
-    setError('');
 
     try {
       const body = new FormData();
@@ -97,14 +97,14 @@ export default function NewsUpdatesManager({ role }: { role: Role }) {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || 'Unable to save update');
+        showAlert({ title: 'Save failed', message: data.error || 'Unable to save update.', variant: 'danger' });
         return;
       }
 
       resetForm();
       fetchUpdates();
     } catch {
-      setError('Unable to save update');
+      showAlert({ title: 'Save failed', message: 'Unable to save update.', variant: 'danger' });
     } finally {
       setSubmitting(false);
     }
@@ -124,20 +124,26 @@ export default function NewsUpdatesManager({ role }: { role: Role }) {
   };
 
   const deleteUpdate = async (id: string) => {
-    if (!confirm('Delete this homepage update?')) return;
+    if (!(await confirmDialog({
+      title: 'Delete this homepage update?',
+      message: 'This update will be removed from the homepage updates list.',
+      confirmText: 'Delete update',
+      variant: 'danger',
+    }))) return;
 
     try {
       const res = await fetch(`/api/admin/news-updates?id=${id}`, { method: 'DELETE' });
       if (res.ok) fetchUpdates();
     } catch {
-      setError('Unable to delete update');
+      showAlert({ title: 'Delete failed', message: 'Unable to delete update.', variant: 'danger' });
     }
   };
 
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-[380px_1fr] gap-5">
-      <form onSubmit={submitUpdate} className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4 h-fit">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+    <>
+    <div className="grid grid-cols-1 xl:grid-cols-[380px_1fr] gap-5 h-full min-h-0">
+      <form onSubmit={submitUpdate} className="bg-white rounded-2xl border border-slate-200 shadow-sm h-full min-h-0 overflow-hidden flex flex-col">
+        <div className="flex items-center justify-between border-b border-slate-100 p-5 shrink-0">
           <div>
             <h2 className="text-lg font-bold text-slate-900">{form.id ? 'Edit update' : 'Create update'}</h2>
             <p className="text-xs font-medium text-slate-500 mt-1">Publish news, events, and announcements.</p>
@@ -149,8 +155,7 @@ export default function NewsUpdatesManager({ role }: { role: Role }) {
           )}
         </div>
 
-        {error && <p className="text-xs font-semibold text-rose-600 bg-rose-50 border border-rose-100 rounded-lg px-3 py-2">{error}</p>}
-
+        <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-5 space-y-4">
         <div className="space-y-1.5">
           <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Category</label>
           <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-semibold outline-none focus:ring-4 focus:ring-[#3f72af]/10">
@@ -194,15 +199,18 @@ export default function NewsUpdatesManager({ role }: { role: Role }) {
           <span className="text-sm font-bold text-slate-700">Visible on userside</span>
           <input type="checkbox" checked={form.isActive} onChange={(e) => setForm({ ...form, isActive: e.target.checked })} className="h-4 w-4" />
         </label>
+        </div>
 
+        <div className="p-5 border-t border-slate-100 bg-white shrink-0">
         <button disabled={submitting} className="w-full flex items-center justify-center px-4 py-3 bg-[#18181b] text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-black disabled:opacity-50">
           {submitting ? <Loader2 size={16} className="animate-spin mr-2" /> : <Plus size={16} className="mr-2" />}
           {form.id ? 'Save update' : 'Publish update'}
         </button>
+        </div>
       </form>
 
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden h-full min-h-0 flex flex-col">
+        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between shrink-0">
           <div>
             <h2 className="text-lg font-bold text-slate-900">Homepage updates</h2>
             <p className="text-xs font-medium text-slate-500 mt-1">Shown in Latest from Madni Islamic Study Centre.</p>
@@ -211,17 +219,17 @@ export default function NewsUpdatesManager({ role }: { role: Role }) {
         </div>
 
         {loading ? (
-          <div className="py-20 flex flex-col items-center justify-center text-slate-400">
+          <div className="flex-1 min-h-0 py-20 flex flex-col items-center justify-center text-slate-400">
             <Loader2 className="animate-spin mb-3" size={28} />
             <p className="text-xs font-bold uppercase tracking-wider">Loading updates...</p>
           </div>
         ) : updates.length === 0 ? (
-          <div className="py-20 flex flex-col items-center justify-center text-slate-400">
+          <div className="flex-1 min-h-0 py-20 flex flex-col items-center justify-center text-slate-400">
             <Megaphone size={34} className="mb-3 text-slate-200" />
             <p className="text-sm font-bold text-slate-700">No updates yet</p>
           </div>
         ) : (
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-slate-100 flex-1 min-h-0 overflow-y-auto custom-scrollbar">
             {updates.map((update) => (
               <div key={update.id} className="p-5 flex flex-col lg:flex-row gap-4 lg:items-center">
                 <div className="w-full lg:w-32 aspect-video rounded-xl overflow-hidden bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0">
@@ -255,5 +263,7 @@ export default function NewsUpdatesManager({ role }: { role: Role }) {
         )}
       </div>
     </div>
+    {dialog}
+    </>
   );
 }

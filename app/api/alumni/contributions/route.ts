@@ -1,11 +1,20 @@
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
+import { getSessionFromCookies } from '@/lib/auth';
+
+const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function normalizeUuid(value: string | null) {
+  if (!value || value === 'undefined' || value === 'null') return null;
+  return uuidRegex.test(value) ? value : null;
+}
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const alumniId = searchParams.get('alumniId');
-    const schoolId = searchParams.get('schoolId');
+    const session = await getSessionFromCookies('ALUMNI');
+    const alumniId = normalizeUuid(searchParams.get('alumniId')) || (session?.role === 'ALUMNI' ? session.userId : null);
+    const schoolId = normalizeUuid(searchParams.get('schoolId'));
 
     let query = `
       SELECT ac.*, a.name as "alumniName", a."profilePic" as "alumniProfilePic", s."schoolName"
@@ -42,8 +51,11 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const session = await getSessionFromCookies('ALUMNI');
     const body = await request.json();
-    const { alumniId, schoolId, contributionType, title, description, amount, quantity, proofUrl, isPublic } = body;
+    const { contributionType, title, description, amount, quantity, proofUrl, isPublic } = body;
+    const alumniId = normalizeUuid(body.alumniId) || (session?.role === 'ALUMNI' ? session.userId : null);
+    const schoolId = normalizeUuid(body.schoolId);
 
     if (!alumniId || !contributionType || !title) {
       return NextResponse.json({ error: 'Missing required fields: alumniId, contributionType, title' }, { status: 400 });

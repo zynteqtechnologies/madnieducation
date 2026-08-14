@@ -6,13 +6,10 @@ import Link from 'next/link';
 import {
   ArrowLeft,
   CalendarDays,
-  Tag,
-  FileText,
   Loader2,
-  Calendar,
-  Sparkles,
   Plus
 } from 'lucide-react';
+import { usePortalDialog } from '@/components/ui/PortalDialog';
 
 const DEFAULT_CATEGORIES = [
   'Annual Day',
@@ -26,6 +23,7 @@ const DEFAULT_CATEGORIES = [
 
 export default function AddEventForm() {
   const router = useRouter();
+  const { dialog, showAlert } = usePortalDialog();
 
   const [title, setTitle] = useState('');
   const [tagline, setTagline] = useState('');
@@ -39,7 +37,6 @@ export default function AddEventForm() {
   const [existingCategories, setExistingCategories] = useState<string[]>(DEFAULT_CATEGORIES);
 
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // Fetch existing events to populate any custom categories previously created
@@ -73,7 +70,6 @@ export default function AddEventForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
     setIsLoading(true);
 
     const finalCategory = category === 'NEW' 
@@ -96,19 +92,21 @@ export default function AddEventForm() {
       });
 
       if (res.ok) {
+        await showAlert({ title: 'Event created', message: 'Event details have been published successfully.', variant: 'success' });
         router.push('/subadmin/school-hub?tab=events');
       } else {
         const data = await res.json();
-        setError(data.error || 'Failed to create event');
+        showAlert({ title: 'Create failed', message: data.error || 'Failed to create event.', variant: 'danger' });
       }
     } catch (err) {
-      setError('Something went wrong while creating event.');
+      showAlert({ title: 'Create failed', message: 'Something went wrong while creating event.', variant: 'danger' });
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
+    <>
     <div className="w-full mx-auto py-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Top Navigation */}
       <div className="mb-6">
@@ -136,12 +134,6 @@ export default function AddEventForm() {
 
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-8 space-y-6">
-          {error && (
-            <div className="p-4 bg-rose-50 border border-rose-200 rounded-xl text-xs font-bold text-rose-700">
-              {error}
-            </div>
-          )}
-
           {/* Event Title */}
           <div className="space-y-2">
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
@@ -327,5 +319,7 @@ export default function AddEventForm() {
         </form>
       </div>
     </div>
+    {dialog}
+    </>
   );
 }

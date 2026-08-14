@@ -4,15 +4,20 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Mail, Lock, ArrowRight, Loader2, ShieldCheck, Eye, EyeOff, Sparkles, Building } from 'lucide-react';
+import { usePortalDialog } from '@/components/ui/PortalDialog';
 
 export default function SubAdminLoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [otpStep, setOtpStep] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [verifiedEmail, setVerifiedEmail] = useState('');
+  const [verifiedRole, setVerifiedRole] = useState('');
   const router = useRouter();
+  const { dialog, showAlert } = usePortalDialog();
 
   useEffect(() => {
     setIsLoaded(true);
@@ -21,7 +26,6 @@ export default function SubAdminLoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
 
     try {
       const res = await fetch('/api/auth/login/subadmin', {
@@ -31,19 +35,49 @@ export default function SubAdminLoginPage() {
       });
 
       const data = await res.json();
+	      if (data.requiresOtp) {
+	        setOtpStep(true);
+	        setVerifiedEmail(data.email || email);
+	        setVerifiedRole(data.role);
+	        showAlert({ title: 'OTP sent', message: data.message || 'Enter the OTP sent to your registered email.', variant: 'success' });
+	      } else if (data.success) {
+	        router.push(data.redirectTo);
+      } else {
+        showAlert({ title: 'Login failed', message: data.error || 'The credentials you entered are incorrect.', variant: 'danger' });
+      }
+    } catch (err) {
+      showAlert({ title: 'Connection error', message: 'System encountered a connection error. Please try again.', variant: 'danger' });
+    } finally {
+      setLoading(false);
+    }
+	  };
+
+  const handleOtpSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const res = await fetch('/api/auth/verify-login-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: verifiedEmail, role: verifiedRole, otp }),
+      });
+
+      const data = await res.json();
       if (data.success) {
         router.push(data.redirectTo);
       } else {
-        setError(data.error || 'The credentials you entered are incorrect.');
+        showAlert({ title: 'OTP verification failed', message: data.error || 'Please enter the correct OTP.', variant: 'danger' });
       }
-    } catch (err) {
-      setError('System encountered a connection error. Please try again.');
+    } catch {
+      showAlert({ title: 'Connection error', message: 'System encountered a connection error. Please try again.', variant: 'danger' });
     } finally {
       setLoading(false);
     }
   };
 
   return (
+    <>
     <div className={`min-h-screen flex items-center justify-center relative overflow-hidden transition-opacity duration-1000 ${isLoaded ? 'opacity-100' : 'opacity-0'} subadmin-portal bg-subadmin-gradient`}>
 
       {/* Pattern Overlay */}
@@ -111,15 +145,33 @@ export default function SubAdminLoginPage() {
               <p className="text-slate-500 text-sm mt-2 font-medium">Enter your credentials to securely access your portal.</p>
             </div>
 
-            {error && (
-              <div className="mb-6 p-4 bg-rose-50 border border-rose-200 rounded-xl flex items-start space-x-3 text-rose-700 text-sm animate-in fade-in duration-500">
-                <ShieldCheck className="w-5 h-5 mt-0.5 flex-shrink-0 text-rose-500" />
-                <p className="font-medium">{error}</p>
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-2 group">
+	            <form onSubmit={otpStep ? handleOtpSubmit : handleSubmit} className="space-y-6">
+                {otpStep ? (
+                  <div className="space-y-5">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#1b4a50]/10 text-[#1b4a50]">
+                      <ShieldCheck size={22} />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-slate-900 tracking-tight">Verify your email</h3>
+                      <p className="mt-1 text-sm font-medium text-slate-500">Enter the 6-digit OTP sent to {verifiedEmail}.</p>
+                    </div>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={6}
+                      required
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                      className="w-full px-4 py-4 bg-white/80 border border-[#8c8273]/30 rounded-xl outline-none transition-all duration-300 focus:bg-white focus:border-[#1b4a50] focus:ring-4 focus:ring-[#1b4a50]/10 text-slate-900 text-center text-2xl font-black tracking-[0.35em]"
+                      placeholder="000000"
+                    />
+                    <button type="button" onClick={() => { setOtpStep(false); setOtp(''); }} className="text-xs font-bold text-[#1b4a50] hover:text-[#1b4a50]/80">
+                      Use another email
+                    </button>
+                  </div>
+                ) : (
+                  <>
+	              <div className="space-y-2 group">
                 <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1 group-focus-within:text-[#1b4a50] transition-colors">Work Email</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-[#1b4a50] transition-colors">
@@ -160,10 +212,12 @@ export default function SubAdminLoginPage() {
                   >
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
-                </div>
-              </div>
+	                </div>
+	              </div>
+                  </>
+                )}
 
-              <button
+	              <button
                 type="submit"
                 disabled={loading}
                 className="group relative w-full py-4 rounded-xl text-white font-bold text-sm shadow-[0_4px_14px_rgba(27,74,80,0.3)] bg-gradient-to-r from-[#1b4a50] to-[#143d43] hover:from-[#143d43] hover:to-[#0d2a4a] transition-all active:scale-[0.98] overflow-hidden disabled:opacity-70 disabled:cursor-not-allowed mt-4"
@@ -173,11 +227,11 @@ export default function SubAdminLoginPage() {
                   {loading ? (
                     <>
                       <Loader2 className="animate-spin" size={18} />
-                      <span>Authenticating...</span>
+	                      <span>{otpStep ? 'Checking OTP...' : 'Authenticating...'}</span>
                     </>
                   ) : (
                     <>
-                      <span>Sign In to Portal</span>
+	                      <span>{otpStep ? 'Verify OTP' : 'Sign In to Portal'}</span>
                       <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                     </>
                   )}
@@ -198,5 +252,7 @@ export default function SubAdminLoginPage() {
         }
       `}</style>
     </div>
+    {dialog}
+    </>
   );
 }

@@ -142,8 +142,8 @@ export default function AlumniDirectory() {
   }, [searchQuery, selectedBatch, selectedSchool]);
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-5 pb-16 animate-in fade-in duration-300">
-      <section className="relative overflow-hidden rounded-3xl border border-white/60 bg-white/40 p-5 shadow-xl shadow-slate-900/5 backdrop-blur-md sm:p-6">
+    <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 pb-28 animate-in fade-in duration-300 sm:gap-5 sm:pb-16">
+      <section className="relative overflow-hidden rounded-3xl border border-white/60 bg-white/40 p-4 shadow-xl shadow-slate-900/5 backdrop-blur-md sm:p-6">
         <div className="relative z-10">
           <div className="mb-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <span className="inline-flex w-fit items-center gap-1.5 rounded-full border border-blue-500/10 bg-blue-500/10 px-2.5 py-0.5 text-[11px] font-bold text-blue-600">
@@ -156,14 +156,14 @@ export default function AlumniDirectory() {
             </span>
           </div>
 
-          <h2 className="text-xl font-extrabold tracking-tight text-slate-800 sm:text-2xl">Find Alumni</h2>
-          <p className="mt-1 max-w-xl text-xs font-medium leading-relaxed text-slate-600">
+          <h2 className="text-lg font-extrabold tracking-tight text-slate-800 sm:text-2xl">Find Alumni</h2>
+          <p className="mt-1 max-w-xl text-[11px] font-medium leading-relaxed text-slate-600 sm:text-xs">
             Search classmates and seniors by name, batch, school, or current role, then connect through LinkedIn.
           </p>
         </div>
       </section>
 
-      <section className="flex flex-col gap-3 rounded-3xl border border-white/70 bg-white/50 p-4 shadow-xl shadow-slate-900/5 backdrop-blur-md lg:flex-row lg:items-center">
+      <section className="flex flex-col gap-3 rounded-3xl border border-white/70 bg-white/50 p-3 shadow-xl shadow-slate-900/5 backdrop-blur-md sm:p-4 lg:flex-row lg:items-center">
         <div className="relative min-w-0 flex-1">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={15} />
           <input
@@ -177,7 +177,7 @@ export default function AlumniDirectory() {
         <select
           value={selectedBatch}
           onChange={event => setSelectedBatch(event.target.value)}
-          className="rounded-2xl border border-slate-200/80 bg-white/80 px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm outline-none transition-all focus:border-blue-400"
+          className="w-full rounded-2xl border border-slate-200/80 bg-white/80 px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm outline-none transition-all focus:border-blue-400 lg:w-auto"
         >
           {batchYears.map(batch => (
             <option key={batch} value={batch}>
@@ -188,7 +188,7 @@ export default function AlumniDirectory() {
         <select
           value={selectedSchool}
           onChange={event => setSelectedSchool(event.target.value)}
-          className="rounded-2xl border border-slate-200/80 bg-white/80 px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm outline-none transition-all focus:border-blue-400"
+          className="w-full rounded-2xl border border-slate-200/80 bg-white/80 px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm outline-none transition-all focus:border-blue-400 lg:w-auto"
         >
           {schools.map(school => (
             <option key={school} value={school}>
@@ -212,19 +212,19 @@ export default function AlumniDirectory() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-3">
             {paginated.map(member => {
               const linkedInUrl = member.linkedIn ? normalizeLinkedInUrl(member.linkedIn) : '';
 
               return (
                 <article
                   key={member.id}
-                  className="group flex min-h-[230px] flex-col gap-4 rounded-3xl border border-white/80 bg-white/70 p-5 shadow-lg shadow-slate-900/5 backdrop-blur-md transition-all hover:-translate-y-0.5 hover:bg-white/85 hover:shadow-xl"
+                  className="group flex min-h-[220px] flex-col gap-3 rounded-3xl border border-white/80 bg-white/70 p-4 shadow-lg shadow-slate-900/5 backdrop-blur-md transition-all hover:-translate-y-0.5 hover:bg-white/85 hover:shadow-xl sm:gap-4 sm:p-5"
                 >
                   <div className="flex items-start gap-4">
                     <AlumniAvatar name={member.name} profilePic={member.profilePic} size={56} />
                     <div className="min-w-0 flex-1">
-                      <h3 className="truncate text-base font-black text-slate-900 transition-colors group-hover:text-blue-600">{member.name}</h3>
+                      <h3 className="break-words text-[15px] font-black text-slate-900 transition-colors group-hover:text-blue-600 sm:text-base">{member.name}</h3>
                       <p className="mt-1 inline-flex items-center gap-1.5 rounded-full bg-blue-50/90 px-2.5 py-1 text-[11px] font-bold text-blue-700">
                         <GraduationCap size={12} />
                         Batch of {member.batchYear || 'N/A'}
@@ -271,7 +271,7 @@ export default function AlumniDirectory() {
           </div>
 
           {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-3">
+            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
               <button
                 type="button"
                 onClick={() => setCurrentPage(page => Math.max(1, page - 1))}

@@ -4,6 +4,7 @@ import { achievements, alumni } from '@/lib/db/schema';
 import { getSessionFromCookies } from '@/lib/auth';
 import { uploadMedia } from '@/lib/imagekit';
 import { createNotification } from '@/lib/notifications';
+import { logActivity } from '@/lib/monitoring';
 import { eq, desc } from 'drizzle-orm';
 
 export async function GET(request: Request) {
@@ -88,6 +89,22 @@ export async function POST(request: Request) {
         { type: 'ROLE', recipientRole: 'SUPER_ADMIN' },
         { type: 'SCHOOL_ROLE', recipientRole: 'SUB_ADMIN', schoolId: alumniRecord.schoolId },
       ],
+    });
+
+    await logActivity({
+      schoolId: alumniRecord.schoolId,
+      actorRole: 'ALUMNI',
+      actorId: session.userId,
+      actorName: alumniRecord.name,
+      actorEmail: alumniRecord.email,
+      category: 'ACHIEVEMENT',
+      action: 'ACHIEVEMENT_SUBMITTED',
+      title,
+      message: 'Achievement submitted for moderation.',
+      status: 'PENDING',
+      entityType: 'Achievement',
+      entityId: newAchievement.id,
+      link: '/subadmin/alumni',
     });
 
     return NextResponse.json(newAchievement);

@@ -15,6 +15,7 @@ import {
   ArrowUpDown,
   Eye
 } from 'lucide-react';
+import { usePortalDialog } from '@/components/ui/PortalDialog';
 
 interface MissionStat {
   id: string;
@@ -33,7 +34,7 @@ export default function MissionStatsManager() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingStat, setEditingStat] = useState<MissionStat | null>(null);
   const [showForm, setShowForm] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { dialog, confirmDialog, showAlert } = usePortalDialog();
 
   const [formData, setFormData] = useState({
     target: 0,
@@ -93,13 +94,18 @@ export default function MissionStatsManager() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this mission stat?')) return;
+    if (!(await confirmDialog({
+      title: 'Delete this mission stat?',
+      message: 'This impact figure will no longer appear in the mission statistics list.',
+      confirmText: 'Delete stat',
+      variant: 'danger',
+    }))) return;
     try {
       const res = await fetch(`/api/superadmin/mission-stats?id=${id}`, { method: 'DELETE' });
       if (res.ok) {
         setStats(stats.filter(s => s.id !== id));
       } else {
-        alert('Failed to delete stat');
+        showAlert({ title: 'Failed to delete stat', message: 'Please try again after refreshing the dashboard.', variant: 'danger' });
       }
     } catch (err) {
       console.error('Delete error:', err);
@@ -125,12 +131,11 @@ export default function MissionStatsManager() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.label || !formData.desc) {
-      setError('Label and Description are required');
+      showAlert({ title: 'Missing details', message: 'Label and description are required.', variant: 'danger' });
       return;
     }
 
     setIsSubmitting(true);
-    setError(null);
 
     try {
       const res = await fetch('/api/superadmin/mission-stats', {
@@ -143,12 +148,17 @@ export default function MissionStatsManager() {
         setShowForm(false);
         setEditingStat(null);
         fetchStats();
+        showAlert({
+          title: editingStat ? 'Mission stat updated' : 'Mission stat created',
+          message: 'Mission statistic has been synchronized successfully.',
+          variant: 'success',
+        });
       } else {
         const data = await res.json();
-        setError(data.error || 'Failed to save stat');
+        showAlert({ title: 'Save failed', message: data.error || 'Failed to save mission statistic.', variant: 'danger' });
       }
     } catch (err) {
-      setError('An unexpected error occurred');
+      showAlert({ title: 'Unexpected error', message: 'Failed to save mission statistic.', variant: 'danger' });
     } finally {
       setIsSubmitting(false);
     }
@@ -163,6 +173,7 @@ export default function MissionStatsManager() {
   }
 
   return (
+    <>
     <div className="space-y-8">
       {/* Header Bar */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-200/80">
@@ -198,12 +209,6 @@ export default function MissionStatsManager() {
             {editingStat ? <Edit3 size={18} className="text-blue-600" /> : <Sparkles size={18} className="text-amber-500" />}
             {editingStat ? 'Edit Mission Stat' : 'Create New Mission Stat'}
           </h3>
-
-          {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm">
-              {error}
-            </div>
-          )}
 
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-5">
             <div>
@@ -383,5 +388,7 @@ export default function MissionStatsManager() {
         )}
       </div>
     </div>
+    {dialog}
+    </>
   );
 }

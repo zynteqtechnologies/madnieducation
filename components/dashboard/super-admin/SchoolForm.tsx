@@ -19,6 +19,7 @@ import {
   Trash2,
   Image as ImageIcon
 } from 'lucide-react';
+import { usePortalDialog } from '@/components/ui/PortalDialog';
 
 interface Trust {
   id: string;
@@ -35,7 +36,7 @@ export default function SchoolForm({ schoolId, isEdit = false, onSubmitSuccess }
   const [trusts, setTrusts] = useState<Trust[]>([]);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(isEdit);
-  const [error, setError] = useState('');
+  const { dialog, showAlert } = usePortalDialog();
 
   const [formData, setFormData] = useState({
     schoolName: '',
@@ -101,7 +102,7 @@ export default function SchoolForm({ schoolId, isEdit = false, onSubmitSuccess }
         }
       }
     } catch (err) {
-      setError('Failed to fetch data.');
+      showAlert({ title: 'Load failed', message: 'Failed to fetch school data.', variant: 'danger' });
     } finally {
       setLoading(false);
       setFetching(false);
@@ -123,7 +124,6 @@ export default function SchoolForm({ schoolId, isEdit = false, onSubmitSuccess }
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
 
     const form = new FormData();
     form.append('schoolName', formData.schoolName);
@@ -161,13 +161,18 @@ export default function SchoolForm({ schoolId, isEdit = false, onSubmitSuccess }
       });
 
       if (res.ok) {
+        await showAlert({
+          title: isEdit ? 'School updated' : 'School registered',
+          message: 'School profile has been synchronized successfully.',
+          variant: 'success',
+        });
         if (onSubmitSuccess) onSubmitSuccess();
       } else {
         const data = await res.json();
-        setError(data.error || 'Action failed.');
+        showAlert({ title: 'Action failed', message: data.error || 'School profile could not be saved.', variant: 'danger' });
       }
     } catch (err) {
-      setError('Sync failed.');
+      showAlert({ title: 'Sync failed', message: 'School profile could not be saved.', variant: 'danger' });
     } finally {
       setLoading(false);
     }
@@ -189,6 +194,7 @@ export default function SchoolForm({ schoolId, isEdit = false, onSubmitSuccess }
       : null;
 
   return (
+    <>
     <div className="bg-white w-full max-w-4xl mx-auto rounded-[2.5rem] border border-slate-200 shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-500">
       <div className="p-10 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
         <div>
@@ -203,13 +209,6 @@ export default function SchoolForm({ schoolId, isEdit = false, onSubmitSuccess }
       </div>
 
       <form onSubmit={handleSubmit} className="p-10 space-y-8">
-        {error && (
-          <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl flex items-center space-x-3 text-rose-700 text-xs font-semibold">
-            <ShieldCheck size={18} />
-            <p>{error}</p>
-          </div>
-        )}
-
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="space-y-2">
             <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest ml-1">Governing Trust</label>
@@ -447,5 +446,7 @@ export default function SchoolForm({ schoolId, isEdit = false, onSubmitSuccess }
         </div>
       </form>
     </div>
+    {dialog}
+    </>
   );
 }

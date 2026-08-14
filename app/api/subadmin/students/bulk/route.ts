@@ -16,6 +16,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No student data provided' }, { status: 400 });
     }
 
+    if (!standardId) {
+      return NextResponse.json({ error: 'Standard is required' }, { status: 400 });
+    }
+
+    const standardCheck = await client.query(
+      `SELECT id FROM "Standard" WHERE id = $1 AND "schoolId" = $2`,
+      [standardId, session.schoolId]
+    );
+    if (standardCheck.rowCount === 0) {
+      return NextResponse.json({ error: 'Standard not found or unauthorized' }, { status: 403 });
+    }
+
+    const maxStudents = 1000;
+    if (students.length > maxStudents) {
+      return NextResponse.json({ error: `Please import ${maxStudents} students or fewer at one time` }, { status: 400 });
+    }
+
     const parseDate = (val: any) => {
       if (!val) return null;
       // Handle Excel date serial numbers if needed, but XLSX usually converts to string/Date
@@ -84,13 +101,13 @@ export async function POST(request: Request) {
             s['Sponsorship Type'],
             (s['Is Under RTE'] === 'Yes' || s['Is Under RTE'] === true) ? false : (s['Is Needy'] === 'Yes' || s['Is Needy'] === true),
             s['Is Under RTE'] === 'Yes' || s['Is Under RTE'] === true,
-            standardId || null,
+            standardId,
             session.schoolId,
             newStudentId
           ]
         );
 
-        if (activeYearId && standardId) {
+        if (activeYearId) {
           await client.query(
             `INSERT INTO "StudentEnrollment" (
               id, "studentId", "standardId", "academicYearId", status, "createdAt", "updatedAt"

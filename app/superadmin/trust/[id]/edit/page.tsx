@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import TrustForm from '@/components/dashboard/super-admin/TrustForm';
 import { Loader2 } from 'lucide-react';
+import { usePortalDialog } from '@/components/ui/PortalDialog';
 
 export default function TrustEditPage() {
   const params = useParams();
@@ -12,6 +13,7 @@ export default function TrustEditPage() {
   const [trust, setTrust] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const { dialog, showAlert } = usePortalDialog();
 
   useEffect(() => {
     if (id) {
@@ -19,12 +21,12 @@ export default function TrustEditPage() {
         .then(res => res.json())
         .then(data => {
           if (!data.error) setTrust(data);
-          else alert(data.error);
+          else showAlert({ title: 'Unable to load trust', message: data.error, variant: 'danger' });
         })
-        .catch(() => alert('Failed to fetch trust data.'))
+        .catch(() => showAlert({ title: 'Unable to load trust', message: 'Failed to fetch trust data.', variant: 'danger' }))
         .finally(() => setLoading(false));
     }
-  }, [id]);
+  }, [id, showAlert]);
 
   return (
     <DashboardLayout
@@ -59,6 +61,7 @@ export default function TrustEditPage() {
           </div>
         )}
       </div>
+      {dialog}
     </DashboardLayout>
   );
 }

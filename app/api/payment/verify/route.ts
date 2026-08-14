@@ -2,11 +2,11 @@ import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import pool from '@/lib/db';
 import { createNotification } from '@/lib/notifications';
-import { checkRateLimit } from '@/lib/rateLimit';
+import { checkRateLimit, rateLimitResponse } from '@/lib/security/rateLimit';
 
 export async function POST(request: Request) {
-  const rateLimitError = checkRateLimit(request, 15, 60 * 1000);
-  if (rateLimitError) return rateLimitError;
+  const limit = await checkRateLimit(request, 'payment');
+  if (!limit.allowed) return rateLimitResponse(limit.retryAfter);
 
   try {
     const { 

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import Razorpay from 'razorpay';
+import { checkRateLimit, rateLimitResponse } from '@/lib/security/rateLimit';
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID!,
@@ -8,6 +9,9 @@ const razorpay = new Razorpay({
 
 export async function POST(request: Request) {
   try {
+    const limit = await checkRateLimit(request, 'payment');
+    if (!limit.allowed) return rateLimitResponse(limit.retryAfter);
+
     const { amount, type, referenceId, schoolId } = await request.json();
 
     if (!amount || !type || !schoolId) {

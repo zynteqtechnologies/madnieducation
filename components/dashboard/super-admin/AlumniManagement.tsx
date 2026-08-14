@@ -18,6 +18,7 @@ import {
   School,
   Star
 } from 'lucide-react';
+import { usePortalDialog } from '@/components/ui/PortalDialog';
 
 interface EligibleStudent {
   id: string;
@@ -54,6 +55,7 @@ export default function AlumniManagement() {
   const rowsPerPage = 10;
 
   const [selectedStandard, setSelectedStandard] = useState('All');
+  const { dialog, showAlert, confirmDialog } = usePortalDialog();
 
   useEffect(() => {
     if (activeTab === 'eligibility') fetchEligible();
@@ -92,7 +94,11 @@ export default function AlumniManagement() {
 
   const handleConvert = async (student: EligibleStudent) => {
     if (!student.gmailId) {
-      alert('Gmail ID is required for alumni authorization.');
+      showAlert({
+        title: 'Gmail ID required',
+        message: 'Enter the student Gmail ID before authorizing alumni access.',
+        variant: 'danger',
+      });
       return;
     }
     setProcessingId(student.id);
@@ -114,7 +120,7 @@ export default function AlumniManagement() {
         fetchEligible();
       } else {
         const err = await res.json();
-        alert(err.error);
+        showAlert({ title: 'Authorization failed', message: err.error || 'Unable to authorize alumni access.', variant: 'danger' });
       }
     } finally {
       setProcessingId(null);
@@ -134,8 +140,38 @@ export default function AlumniManagement() {
         fetchAlumni();
       } else {
         const err = await res.json();
-        alert(err.error || 'Failed to update featured alumni');
+        showAlert({ title: 'Update failed', message: err.error || 'Failed to update featured alumni.', variant: 'danger' });
       }
+    } finally {
+      setProcessingId(null);
+    }
+	  };
+
+  const handleResetAccess = async (alumni: Alumni) => {
+    const confirmed = await confirmDialog({
+      title: 'Reset alumni access?',
+      message: `A new temporary password will be generated and emailed to ${alumni.email}.`,
+      variant: 'info',
+      confirmText: 'Reset Access',
+      cancelText: 'Cancel',
+    });
+    if (!confirmed) return;
+
+    setProcessingId(alumni.id);
+    try {
+      const res = await fetch('/api/subadmin/alumni/reset-access', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ alumniId: alumni.id }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSuccessData({ ...data, resetAccess: true });
+      } else {
+        showAlert({ title: 'Reset failed', message: data.error || 'Failed to reset alumni access.', variant: 'danger' });
+      }
+    } catch {
+      showAlert({ title: 'Connection failed', message: 'Failed to connect to server.', variant: 'danger' });
     } finally {
       setProcessingId(null);
     }
@@ -167,13 +203,13 @@ export default function AlumniManagement() {
             onClick={() => setActiveTab('eligibility')}
             className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${activeTab === 'eligibility' ? 'bg-[#18181b] text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
           >
-            Eligibility
+            Make Alumni
           </button>
           <button
             onClick={() => setActiveTab('directory')}
             className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${activeTab === 'directory' ? 'bg-[#18181b] text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
           >
-            Directory
+            Alumni List
           </button>
         </div>
       </div>
@@ -386,7 +422,12 @@ export default function AlumniManagement() {
 	                          <button className="p-1.5 text-slate-400 hover:text-black hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 rounded-md transition-all">
                             <ShieldCheck size={14} />
                           </button>
-                          <button className="p-1.5 text-slate-400 hover:text-black hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 rounded-md transition-all">
+                          <button
+                            onClick={() => handleResetAccess(a)}
+                            disabled={processingId === a.id}
+                            className="p-1.5 text-slate-400 hover:text-black hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 rounded-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="Reset access and email temporary password"
+                          >
                             <Key size={14} />
                           </button>
                         </div>
@@ -435,10 +476,11 @@ export default function AlumniManagement() {
             <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-emerald-100 shadow-sm">
               <ShieldCheck size={32} strokeWidth={1.5} />
             </div>
-            <h3 className="text-xl font-bold text-slate-900 tracking-tight mb-2">Account authorized</h3>
-            <p className="text-slate-500 text-[12px] font-medium mb-8 leading-relaxed">
-              Alumni access has been provisioned for <span className="text-[#1A3D63] font-bold">{successData.name}</span>.
-            </p>
+	            <h3 className="text-xl font-bold text-slate-900 tracking-tight mb-2">{successData.resetAccess ? 'Access reset' : 'Account authorized'}</h3>
+	            <p className="text-slate-500 text-[12px] font-medium mb-8 leading-relaxed">
+	              {successData.resetAccess ? 'A new temporary password has been generated for ' : 'Alumni access has been provisioned for '}
+                <span className="text-[#1A3D63] font-bold">{successData.name}</span>.
+	            </p>
 
             <div className="space-y-3 mb-10 text-left">
               <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
@@ -460,6 +502,7 @@ export default function AlumniManagement() {
           </div>
         </div>
       )}
+      {dialog}
 
     </div>
   );

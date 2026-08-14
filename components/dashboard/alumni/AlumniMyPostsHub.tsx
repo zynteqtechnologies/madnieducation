@@ -21,7 +21,6 @@ import AlumniAchievementHub from './AlumniAchievementHub';
 import AlumniBlogHub from './AlumniBlogHub';
 import AlumniCareerHub from './AlumniCareerHub';
 import AlumniMentorshipHub from './AlumniMentorshipHub';
-import CreatePostSubmenu from './CreatePostSubmenu';
 
 type ManagerTab = 'all' | 'achievements' | 'blogs' | 'careers' | 'mentorship' | 'contributions';
 type StatusFilter = 'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED';
@@ -122,6 +121,14 @@ function formatDate(value?: string | null) {
   });
 }
 
+function getPostPreview(text: string, expanded: boolean) {
+  const normalized = String(text || 'No description added.').trim();
+  if (expanded || normalized.length <= 150) {
+    return { text: normalized, canToggle: normalized.length > 150 };
+  }
+  return { text: `${normalized.slice(0, 150).trim()}...`, canToggle: true };
+}
+
 function PostRowSkeleton() {
   return (
     <article className="animate-pulse rounded-3xl border border-white/80 bg-white/70 p-5 shadow-sm">
@@ -149,7 +156,6 @@ export default function AlumniMyPostsHub() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
   const [typeFilter, setTypeFilter] = useState<PostTypeFilter>('ALL');
   const [initialCareerType, setInitialCareerType] = useState<'JOB' | 'INTERNSHIP'>('JOB');
-  const [isSubmenuOpen, setIsSubmenuOpen] = useState(false);
   const [autoOpenForm, setAutoOpenForm] = useState(false);
   const [userData, setUserData] = useState<any>(null);
   const [achievementsList, setAchievementsList] = useState<any[]>([]);
@@ -159,14 +165,15 @@ export default function AlumniMyPostsHub() {
   const [contributionsList, setContributionsList] = useState<any[]>([]);
   const [aoyWinner, setAoyWinner] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [expandedPosts, setExpandedPosts] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     fetch('/api/auth/me').then(res => res.json()).then(data => {
       if (!data.error) {
         setUserData(data);
-        fetch(`/api/alumni/contributions?alumniId=${data.id}`).then(r => r.json()).then(c => {
-          setContributionsList(Array.isArray(c) ? c : []);
-        }).catch(() => []);
+	        fetch('/api/alumni/contributions').then(r => r.json()).then(c => {
+	          setContributionsList(Array.isArray(c) ? c : []);
+	        }).catch(() => []);
       }
     }).catch(() => { });
 
@@ -276,7 +283,6 @@ export default function AlumniMyPostsHub() {
 
   const handleCreateSelect = (type: 'achievement' | 'story' | 'job' | 'internship' | 'mentorship') => {
     setAutoOpenForm(true);
-    setIsSubmenuOpen(false);
 
     if (type === 'achievement') {
       setActiveTab('achievements');
@@ -310,6 +316,10 @@ export default function AlumniMyPostsHub() {
     setAutoOpenForm(false);
     setActiveTab('all');
     fetchAllMyPosts();
+  };
+
+  const toggleExpandedPost = (key: string) => {
+    setExpandedPosts((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
   if (activeTab === 'achievements') {
@@ -421,7 +431,7 @@ export default function AlumniMyPostsHub() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-5 pb-16 animate-in fade-in duration-300">
+	    <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 pb-28 sm:gap-5 sm:pb-16 animate-in fade-in duration-300">
       {/* Alumni of the Year Spotlight Banner */}
       {/* {aoyWinner && (
         <section className="relative overflow-hidden rounded-3xl border border-amber-200/80 bg-amber-50/70 p-5 shadow-xl shadow-slate-900/5 backdrop-blur-md">
@@ -481,42 +491,25 @@ export default function AlumniMyPostsHub() {
         </section>
       )} */}
 
-      <section className="relative overflow-visible rounded-3xl border border-white/60 bg-white/40 p-5 shadow-xl shadow-slate-900/5 backdrop-blur-md sm:p-6">
-        <div className="relative z-10 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+	      <section className="relative overflow-visible rounded-3xl border border-white/60 bg-white/40 p-4 shadow-xl shadow-slate-900/5 backdrop-blur-md sm:p-6">
+	        <div className="relative z-10 flex flex-col gap-3 sm:gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div className="min-w-0">
             <span className="inline-flex w-fit items-center gap-1.5 rounded-full border border-blue-500/10 bg-blue-500/10 px-2.5 py-0.5 text-[11px] font-bold text-blue-600">
               <Sparkles size={11} className="animate-pulse" />
               Submission Tracker
             </span>
-            <h2 className="mt-2 text-xl font-extrabold tracking-tight text-slate-800 sm:text-2xl">My Posts</h2>
-            <p className="mt-1 max-w-xl text-xs font-medium leading-relaxed text-slate-600">
+	            <h2 className="mt-2 text-lg font-extrabold tracking-tight text-slate-800 sm:text-2xl">My Posts</h2>
+	            <p className="mt-1 max-w-xl text-[11px] font-medium leading-relaxed text-slate-600 sm:text-xs">
               Track your jobs, internships, mentorship offers, stories, and achievements in one place.
             </p>
             {userData?.schoolName && (
               <p className="mt-2 text-xs font-semibold text-slate-500">{userData.schoolName}</p>
             )}
           </div>
-
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setIsSubmenuOpen(!isSubmenuOpen)}
-              className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 px-4 text-xs font-extrabold text-white shadow-md shadow-blue-500/20 transition-all hover:bg-blue-700 sm:w-auto"
-            >
-              <Plus size={15} />
-              <span>Create Post</span>
-            </button>
-
-            <CreatePostSubmenu
-              isOpen={isSubmenuOpen}
-              onClose={() => setIsSubmenuOpen(false)}
-              onSelectType={handleCreateSelect}
-            />
-          </div>
         </div>
       </section>
 
-      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+	      <section className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4">
         {statusFilters.map((status) => {
           const style = status.id === 'ALL'
             ? { color: 'border-slate-200 bg-white text-slate-800', icon: <FileText size={18} /> }
@@ -528,21 +521,21 @@ export default function AlumniMyPostsHub() {
               key={status.id}
               type="button"
               onClick={() => setStatusFilter(status.id)}
-              className={`rounded-3xl border p-4 text-left shadow-lg shadow-slate-900/5 backdrop-blur-md transition-all ${active ? 'border-slate-950 bg-slate-950 text-white' : `${style.color} hover:border-slate-300`
+	              className={`rounded-3xl border p-3 text-left shadow-lg shadow-slate-900/5 backdrop-blur-md transition-all sm:p-4 ${active ? 'border-slate-950 bg-slate-950 text-white' : `${style.color} hover:border-slate-300`
                 }`}
             >
               <div className="flex items-center justify-between gap-3">
                 <span className="text-xs font-bold uppercase">{status.label}</span>
                 <span className={active ? 'text-white' : ''}>{style.icon}</span>
               </div>
-              <p className="mt-3 text-2xl font-black">{counts.byStatus[status.id]}</p>
+	              <p className="mt-2 text-xl font-black sm:mt-3 sm:text-2xl">{counts.byStatus[status.id]}</p>
             </button>
           );
         })}
       </section>
 
-      <section className="rounded-3xl border border-white/70 bg-white/50 p-4 shadow-xl shadow-slate-900/5 backdrop-blur-md">
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-2 px-1">
+	      <section className="rounded-3xl border border-white/70 bg-white/50 p-3 shadow-xl shadow-slate-900/5 backdrop-blur-md sm:p-4">
+	        <div className="mb-3 flex flex-col items-start justify-between gap-2 px-1 sm:flex-row sm:items-center">
           <div className="flex items-center gap-2 text-xs font-bold uppercase text-slate-500">
             <ListFilter size={14} />
             <span>Post Type</span>
@@ -600,7 +593,7 @@ export default function AlumniMyPostsHub() {
             </button>
           )}
         </div>
-        <div className="flex gap-2 overflow-x-auto pb-1">
+	        <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {typeFilters.map((filter) => {
             const active = typeFilter === filter.id;
             return (
@@ -608,7 +601,7 @@ export default function AlumniMyPostsHub() {
                 key={filter.id}
                 type="button"
                 onClick={() => setTypeFilter(filter.id)}
-                className={`inline-flex min-h-10 shrink-0 items-center gap-2 rounded-2xl border px-3 text-xs font-bold transition-all ${active
+	                className={`inline-flex min-h-9 shrink-0 items-center gap-2 rounded-2xl border px-3 text-[11px] font-bold transition-all sm:min-h-10 sm:text-xs ${active
                     ? 'border-slate-950 bg-slate-950 text-white'
                     : 'border-white bg-white/80 text-slate-700 hover:border-blue-200 hover:text-blue-700'
                   }`}
@@ -634,8 +627,8 @@ export default function AlumniMyPostsHub() {
         </div>
       </section>
 
-      <section className="rounded-3xl border border-white/70 bg-white/50 p-3 shadow-xl shadow-slate-900/5 backdrop-blur-md">
-        <div className="flex flex-col gap-3 px-2 py-2 sm:flex-row sm:items-center sm:justify-between">
+	      <section className="rounded-3xl border border-white/70 bg-white/50 p-2.5 shadow-xl shadow-slate-900/5 backdrop-blur-md sm:p-3">
+	        <div className="flex flex-col gap-3 px-2 py-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h3 className="text-sm font-black text-slate-900">Submission List</h3>
             <p className="text-xs font-medium text-slate-500">{filteredPosts.length} post{filteredPosts.length === 1 ? '' : 's'} shown</p>
@@ -782,14 +775,17 @@ export default function AlumniMyPostsHub() {
           </div>
         ) : (
           <div className="space-y-3 pt-2">
-            {filteredPosts.map((post) => {
-              const typeStyle = typeStyles[post.type];
-              const statusStyle = getStatusStyle(post.status);
+	            {filteredPosts.map((post) => {
+	              const typeStyle = typeStyles[post.type];
+	              const statusStyle = getStatusStyle(post.status);
+	              const postKey = `${post.type}-${post.id}`;
+	              const expanded = Boolean(expandedPosts[postKey]);
+	              const preview = getPostPreview(post.description, expanded);
 
-              return (
-                <article key={`${post.type}-${post.id}`} className="grid gap-4 rounded-3xl border border-white/80 bg-white/70 p-5 shadow-sm transition-all hover:bg-white/85 hover:shadow-md lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
-                  <div className="min-w-0">
-                    <div className="mb-2 flex flex-wrap items-center gap-2">
+	              return (
+	                <article key={postKey} className="grid gap-3 rounded-3xl border border-white/80 bg-white/70 p-3.5 shadow-sm transition-all hover:bg-white/85 hover:shadow-md sm:p-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+	                  <div className="min-w-0">
+	                    <div className="mb-2 flex flex-wrap items-center gap-2">
                       <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-black ${typeStyle.color}`}>
                         {typeStyle.icon}
                         {typeStyle.label}
@@ -801,10 +797,19 @@ export default function AlumniMyPostsHub() {
                       <span className="rounded-full bg-white/70 px-2.5 py-1 text-xs font-semibold text-slate-500">Submitted {formatDate(post.createdAt || post.date)}</span>
                     </div>
 
-                    <h4 className="break-words text-sm font-black text-slate-950 sm:text-base">{post.title}</h4>
-                    <p className="mt-1 line-clamp-2 max-w-4xl break-words text-sm font-medium leading-relaxed text-slate-600">
-                      {post.description || 'No description added.'}
-                    </p>
+	                    <h4 className="break-words text-[15px] font-black text-slate-950 sm:text-base">{post.title}</h4>
+	                    <p className="mt-1 max-w-4xl break-words text-[13px] font-medium leading-relaxed text-slate-600 sm:text-sm">
+	                      {preview.text}
+	                    </p>
+	                    {preview.canToggle && (
+	                      <button
+	                        type="button"
+	                        onClick={() => toggleExpandedPost(postKey)}
+	                        className="mt-1 text-[12px] font-black text-blue-600 hover:text-blue-700"
+	                      >
+	                        {expanded ? 'Show less' : 'Read more'}
+	                      </button>
+	                    )}
                     <div className="mt-2 flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-500">
                       {post.meta && <span>{post.meta}</span>}
                       {post.meta && <span className="text-slate-300">|</span>}
@@ -815,7 +820,7 @@ export default function AlumniMyPostsHub() {
                   <button
                     type="button"
                     onClick={() => openManager(post.type)}
-                    className="inline-flex min-h-10 items-center justify-center gap-2 rounded-2xl border border-white bg-white/80 px-3 text-xs font-bold text-slate-700 shadow-sm transition-all hover:border-blue-200 hover:text-blue-700"
+	                    className="inline-flex min-h-9 items-center justify-center gap-2 rounded-2xl border border-white bg-white/80 px-3 text-xs font-bold text-slate-700 shadow-sm transition-all hover:border-blue-200 hover:text-blue-700 sm:min-h-10"
                   >
                     <Eye size={15} />
                     <span>View</span>

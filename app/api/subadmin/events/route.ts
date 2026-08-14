@@ -3,6 +3,7 @@ import pool from '@/lib/db';
 import { getSessionFromCookies } from '@/lib/auth';
 import { createNotification } from '@/lib/notifications';
 import { broadcastEmailToAlumni } from '@/lib/notifyAlumniByEmail';
+import { logActivity } from '@/lib/monitoring';
 
 export async function GET(request: Request) {
   try {
@@ -91,6 +92,21 @@ export async function POST(request: Request) {
       ],
     });
 
+    await logActivity({
+      schoolId: session.schoolId,
+      actorRole: 'SUB_ADMIN',
+      actorId: session.userId,
+      actorEmail: session.email,
+      category: 'EVENT',
+      action: 'EVENT_CREATED',
+      title: 'New school event added',
+      message: title,
+      status: 'SUCCESS',
+      entityType: 'Event',
+      entityId: result.rows[0].id,
+      link: '/subadmin/school-hub?tab=events',
+    });
+
     // Send broadcast email notification to all registered alumni of this school
     broadcastEmailToAlumni({
       schoolId: session.schoolId,
@@ -100,6 +116,11 @@ export async function POST(request: Request) {
       date,
       category: category || 'Event',
       imageUrl: featuredImage || null,
+      sourceRole: 'SUB_ADMIN',
+      sourceId: session.userId,
+      sourceName: session.email,
+      relatedEntityType: 'Event',
+      relatedEntityId: result.rows[0].id,
     }).catch((err) => console.error('Error broadcasting event email:', err));
 
     return NextResponse.json({ ...result.rows[0], media: [] }, { status: 201 });

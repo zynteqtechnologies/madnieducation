@@ -4,9 +4,10 @@ import React, { useState } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import AlumniManagement from '@/components/dashboard/super-admin/AlumniManagement';
 import AlumniInteractionManager from '@/components/dashboard/sub-admin/AlumniInteractionManager';
+import AlumniRegistrationRequests from '@/components/dashboard/sub-admin/AlumniRegistrationRequests';
 
 export default function SubAdminAlumniPage() {
-  const [activeTab, setActiveTab] = useState<'profiles' | 'interactions'>('profiles');
+  const [activeTab, setActiveTab] = useState<'profiles' | 'interactions' | 'requests'>('profiles');
   return (
     <DashboardLayout title="Alumni" role="SUB_ADMIN" activeItem="Alumni">
       <div className="py-4 lg:h-full lg:overflow-hidden flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -22,10 +23,13 @@ export default function SubAdminAlumniPage() {
             <button onClick={() => setActiveTab('interactions')} className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${activeTab === 'interactions' ? 'bg-[#18181b] text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
               Interactions
             </button>
+            <button onClick={() => setActiveTab('requests')} className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${activeTab === 'requests' ? 'bg-[#18181b] text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+              Registration Requests
+            </button>
           </div>
         </div>
         <div className="flex-1 min-h-0 lg:overflow-hidden">
-          {activeTab === 'profiles' ? <AlumniManagement /> : <AlumniInteractionManager />}
+          {activeTab === 'profiles' ? <AlumniManagement /> : activeTab === 'interactions' ? <AlumniInteractionManager /> : <AlumniRegistrationRequests />}
         </div>
       </div>
     </DashboardLayout>

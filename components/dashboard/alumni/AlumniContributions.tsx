@@ -18,6 +18,7 @@ import {
    ChevronRight,
    Info
 } from 'lucide-react';
+import { usePortalDialog } from '@/components/ui/PortalDialog';
 
 declare global {
    interface Window {
@@ -25,10 +26,103 @@ declare global {
    }
 }
 
+type ProjectStatusFilter = 'active' | 'completed';
+
+function toAmount(value: any) {
+   const amount = Number(value || 0);
+   return Number.isFinite(amount) ? amount : 0;
+}
+
+function formatMoney(value: any) {
+   return `Rs. ${toAmount(value).toLocaleString()}`;
+}
+
+function getProjectProgress(item: any) {
+   const estimated = toAmount(item?.estimatedCost);
+   const paid = toAmount(item?.paidAmount);
+   if (estimated <= 0) return 0;
+   return Math.min(100, Math.round((paid / estimated) * 100));
+}
+
+function isProjectCompleted(item: any) {
+   const estimated = toAmount(item?.estimatedCost);
+   return estimated > 0 && toAmount(item?.paidAmount) >= estimated;
+}
+
+function ContributionSkeleton() {
+   return (
+      <div className="mx-auto max-w-7xl space-y-4 pb-28 sm:space-y-6 sm:pb-16">
+         <div className="rounded-3xl border border-white/70 bg-white/50 p-4 shadow-xl shadow-slate-900/5 sm:p-6">
+            <div className="h-5 w-36 animate-pulse rounded-full bg-slate-200/80" />
+            <div className="mt-4 h-8 w-64 max-w-full animate-pulse rounded-full bg-slate-200/80" />
+            <div className="mt-3 h-4 w-full max-w-md animate-pulse rounded-full bg-slate-200/70" />
+         </div>
+         <div className="h-12 animate-pulse rounded-2xl border border-slate-100 bg-white/70" />
+         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, index) => (
+               <div key={`give-back-skeleton-${index}`} className="overflow-hidden rounded-3xl border border-white/70 bg-white/50 shadow-lg shadow-slate-900/5">
+                  <div className="aspect-video animate-pulse bg-slate-200/70" />
+                  <div className="space-y-4 p-4 sm:p-5">
+                     <div className="h-5 w-4/5 animate-pulse rounded-full bg-slate-200/80" />
+                     <div className="h-3 w-full animate-pulse rounded-full bg-slate-200/70" />
+                     <div className="h-3 w-2/3 animate-pulse rounded-full bg-slate-200/70" />
+                     <div className="h-10 animate-pulse rounded-2xl bg-slate-200/80" />
+                  </div>
+               </div>
+            ))}
+         </div>
+      </div>
+   );
+}
+
+function attachMyDonationTotals(needs: any, donations: any[]) {
+   const projectTotals = new Map<string, number>();
+   const aidTotals = new Map<string, { total: number; zakat: number; sadka: number; lillah: number }>();
+
+   donations.forEach((donation) => {
+      const referenceId = String(donation.referenceId || '');
+      if (!referenceId) return;
+
+      const amount = toAmount(donation.amount);
+      if (['CONSTRUCTION', 'EVENT'].includes(donation.type)) {
+         projectTotals.set(referenceId, (projectTotals.get(referenceId) || 0) + amount);
+         return;
+      }
+
+      if (['ZAKAT', 'SADKA', 'LILLAH'].includes(donation.type)) {
+         const current = aidTotals.get(referenceId) || { total: 0, zakat: 0, sadka: 0, lillah: 0 };
+         current.total += amount;
+         if (donation.type === 'ZAKAT') current.zakat += amount;
+         if (donation.type === 'SADKA') current.sadka += amount;
+         if (donation.type === 'LILLAH') current.lillah += amount;
+         aidTotals.set(referenceId, current);
+      }
+   });
+
+   return {
+      expenses: (needs.expenses || []).map((expense: any) => ({
+         ...expense,
+         myDonatedAmount: projectTotals.get(String(expense.id)) || 0,
+      })),
+      financialAid: (needs.financialAid || []).map((standard: any) => {
+         const totals = aidTotals.get(String(standard.standardId)) || { total: 0, zakat: 0, sadka: 0, lillah: 0 };
+         return {
+            ...standard,
+            myTotalDonated: totals.total,
+            myZakatDonated: totals.zakat,
+            mySadkaDonated: totals.sadka,
+            myLillahDonated: totals.lillah,
+         };
+      }),
+   };
+}
+
 export default function AlumniContributions() {
    const [data, setData] = useState<any>(null);
    const [loading, setLoading] = useState(true);
+   const [loadError, setLoadError] = useState('');
    const [activeTab, setActiveTab] = useState<'construction' | 'aid'>('construction');
+   const [projectStatus, setProjectStatus] = useState<ProjectStatusFilter>('active');
    const [searchTerm, setSearchTerm] = useState('');
 
    // Payment Modal State
@@ -37,6 +131,7 @@ export default function AlumniContributions() {
    const [paymentAmount, setPaymentAmount] = useState('');
    const [isPaying, setIsPaying] = useState(false);
    const [userData, setUserData] = useState<any>(null);
+   const { dialog, showAlert } = usePortalDialog();
 
    useEffect(() => {
       fetchNeeds();
@@ -45,19 +140,42 @@ export default function AlumniContributions() {
 
    const fetchNeeds = async () => {
       setLoading(true);
+      setLoadError('');
       try {
          const res = await fetch('/api/alumni/needs');
          const d = await res.json();
-         setData(d);
+         if (!res.ok) {
+            throw new Error(d.error || 'Unable to load donation needs.');
+         }
+         const safeNeeds = {
+            expenses: Array.isArray(d.expenses) ? d.expenses : [],
+            financialAid: Array.isArray(d.financialAid) ? d.financialAid : [],
+         };
+
+         let donations: any[] = [];
+         try {
+            const donationsRes = await fetch('/api/alumni/donations');
+            const donationData = await donationsRes.json();
+            donations = donationsRes.ok && Array.isArray(donationData) ? donationData : [];
+         } catch {
+            donations = [];
+         }
+
+         setData(attachMyDonationTotals(safeNeeds, donations));
       } catch (err) {
          console.error(err);
+         setData({ expenses: [], financialAid: [] });
+         setLoadError('Unable to load donation needs. Please refresh once.');
       } finally {
          setLoading(false);
       }
    };
 
    const handlePayment = async () => {
-      if (!paymentAmount || parseFloat(paymentAmount) <= 0) return alert('Enter a valid amount');
+      if (!paymentAmount || parseFloat(paymentAmount) <= 0) {
+         showAlert({ title: 'Enter a valid amount', message: 'Please enter an amount greater than zero before continuing.', variant: 'danger' });
+         return;
+      }
 
       setIsPaying(true);
       try {
@@ -97,11 +215,15 @@ export default function AlumniContributions() {
                });
 
                if (verifyRes.ok) {
-                  alert('Transfer Successful! Your institutional support has been recorded.');
+                  showAlert({
+                     title: 'Transfer successful',
+                     message: 'Your institutional support has been recorded.',
+                     variant: 'success',
+                  });
                   setIsPaymentModalOpen(false);
                   fetchNeeds();
                } else {
-                  alert('Verification failed.');
+                  showAlert({ title: 'Verification failed', message: 'The payment could not be verified. Please contact the administration team if money was debited.', variant: 'danger' });
                }
             },
             prefill: {
@@ -122,90 +244,131 @@ export default function AlumniContributions() {
       }
    };
 
-   const filteredExpenses = data?.expenses?.filter((e: any) =>
-      e.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      e.schoolName.toLowerCase().includes(searchTerm.toLowerCase())
-   );
+   const filteredExpenses = data?.expenses?.filter((e: any) => {
+      const term = searchTerm.toLowerCase();
+      const matchesSearch =
+         e.title.toLowerCase().includes(term) ||
+         e.schoolName.toLowerCase().includes(term);
+      const completed = isProjectCompleted(e);
+      const matchesStatus = projectStatus === 'completed' ? completed : !completed;
+
+      return matchesSearch && matchesStatus;
+   });
 
    const filteredAid = data?.financialAid?.filter((a: any) =>
       a.schoolName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       a.standardName.toLowerCase().includes(searchTerm.toLowerCase())
    );
 
-   if (loading) return (
-      <div className="py-32 flex flex-col items-center justify-center space-y-4">
-         <Loader2 className="animate-spin text-blue-600" size={40} />
-         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em]">Aggregating Institutional Needs...</p>
-      </div>
-   );
+   if (loading) return <ContributionSkeleton />;
 
    return (
-      <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-700">
+      <>
+      <div className="mx-auto max-w-7xl space-y-4 pb-28 animate-in fade-in duration-700 sm:space-y-6 sm:pb-16">
          <Script src="https://checkout.razorpay.com/v1/checkout.js" />
 
          {/* Header */}
-         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 pb-2 border-b border-slate-100/50">
+         <div className="rounded-3xl border border-white/70 bg-white/50 p-4 shadow-xl shadow-slate-900/5 backdrop-blur-md sm:p-6">
+         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-1">
-               <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight flex items-center">
-                  <Heart className="mr-3 text-blue-600" size={28} />
+               <h2 className="flex items-center text-xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">
+                  <Heart className="mr-2 text-blue-600 sm:mr-3" size={24} />
                   Give Back & Donations
                </h2>
-               <p className="text-xs text-slate-500 font-medium ml-1">Support Madni Education by funding active projects or sponsoring a student's future.</p>
+               <p className="ml-1 max-w-xl text-[11px] font-medium leading-relaxed text-slate-600 sm:text-xs">Support Madni Education by funding active projects or sponsoring a student's future.</p>
             </div>
 
-            <div className="flex bg-white/40 backdrop-blur-md p-1.5 rounded-2xl border border-white/60 shadow-sm">
+            <div className="grid grid-cols-2 gap-1.5 rounded-2xl border border-white/60 bg-white/40 p-1.5 shadow-sm backdrop-blur-md sm:flex">
                <button
                   onClick={() => setActiveTab('construction')}
-                  className={`px-6 py-2.5 rounded-xl text-xs font-semibold transition-all ${activeTab === 'construction' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                  className={`rounded-xl px-3 py-2.5 text-[11px] font-bold transition-all sm:px-6 sm:text-xs ${activeTab === 'construction' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-600 hover:text-slate-800'}`}
                >
                   Sponsor a Project
                </button>
                <button
                   onClick={() => setActiveTab('aid')}
-                  className={`px-6 py-2.5 rounded-xl text-xs font-semibold transition-all ${activeTab === 'aid' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                  className={`rounded-xl px-3 py-2.5 text-[11px] font-bold transition-all sm:px-6 sm:text-xs ${activeTab === 'aid' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-600 hover:text-slate-800'}`}
                >
                   Sponsor a Student
                </button>
             </div>
          </div>
+         </div>
 
          {/* Search */}
-         <div className="relative group w-full max-w-2xl mx-auto">
-            <Search size={18} className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+         <div className="relative group mx-auto w-full max-w-2xl">
+            <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 transition-colors group-focus-within:text-blue-500 sm:left-6 sm:size-[18px]" />
             <input
                type="text"
                placeholder="Search schools, standards, or projects..."
                value={searchTerm}
                onChange={(e) => setSearchTerm(e.target.value)}
-               className="w-full pl-14 pr-6 py-4 bg-white/50 border border-slate-200/80 rounded-2xl text-sm font-semibold outline-none focus:ring-4 focus:ring-blue-500/10 focus:bg-white shadow-sm transition-all text-slate-800 placeholder:text-slate-400"
+               className="w-full rounded-2xl border border-slate-200/80 bg-white/60 py-3 pl-11 pr-4 text-sm font-semibold text-slate-800 shadow-sm outline-none transition-all placeholder:text-slate-400 focus:bg-white focus:ring-4 focus:ring-blue-500/10 sm:py-4 sm:pl-14 sm:pr-6"
             />
          </div>
 
          {/* Content */}
+         {loadError && (
+            <div className="rounded-3xl border border-rose-100 bg-rose-50/80 p-4 text-sm font-bold text-rose-700 shadow-sm">
+               {loadError}
+            </div>
+         )}
+
          {activeTab === 'construction' ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-               {filteredExpenses?.map((exp: any) => (
-                  <div key={exp.id} className="bg-white/40 backdrop-blur-md rounded-[2rem] border border-white/60 shadow-xl shadow-slate-900/5 hover:scale-[1.02] transition-all duration-300 overflow-hidden group">
-                     <div className="aspect-video relative bg-slate-100 overflow-hidden">
+            <div className="space-y-4">
+               <div className="flex items-center gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                  {[
+                     { id: 'active' as const, label: 'Active Projects' },
+                     { id: 'completed' as const, label: 'Completed Projects' },
+                  ].map((filter) => (
+                     <button
+                        key={filter.id}
+                        type="button"
+                        onClick={() => setProjectStatus(filter.id)}
+                        className={`min-h-9 shrink-0 rounded-2xl border px-4 text-[11px] font-black transition-all sm:min-h-10 sm:text-xs ${projectStatus === filter.id ? 'border-slate-950 bg-slate-950 text-white' : 'border-white bg-white/70 text-slate-700 hover:border-blue-200 hover:text-blue-700'}`}
+                     >
+                        {filter.label}
+                     </button>
+                  ))}
+               </div>
+
+               {filteredExpenses?.length ? (
+               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+               {filteredExpenses?.map((exp: any) => {
+                  const progress = getProjectProgress(exp);
+                  const remaining = Math.max(0, toAmount(exp.estimatedCost) - toAmount(exp.paidAmount));
+                  const completed = isProjectCompleted(exp);
+
+                  return (
+                  <div key={exp.id} className="group overflow-hidden rounded-3xl border border-white/60 bg-white/50 shadow-xl shadow-slate-900/5 backdrop-blur-md transition-all duration-300 hover:bg-white/70 sm:rounded-[2rem]">
+                     <div className="relative aspect-video overflow-hidden bg-slate-100">
                         {exp.mediaUrl ? (
                            <img src={exp.mediaUrl} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                         ) : (
-                           <div className="w-full h-full flex items-center justify-center text-slate-300">
-                              <Construction size={48} />
+                           <div className="flex h-full w-full items-center justify-center text-slate-300">
+                              <Construction size={44} />
                            </div>
                         )}
-                        <div className="absolute top-4 left-4">
-                           <span className="bg-blue-600/90 backdrop-blur text-white px-4 py-1.5 rounded-full text-[10px] font-bold shadow-sm">
+                        <div className="absolute left-3 top-3">
+                           <span className="rounded-full bg-blue-600/90 px-3 py-1.5 text-[10px] font-bold text-white shadow-sm backdrop-blur">
                               {exp.schoolName}
                            </span>
                         </div>
+                        {completed && (
+                           <div className="absolute right-3 top-3">
+                              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-600/95 px-3 py-1.5 text-[10px] font-black text-white shadow-sm">
+                                 <CheckCircle2 size={12} />
+                                 Completed
+                              </span>
+                           </div>
+                        )}
                      </div>
-                     <div className="p-8 space-y-6 relative">
+                     <div className="relative space-y-4 p-4 sm:space-y-5 sm:p-6">
                         {/* Background Glow */}
                         <div className="absolute top-[-20%] right-[-10%] w-32 h-32 bg-blue-500/5 blur-[40px] rounded-full pointer-events-none"></div>
 
                         <div>
-                           <h4 className="text-xl font-bold text-slate-800 tracking-tight leading-tight group-hover:text-blue-600 transition-colors">{exp.title}</h4>
+                           <h4 className="break-words text-lg font-bold leading-tight tracking-tight text-slate-900 transition-colors group-hover:text-blue-600 sm:text-xl">{exp.title}</h4>
                            <p className="text-xs text-slate-500 font-medium mt-2 line-clamp-2 leading-relaxed">{exp.description}</p>
                         </div>
 
@@ -217,40 +380,61 @@ export default function AlumniContributions() {
                            <div className="h-2 w-full bg-slate-200/50 rounded-full overflow-hidden">
                               <div
                                  className="h-full bg-blue-500 rounded-full shadow-[0_0_15px_rgba(59,130,246,0.5)] transition-all duration-1000"
-                                 style={{ width: `${(exp.paidAmount / exp.estimatedCost) * 100}%` }}
+	                                 style={{ width: `${progress}%` }}
                               ></div>
                            </div>
                         </div>
 
+                        <div className="grid grid-cols-2 gap-2 rounded-2xl border border-slate-100 bg-white/70 p-3">
+                           <div>
+                              <p className="text-[9px] font-black uppercase tracking-wider text-slate-400">Remaining</p>
+                              <p className="mt-0.5 text-xs font-black text-slate-800">{formatMoney(remaining)}</p>
+                           </div>
+                           <div className="text-right">
+                              <p className="text-[9px] font-black uppercase tracking-wider text-slate-400">You donated</p>
+                              <p className="mt-0.5 text-xs font-black text-emerald-600">{formatMoney(exp.myDonatedAmount)}</p>
+                           </div>
+                        </div>
+
                         <button
+                           disabled={completed}
                            onClick={() => {
-                              setSelectedItem({ ...exp, type: 'CONSTRUCTION', title: exp.title, amountNeeded: exp.estimatedCost - exp.paidAmount });
-                              setPaymentAmount((exp.estimatedCost - exp.paidAmount).toString());
+                              setSelectedItem({ ...exp, type: 'CONSTRUCTION', title: exp.title, amountNeeded: remaining });
+                              setPaymentAmount(remaining.toString());
                               setIsPaymentModalOpen(true);
                            }}
-                           className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-2xl text-xs font-bold shadow-md shadow-blue-500/10 hover:shadow-lg hover:shadow-blue-500/20 active:scale-95 transition-all flex justify-center items-center gap-2"
+                           className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 py-3.5 text-xs font-bold text-white shadow-md shadow-blue-500/10 transition-all hover:from-blue-700 hover:to-indigo-700 hover:shadow-lg hover:shadow-blue-500/20 active:scale-95 disabled:cursor-not-allowed disabled:from-slate-300 disabled:to-slate-300 disabled:text-slate-600 disabled:shadow-none"
                         >
-                           Donate Now
-                           <ArrowUpRight size={14} />
+                           {completed ? 'Project Completed' : 'Donate Now'}
+                           {!completed && <ArrowUpRight size={14} />}
                         </button>
                      </div>
                   </div>
-               ))}
+                  );
+               })}
+               </div>
+               ) : (
+                  <div className="flex min-h-60 flex-col items-center justify-center rounded-3xl border border-white/70 bg-white/60 p-8 text-center shadow-xl shadow-slate-900/5">
+                     <Construction size={36} className="text-slate-300" />
+                     <h3 className="mt-3 text-sm font-black text-slate-900">No {projectStatus} projects found</h3>
+                     <p className="mt-1 text-xs font-semibold text-slate-500">Try changing the search or project filter.</p>
+                  </div>
+               )}
             </div>
          ) : (
-            <div className="space-y-16">
+            <div className="space-y-8 sm:space-y-12">
                {Array.from(new Set(filteredAid?.map((a: any) => a.schoolName))).map((schoolName: any) => (
                   <div key={schoolName} className="space-y-6">
-                     <div className="flex items-center space-x-4">
-                        <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                     <div className="flex items-center gap-3 rounded-3xl border border-white/70 bg-white/50 p-3 shadow-sm sm:gap-4 sm:p-4">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
                            <SchoolIcon size={20} />
                         </div>
-                        <h3 className="text-xl font-bold text-slate-800 tracking-tight">{schoolName}</h3>
+                        <h3 className="break-words text-base font-bold tracking-tight text-slate-800 sm:text-xl">{schoolName}</h3>
                      </div>
 
-                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                         {filteredAid?.filter((a: any) => a.schoolName === schoolName).map((std: any) => (
-                           <div key={std.standardId} className="bg-white/40 backdrop-blur-md rounded-[2rem] border border-white/60 shadow-xl shadow-slate-900/5 p-8 space-y-6 hover:scale-[1.02] transition-all duration-300 relative overflow-hidden">
+                           <div key={std.standardId} className="relative space-y-5 overflow-hidden rounded-3xl border border-white/60 bg-white/50 p-4 shadow-xl shadow-slate-900/5 backdrop-blur-md transition-all duration-300 hover:bg-white/70 sm:p-6">
                               <div className="absolute -top-10 -right-10 w-32 h-32 bg-blue-500/5 blur-[40px] rounded-full pointer-events-none"></div>
 
                               <div className="flex justify-between items-start">
@@ -262,6 +446,7 @@ export default function AlumniContributions() {
 
                               <div>
                                  <h4 className="text-lg font-bold text-slate-800 tracking-tight">Standard {std.standardName} Aid</h4>
+                                 <p className="mt-1 text-[11px] font-black text-emerald-600">You donated: {formatMoney(std.myTotalDonated)}</p>
                                  <p className="text-xs font-semibold text-slate-500 mt-1">Annual Fee: ₹{parseFloat(std.fees).toLocaleString()}</p>
                               </div>
 
@@ -282,6 +467,7 @@ export default function AlumniContributions() {
                                        </div>
                                        <div className="text-right">
                                           <p className="text-[9px] font-semibold text-slate-400 uppercase">Remaining</p>
+                                          <p className="mt-0.5 text-[9px] font-black uppercase text-emerald-600">You {formatMoney(std.myZakatDonated)}</p>
                                           <p className="text-sm font-bold text-indigo-600">₹{((std.fees * std.zakatCount) - std.zakatPaid).toLocaleString()}</p>
                                        </div>
                                     </div>
@@ -303,6 +489,7 @@ export default function AlumniContributions() {
                                        </div>
                                        <div className="text-right">
                                           <p className="text-[9px] font-semibold text-slate-400 uppercase">Remaining</p>
+                                          <p className="mt-0.5 text-[9px] font-black uppercase text-emerald-600">You {formatMoney(std.mySadkaDonated)}</p>
                                           <p className="text-sm font-bold text-amber-600">₹{((std.fees * std.sadkaCount) - std.sadkaPaid).toLocaleString()}</p>
                                        </div>
                                     </div>
@@ -324,6 +511,7 @@ export default function AlumniContributions() {
                                        </div>
                                        <div className="text-right">
                                           <p className="text-[9px] font-semibold text-slate-400 uppercase">Remaining</p>
+                                          <p className="mt-0.5 text-[9px] font-black uppercase text-emerald-600">You {formatMoney(std.myLillahDonated)}</p>
                                           <p className="text-sm font-bold text-emerald-600">₹{((std.fees * std.lillahCount) - std.lillahPaid).toLocaleString()}</p>
                                        </div>
                                     </div>
@@ -361,7 +549,7 @@ export default function AlumniContributions() {
 
                   <div className="space-y-6 relative">
                      <div className="space-y-1.5">
-                        <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider ml-1 mb-1.5 block">Donation Amount (₹)</label>
+                        <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider ml-1 mb-1.5 block">Donation Amount (Rs.)</label>
                         <div className="relative group/input">
                            <IndianRupee size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within/input:text-blue-500 transition-colors" />
                            <input
@@ -388,7 +576,7 @@ export default function AlumniContributions() {
                            ) : (
                               <>
                                  <Heart size={18} />
-                                 <span>Donate ₹{paymentAmount || '0'} Securely</span>
+                                 <span>Donate {formatMoney(paymentAmount || '0')} Securely</span>
                               </>
                            )}
                         </button>
@@ -401,5 +589,7 @@ export default function AlumniContributions() {
             </div>
          )}
       </div>
+      {dialog}
+      </>
    );
 }

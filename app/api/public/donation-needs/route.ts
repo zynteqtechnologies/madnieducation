@@ -4,6 +4,25 @@ import { withPublicApi } from '@/lib/public-api';
 
 export const dynamic = 'force-dynamic';
 
+function normalizeExpenseMedia(row: any) {
+  const mediaUrls = (() => {
+    if (!row.mediaUrl) return [];
+    try {
+      const parsed = JSON.parse(row.mediaUrl);
+      return Array.isArray(parsed) ? parsed.filter(Boolean) : [row.mediaUrl];
+    } catch {
+      return [row.mediaUrl];
+    }
+  })();
+
+  return {
+    ...row,
+    mediaUrl: mediaUrls[0] || null,
+    mediaUrls,
+    mediaType: mediaUrls.length ? 'IMAGE' : row.mediaType,
+  };
+}
+
 export const GET = withPublicApi(async () => {
   const expensesRes = await pool.query(`
     SELECT
@@ -45,7 +64,7 @@ export const GET = withPublicApi(async () => {
   `);
 
   return NextResponse.json({
-    expenses: expensesRes.rows,
+    expenses: expensesRes.rows.map(normalizeExpenseMedia),
     financialAid: financialAidRes.rows,
   });
 }, { maxRequests: 60, cacheSeconds: 30 });

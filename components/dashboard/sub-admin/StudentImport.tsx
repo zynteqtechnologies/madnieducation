@@ -4,16 +4,11 @@ import React, { useState, useRef, useEffect } from 'react';
 import { 
   FileUp, 
   Table, 
-  CheckCircle2, 
-  AlertCircle, 
-  X, 
   Loader2, 
-  Search,
-  Filter,
   Save,
-  Trash2,
-  Edit2
+  Trash2
 } from 'lucide-react';
+import { usePortalDialog } from '@/components/ui/PortalDialog';
 
 export interface Standard {
   id: string;
@@ -29,9 +24,8 @@ export default function StudentImport() {
   const [selectedStandardId, setSelectedStandardId] = useState('');
   const [loading, setLoading] = useState(false);
   const [importing, setImporting] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { dialog, showAlert } = usePortalDialog();
 
   useEffect(() => {
     fetchStandards();
@@ -52,18 +46,20 @@ export default function StudentImport() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       setFile(e.target.files[0]);
-      setError('');
     }
   };
 
   const handleUpload = async () => {
     if (!file) return;
     if (!selectedStandardId) {
-      setError('Please select a target Academic Standard first.');
+      showAlert({
+        title: 'Select academic standard',
+        message: 'Please select a target academic standard before analyzing the file.',
+        variant: 'danger',
+      });
       return;
     }
     setLoading(true);
-    setError('');
 
     const formData = new FormData();
     formData.append('file', file);
@@ -79,10 +75,10 @@ export default function StudentImport() {
         setHeaders(data.headers);
         setPreviewData(data.students);
       } else {
-        setError(data.error);
+        showAlert({ title: 'Analysis failed', message: data.error || 'The Excel file could not be analyzed.', variant: 'danger' });
       }
     } catch (err) {
-      setError('Communication failed. Check your network.');
+      showAlert({ title: 'Communication failed', message: 'Please check your network and try again.', variant: 'danger' });
     } finally {
       setLoading(false);
     }
@@ -91,7 +87,6 @@ export default function StudentImport() {
   const handleSave = async () => {
     if (previewData.length === 0 || !selectedStandardId) return;
     setImporting(true);
-    setError('');
 
     try {
       const res = await fetch('/api/subadmin/students/bulk', {
@@ -104,16 +99,20 @@ export default function StudentImport() {
       });
 
       if (res.ok) {
-        setSuccess(true);
         setPreviewData([]);
         setFile(null);
         setSelectedStandardId('');
+        showAlert({
+          title: 'Sync complete',
+          message: 'All records have been successfully synchronized with the institutional registry.',
+          variant: 'success',
+        });
       } else {
         const data = await res.json();
-        setError(data.error);
+        showAlert({ title: 'Import failed', message: data.error || 'Student records could not be synchronized.', variant: 'danger' });
       }
     } catch (err) {
-      setError('Database synchronization failed.');
+      showAlert({ title: 'Database synchronization failed', message: 'Student records could not be saved. Please try again.', variant: 'danger' });
     } finally {
       setImporting(false);
     }
@@ -130,10 +129,11 @@ export default function StudentImport() {
   };
 
   return (
+    <>
     <div className="lg:h-full lg:overflow-hidden flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-4 duration-700">
       
       {/* Step 1: Upload Section */}
-      {!previewData.length && !success && (
+      {!previewData.length && (
         <div className="flex-1 flex flex-col items-center justify-center py-6">
           <div className="bg-[#FAF7F0] p-8 rounded-md border border-[#E6DFD3] shadow-sm text-center w-full max-w-lg">
              <div className="w-16 h-16 bg-[#dac48b]/10 text-[#dac48b] rounded-md flex items-center justify-center mx-auto mb-4">
@@ -208,13 +208,6 @@ export default function StudentImport() {
               </div>
            </div>
 
-           {error && (
-             <div className="p-3 bg-rose-50 border border-rose-100 rounded-md flex items-center space-x-3 text-rose-700 text-xs font-bold shrink-0">
-                <AlertCircle size={14} />
-                <p>{error}</p>
-             </div>
-           )}
-
            <div className="bg-white rounded-md border border-slate-100 shadow-sm overflow-hidden flex-1 min-h-0 flex flex-col">
               <div className="overflow-auto custom-scrollbar flex-1">
                  <table className="w-full text-left border-collapse text-[11px] min-w-[1000px]">
@@ -251,19 +244,8 @@ export default function StudentImport() {
         </div>
       )}
 
-      {/* Success State */}
-      {success && (
-         <div className="flex-1 flex flex-col items-center justify-center py-20 text-center animate-in zoom-in duration-500">
-            <div className="w-24 h-24 bg-[#dac48b]/10 text-[#dac48b] rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner relative">
-               <div className="absolute inset-0 bg-[#dac48b]/20 rounded-full animate-ping opacity-20"></div>
-               <CheckCircle2 size={48} className="relative z-10" />
-            </div>
-            <h3 className="text-3xl font-bold text-slate-900 mb-2">Sync Complete</h3>
-            <p className="text-slate-500 font-medium mb-10 max-w-sm">All records have been successfully synchronized with the institutional registry.</p>
-            <button onClick={() => setSuccess(false)} className="px-8 py-3 bg-[#18181b] text-white rounded-md font-bold text-xs uppercase tracking-widest shadow-sm hover:bg-black transition-all">Return to Module</button>
-         </div>
-      )}
-
     </div>
+    {dialog}
+    </>
   );
 }

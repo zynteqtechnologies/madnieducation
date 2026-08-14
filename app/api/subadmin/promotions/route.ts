@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { studentEnrollments, students, standards } from '@/lib/db/schema';
 import { getSessionFromCookies } from '@/lib/auth';
 import { createNotification } from '@/lib/notifications';
+import { logActivity } from '@/lib/monitoring';
 import { eq, inArray, and } from 'drizzle-orm';
 
 export async function POST(request: Request) {
@@ -122,6 +123,21 @@ export async function POST(request: Request) {
       entityId: academicYearId,
       link: '/superadmin/students',
       audiences: [{ type: 'ROLE', recipientRole: 'SUPER_ADMIN' }],
+    });
+
+    await logActivity({
+      schoolId: session.schoolId,
+      actorRole: 'SUB_ADMIN',
+      actorId: session.userId,
+      actorEmail: session.email,
+      category: 'PROMOTION',
+      action: 'STUDENT_PROMOTION_PROCESSED',
+      title: 'Student promotion processed',
+      message: `${studentIds.length} student records were processed with ${status}.`,
+      status: 'SUCCESS',
+      entityType: 'StudentPromotion',
+      entityId: academicYearId,
+      link: '/subadmin/promotion',
     });
 
     return NextResponse.json({ success: true, message: `Processed ${studentIds.length} students` });

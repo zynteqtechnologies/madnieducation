@@ -1,30 +1,41 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { comparePassword, encryptSession, setSessionCookie } from '@/lib/auth';
+import { comparePassword } from '@/lib/auth';
+import { startLoginOtp, normalizeLoginEmail } from '@/lib/auth/loginOtp';
+import { checkRateLimit, rateLimitResponse } from '@/lib/security/rateLimit';
 
 export async function POST(request: Request) {
   try {
-    const { email, password } = await request.json();
+    const limit = await checkRateLimit(request, 'login');
+    if (!limit.allowed) return rateLimitResponse(limit.retryAfter);
 
-    const result = await query('SELECT * FROM "User" WHERE email = $1 AND role = $2', [email, 'SUB_ADMIN']);
+    const { email, password } = await request.json();
+    const cleanEmail = normalizeLoginEmail(email);
+
+    const result = await query('SELECT * FROM "User" WHERE LOWER(email) = $1 AND role = $2', [cleanEmail, 'SUB_ADMIN']);
     const user = result.rows[0];
 
     if (!user || !(await comparePassword(password, user.password))) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
-    const encryptedSession = await encryptSession({
-      userId: user.id,
-      role: user.role,
+    await startLoginOtp({
+      role: 'SUB_ADMIN',
       email: user.email,
+      userId: user.id,
       schoolId: user.schoolId,
+      name: user.name,
     });
 
-    await setSessionCookie(encryptedSession, 'SUB_ADMIN');
-
-    return NextResponse.json({ success: true, redirectTo: '/subadmin/dashboard' });
+    return NextResponse.json({
+      success: true,
+      requiresOtp: true,
+      role: 'SUB_ADMIN',
+      email: user.email,
+      message: 'OTP sent to your registered email.',
+    });
   } catch (error) {
     console.error('Login error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Internal server error' }, { status: 500 });
   }
 }

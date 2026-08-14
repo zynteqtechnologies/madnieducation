@@ -24,6 +24,25 @@ function pct(passed: number, appeared: number) {
   return `${((passed / appeared) * 100).toFixed(1)}%`;
 }
 
+function normalizeExpenseMedia(row: any) {
+  const mediaUrls = (() => {
+    if (!row.mediaUrl) return [];
+    try {
+      const parsed = JSON.parse(row.mediaUrl);
+      return Array.isArray(parsed) ? parsed.filter(Boolean) : [row.mediaUrl];
+    } catch {
+      return [row.mediaUrl];
+    }
+  })();
+
+  return {
+    ...row,
+    mediaUrl: mediaUrls[0] || null,
+    mediaUrls,
+    mediaType: mediaUrls.length ? 'IMAGE' : row.mediaType,
+  };
+}
+
 export const GET = withPublicApi(async (req: NextRequest) => {
   const slug = req.nextUrl.searchParams.get('slug');
   if (!slug) return NextResponse.json({ error: 'Missing slug' }, { status: 400 });
@@ -165,7 +184,7 @@ export const GET = withPublicApi(async (req: NextRequest) => {
     results,
     toppers: toppersRes.rows,
     events: eventsRes.rows,
-    projects: projectsRes.rows,
+    projects: projectsRes.rows.map(normalizeExpenseMedia),
     financialAidNeeds: financialAidRes.rows,
     alumniStories: alumniStoriesRes.rows,
     alumniAchievements: alumniAchievementsRes.rows,

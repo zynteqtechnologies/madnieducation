@@ -3,6 +3,7 @@ import pool from '@/lib/db';
 import { getSessionFromCookies } from '@/lib/auth';
 import { createNotification } from '@/lib/notifications';
 import { ensureCareerTables } from '@/lib/ensureCareerTables';
+import { logActivity } from '@/lib/monitoring';
 
 export async function GET(request: Request) {
   try {
@@ -77,7 +78,7 @@ export async function POST(request: Request) {
     }
 
     // Get alumni's schoolId to associate with the post
-    const alumniRes = await pool.query('SELECT "schoolId" FROM "Alumni" WHERE id = $1', [alumniId]);
+    const alumniRes = await pool.query('SELECT name, email, "schoolId" FROM "Alumni" WHERE id = $1', [alumniId]);
     const schoolId = alumniRes.rows[0]?.schoolId;
 
     if (!schoolId) {
@@ -125,6 +126,22 @@ export async function POST(request: Request) {
         { type: 'SCHOOL_ROLE', recipientRole: 'SUB_ADMIN', schoolId },
         { type: 'SCHOOL_ALUMNI', schoolId },
       ],
+    });
+
+    await logActivity({
+      schoolId,
+      actorRole: 'ALUMNI',
+      actorId: alumniId,
+      actorName: alumniRes.rows[0]?.name,
+      actorEmail: alumniRes.rows[0]?.email,
+      category: 'CAREER',
+      action: 'CAREER_SUBMITTED',
+      title: `${role} at ${companyName}`,
+      message: 'Career opportunity submitted for review.',
+      status: 'PENDING',
+      entityType: 'CareerOpportunity',
+      entityId: result.rows[0].id,
+      link: '/subadmin/alumni',
     });
 
     return NextResponse.json(result.rows[0]);

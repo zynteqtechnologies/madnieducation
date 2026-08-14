@@ -14,6 +14,7 @@ import {
   Volleyball,
   Wrench,
 } from 'lucide-react';
+import { usePortalDialog } from '@/components/ui/PortalDialog';
 
 interface Standard {
   id: string;
@@ -158,10 +159,26 @@ function normalizeContent(value: any): SchoolPageContent {
       subjects: Array.isArray(program.subjects) ? program.subjects : [],
       curriculumRows: Array.isArray(program.curriculumRows) ? program.curriculumRows : [],
     })) : [],
-    facilities: Array.isArray(merged.facilities) ? merged.facilities : [],
-    activityCategories: Array.isArray(merged.activityCategories) ? merged.activityCategories : [],
+    facilities: Array.isArray(merged.facilities) ? merged.facilities.map((facility: any) => ({
+      id: facility.id || newId('facility'),
+      icon: facility.icon || 'book',
+      name: facility.name || '',
+      detail: facility.detail || '',
+      imageUrl: facility.imageUrl || '',
+      imageFileId: facility.imageFileId || '',
+    })) : [],
+    activityCategories: Array.isArray(merged.activityCategories) ? merged.activityCategories.map((category: any) => ({
+      id: category.id || newId('activity'),
+      icon: category.icon || 'sports',
+      category: category.category || '',
+      items: Array.isArray(category.items) ? category.items.map((item: any) => ({
+        name: item?.name || '',
+        desc: item?.desc || '',
+      })) : [],
+    })) : [],
     teachers: Array.isArray(merged.teachers) ? merged.teachers.map((teacher: any) => ({
       ...teacher,
+      id: teacher.id || newId('teacher'),
       subjects: Array.isArray(teacher.subjects) ? teacher.subjects : toList(teacher.subject || ''),
       standardIds: Array.isArray(teacher.standardIds) ? teacher.standardIds : [],
     })) : [],
@@ -193,8 +210,8 @@ export default function SchoolPageManager() {
   const [content, setContent] = useState<SchoolPageContent>(defaultContent);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState('');
   const [uploadingId, setUploadingId] = useState('');
+  const { dialog, showAlert } = usePortalDialog();
 
   useEffect(() => {
     fetchData();
@@ -224,7 +241,7 @@ export default function SchoolPageManager() {
       setSchool(data.school || null);
       setContent(normalizeContent(data.content));
     } catch (error: any) {
-      setMessage(error.message || 'Failed to load school page content');
+      showAlert({ title: 'Load failed', message: error.message || 'Failed to load school page content.', variant: 'danger' });
     } finally {
       setLoading(false);
     }
@@ -232,7 +249,6 @@ export default function SchoolPageManager() {
 
   const save = async () => {
     setSaving(true);
-    setMessage('');
     try {
       const res = await fetch('/api/subadmin/school-page', {
         method: 'PUT',
@@ -242,9 +258,9 @@ export default function SchoolPageManager() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to save school page content');
       setContent(normalizeContent(data));
-      setMessage('School page content saved.');
+      showAlert({ title: 'School page saved', message: 'School page content saved successfully.', variant: 'success' });
     } catch (error: any) {
-      setMessage(error.message || 'Failed to save school page content');
+      showAlert({ title: 'Save failed', message: error.message || 'Failed to save school page content.', variant: 'danger' });
     } finally {
       setSaving(false);
     }
@@ -253,7 +269,6 @@ export default function SchoolPageManager() {
   const uploadFacilityImage = async (facilityId: string, file?: File) => {
     if (!file) return;
     setUploadingId(facilityId);
-    setMessage('');
     try {
       const body = new FormData();
       body.append('file', file);
@@ -264,7 +279,7 @@ export default function SchoolPageManager() {
         facility.id === facilityId ? { ...facility, imageUrl: data.url, imageFileId: data.fileId } : facility
       )));
     } catch (error: any) {
-      setMessage(error.message || 'Failed to upload image');
+      showAlert({ title: 'Upload failed', message: error.message || 'Failed to upload image.', variant: 'danger' });
     } finally {
       setUploadingId('');
     }
@@ -283,33 +298,55 @@ export default function SchoolPageManager() {
   }
 
   return (
+    <>
     <div className="lg:h-full lg:overflow-hidden flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3 bg-white px-5 py-3 rounded-md border border-slate-200 shadow-sm shrink-0">
         <div>
           <h2 className="text-lg font-bold text-slate-900 tracking-tight">School Page Content</h2>
           <p className="text-xs text-slate-500 font-medium uppercase tracking-wide">{school?.schoolName || 'Your School'}</p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex bg-slate-100 p-1 rounded-md overflow-x-auto custom-scrollbar">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === tab.id ? 'bg-[#18181b] text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
-                  <Icon size={13} /> {tab.label}
-                </button>
-              );
-            })}
-          </div>
-          <button onClick={save} disabled={saving} className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-[#18181b] text-white text-xs font-bold uppercase tracking-wider disabled:opacity-50">
-            {saving ? <Loader2 className="animate-spin" size={14} /> : <Save size={14} />}
-            Save
+	        <div className="flex flex-wrap items-center gap-2">
+	          <button onClick={save} disabled={saving} className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-[#18181b] text-white text-xs font-bold uppercase tracking-wider disabled:opacity-50">
+	            {saving ? <Loader2 className="animate-spin" size={14} /> : <Save size={14} />}
+	            Save
           </button>
         </div>
       </div>
 
-      {message && <div className="bg-white border border-slate-200 rounded-md px-4 py-2 text-xs font-semibold text-slate-600">{message}</div>}
+	      <div className="flex-1 min-h-0 grid grid-cols-1 xl:grid-cols-[280px_1fr] gap-4 overflow-hidden">
+	        <aside className="bg-white rounded-md border border-slate-200 shadow-sm overflow-hidden flex flex-col min-h-0">
+	          <div className="px-4 py-3 border-b border-slate-100 shrink-0">
+	            <h3 className="text-sm font-bold text-slate-900">Public page sections</h3>
+	            <p className="text-xs text-slate-500 font-medium mt-0.5">Choose one section to edit.</p>
+	          </div>
+	          <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-3 space-y-2">
+	            {tabs.map((tab) => {
+	              const Icon = tab.icon;
+	              const isActive = activeTab === tab.id;
+	              return (
+	                <button
+	                  key={tab.id}
+	                  type="button"
+	                  onClick={() => setActiveTab(tab.id)}
+	                  className={`w-full text-left rounded-md border px-3 py-3 transition-all ${isActive ? 'bg-[#18181b] text-white border-[#18181b] shadow-sm' : 'bg-slate-50 text-slate-700 border-slate-100 hover:bg-[#EFECE5] hover:text-slate-950'}`}
+	                >
+	                  <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide">
+	                    <Icon size={14} /> {tab.label}
+	                  </span>
+	                  <span className={`mt-1 block text-[11px] leading-relaxed ${isActive ? 'text-white/70' : 'text-slate-500'}`}>
+	                    {tab.id === 'about' && 'Tagline, profile text, board details, and highlights.'}
+	                    {tab.id === 'programs' && 'Classes, streams, subjects, and curriculum rows.'}
+	                    {tab.id === 'facilities' && 'Campus facilities with icons, details, and images.'}
+	                    {tab.id === 'activities' && 'Sports, clubs, cultural life, and activities.'}
+	                    {tab.id === 'teachers' && 'Faculty names, roles, subjects, and standards.'}
+	                  </span>
+	                </button>
+	              );
+	            })}
+	          </div>
+	        </aside>
 
-      <div className="flex-1 min-h-0 bg-white rounded-md border border-slate-200 shadow-sm overflow-y-auto custom-scrollbar p-5">
+	      <div className="bg-white rounded-md border border-slate-200 shadow-sm overflow-y-auto custom-scrollbar p-5 min-h-0">
         {activeTab === 'about' && (
           <div className="space-y-5">
             <div className="grid md:grid-cols-3 gap-3 rounded-md border border-slate-200 bg-slate-50 p-4">
@@ -321,11 +358,11 @@ export default function SchoolPageManager() {
                 ['Operated By', school?.trustName || 'Madni Education Trust'],
                 ['Year Founded', school?.establishYear ? `Est. ${school.establishYear}` : 'Not set in superadmin'],
               ].map(([label, value]) => (
-                <div key={`info-card-${label}`} className="rounded-md bg-white border border-slate-200 px-3 py-2">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{label}</p>
-                  <p className="text-sm font-bold text-slate-800 mt-1">{value}</p>
-                </div>
-              ))}
+	                <div key={`info-card-${label}`} className="rounded-md bg-white border border-slate-200 px-3 py-2">
+	                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{label}</p>
+	                  <p className="text-sm font-bold text-slate-800 mt-1">{value}</p>
+		      </div>
+	              ))}
             </div>
             <div className="grid md:grid-cols-2 gap-4">
               <Field label="School tagline" value={content.tagline || ''} onChange={(value) => update('tagline', value)} />
@@ -371,7 +408,7 @@ export default function SchoolPageManager() {
               </div>
             ) : (
               content.academicPrograms.map((program, index) => (
-                <div key={program.id} className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4 shadow-sm hover:border-slate-300 transition-all">
+                <div key={`program-${program.id || index}-${index}`} className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4 shadow-sm hover:border-slate-300 transition-all">
                   <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                     <span className="text-xs font-black text-slate-700 uppercase tracking-wider">
                       Program #{index + 1} — {program.category}
@@ -506,7 +543,7 @@ export default function SchoolPageManager() {
               </div>
             ) : (
               content.facilities.map((facility, index) => (
-                <div key={facility.id} className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:border-slate-300 transition-all space-y-4">
+                <div key={`facility-${facility.id || index}-${index}`} className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:border-slate-300 transition-all space-y-4">
                   <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                     <span className="text-xs font-black text-slate-700 uppercase tracking-wider">
                       Facility #{index + 1} {facility.name ? `— ${facility.name}` : ''}
@@ -624,7 +661,7 @@ export default function SchoolPageManager() {
               </div>
             ) : (
               content.activityCategories.map((cat, index) => (
-                <div key={cat.id} className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:border-slate-300 transition-all space-y-4">
+                <div key={`activity-${cat.id || index}-${index}`} className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:border-slate-300 transition-all space-y-4">
                   <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                     <span className="text-xs font-black text-slate-700 uppercase tracking-wider">
                       Activity Group #{index + 1} {cat.category ? `— ${cat.category}` : ''}
@@ -770,7 +807,7 @@ export default function SchoolPageManager() {
               </div>
             ) : (
               content.teachers.map((teacher, index) => (
-                <div key={teacher.id} className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4 shadow-sm hover:border-slate-300 transition-all">
+                <div key={`teacher-${teacher.id || index}-${index}`} className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4 shadow-sm hover:border-slate-300 transition-all">
                   <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                     <span className="text-xs font-black text-slate-700 uppercase tracking-wider">
                       Teacher #{index + 1} {teacher.name ? `— ${teacher.name}` : ''}
@@ -884,8 +921,11 @@ export default function SchoolPageManager() {
           </div>
         )}
 
-      </div>
-    </div>
+	      </div>
+	    </div>
+	    </div>
+	    {dialog}
+	    </>
   );
 }
 

@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { mentorshipOffers, alumni } from '@/lib/db/schema';
 import { getSessionFromCookies } from '@/lib/auth';
 import { createNotification } from '@/lib/notifications';
+import { logActivity } from '@/lib/monitoring';
 import { desc, eq } from 'drizzle-orm';
 
 export async function GET(request: Request) {
@@ -43,7 +44,7 @@ export async function POST(request: Request) {
     // Get alumni's schoolId using Drizzle
     const alumniRecord = await db.query.alumni.findFirst({
       where: eq(alumni.id, session.userId),
-      columns: { schoolId: true }
+      columns: { schoolId: true, name: true, email: true }
     });
     
     const schoolId = alumniRecord?.schoolId;
@@ -79,6 +80,22 @@ export async function POST(request: Request) {
         { type: 'SCHOOL_ROLE', recipientRole: 'SUB_ADMIN', schoolId },
         { type: 'SCHOOL_ALUMNI', schoolId },
       ],
+    });
+
+    await logActivity({
+      schoolId,
+      actorRole: 'ALUMNI',
+      actorId: session.userId,
+      actorName: alumniRecord.name,
+      actorEmail: alumniRecord.email,
+      category: 'MENTORSHIP',
+      action: 'MENTORSHIP_SUBMITTED',
+      title,
+      message: 'Mentorship offer submitted for review.',
+      status: 'PENDING',
+      entityType: 'MentorshipOffer',
+      entityId: newOffer.id,
+      link: '/subadmin/alumni',
     });
 
     return NextResponse.json(newOffer);

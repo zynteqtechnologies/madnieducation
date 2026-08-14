@@ -8,19 +8,30 @@ import {
   Loader2,
   Eye,
   EyeOff,
-  AlertCircle
+  ShieldCheck
 } from 'lucide-react';
+import { usePortalDialog } from '@/components/ui/PortalDialog';
 
 export default function AlumniLoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [activeTab, setActiveTab] = useState<'email' | 'phone'>('email');
   const [phone, setPhone] = useState('');
+  const [otpStep, setOtpStep] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [verifiedEmail, setVerifiedEmail] = useState('');
+  const [verifiedRole, setVerifiedRole] = useState('');
+  const [resetMode, setResetMode] = useState(false);
+  const [resetOtpSent, setResetOtpSent] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetOtp, setResetOtp] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const router = useRouter();
+  const { dialog, showAlert } = usePortalDialog();
 
   useEffect(() => {
     setIsLoaded(true);
@@ -29,7 +40,6 @@ export default function AlumniLoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
 
     try {
       const res = await fetch('/api/auth/login/alumni', {
@@ -39,19 +49,103 @@ export default function AlumniLoginPage() {
       });
 
       const data = await res.json();
+      if (data.requiresOtp) {
+        setOtpStep(true);
+        setVerifiedEmail(data.email || email);
+        setVerifiedRole(data.role);
+        showAlert({ title: 'OTP sent', message: data.message || 'Enter the OTP sent to your registered email.', variant: 'success' });
+      } else if (data.success) {
+        router.push(data.redirectTo);
+      } else {
+        showAlert({ title: 'Login failed', message: data.error || 'The credentials you entered are incorrect.', variant: 'danger' });
+      }
+    } catch (err) {
+      showAlert({ title: 'Connection error', message: 'System encountered a connection error. Please try again.', variant: 'danger' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOtpSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const res = await fetch('/api/auth/verify-login-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: verifiedEmail, role: verifiedRole, otp }),
+      });
+
+      const data = await res.json();
       if (data.success) {
         router.push(data.redirectTo);
       } else {
-        setError(data.error || 'The credentials you entered are incorrect.');
+        showAlert({ title: 'OTP verification failed', message: data.error || 'Please enter the correct OTP.', variant: 'danger' });
       }
-    } catch (err) {
-      setError('System encountered a connection error. Please try again.');
+    } catch {
+      showAlert({ title: 'Connection error', message: 'System encountered a connection error. Please try again.', variant: 'danger' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      if (!resetOtpSent) {
+        const res = await fetch('/api/auth/alumni-forgot-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: resetEmail }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          setResetOtpSent(true);
+          setResetEmail(data.email || resetEmail);
+          showAlert({ title: 'OTP sent', message: data.message || 'Password reset OTP sent to your email.', variant: 'success' });
+        } else {
+          showAlert({ title: 'Reset failed', message: data.error || 'Failed to send reset OTP.', variant: 'danger' });
+        }
+      } else {
+        if (newPassword.length < 8) {
+          showAlert({ title: 'Weak password', message: 'Password must be at least 8 characters.', variant: 'danger' });
+          return;
+        }
+        if (newPassword !== confirmPassword) {
+          showAlert({ title: 'Password mismatch', message: 'New password and confirm password must match.', variant: 'danger' });
+          return;
+        }
+
+        const res = await fetch('/api/auth/alumni-reset-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: resetEmail, otp: resetOtp, newPassword }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showAlert({ title: 'Password updated', message: data.message || 'Please login again with your new password.', variant: 'success' });
+          setResetMode(false);
+          setResetOtpSent(false);
+          setResetOtp('');
+          setNewPassword('');
+          setConfirmPassword('');
+          setEmail(resetEmail);
+        } else {
+          showAlert({ title: 'Reset failed', message: data.error || 'Failed to reset password.', variant: 'danger' });
+        }
+      }
+    } catch {
+      showAlert({ title: 'Connection error', message: 'System encountered a connection error. Please try again.', variant: 'danger' });
     } finally {
       setLoading(false);
     }
   };
 
   return (
+    <>
     <div className={`relative flex min-h-screen items-center justify-between bg-gradient-to-br from-[#eff6ff] via-[#f5f3ff] to-white overflow-hidden font-inter transition-opacity duration-1000 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}>
 
       {/* 3D Glassy Ribbon SVG Background */}
@@ -153,16 +247,100 @@ export default function AlumniLoginPage() {
             </button>
           </div>
 
-          {error && (
-            <div className="p-3.5 bg-rose-50 border border-rose-100 rounded-2xl flex items-start space-x-2.5 text-rose-700 text-xs animate-in fade-in duration-300">
-              <AlertCircle className="w-4 h-4 flex-shrink-0 text-rose-500 mt-0.5" />
-              <p className="font-semibold leading-normal">{error}</p>
-            </div>
-          )}
+	          <form onSubmit={resetMode ? handleResetSubmit : otpStep ? handleOtpSubmit : handleSubmit} className="space-y-4">
+              {resetMode ? (
+                <div className="space-y-5">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                    <ShieldCheck size={22} />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-slate-900 tracking-tight">Reset password</h3>
+                    <p className="mt-1 text-sm font-medium text-slate-500">
+                      {resetOtpSent ? 'Enter the OTP and choose a new password.' : 'Enter your registered alumni email to receive a reset OTP.'}
+                    </p>
+                  </div>
+                  {!resetOtpSent ? (
+                    <input
+                      type="email"
+                      required
+                      value={resetEmail}
+                      onChange={(e) => setResetEmail(e.target.value)}
+                      className="w-full px-4 py-3.5 bg-slate-50/50 hover:bg-slate-50 focus:bg-white border border-slate-100 focus:border-blue-500 rounded-xl outline-none transition-all duration-300 focus:ring-4 focus:ring-blue-500/5 text-slate-800 text-xs font-semibold placeholder:text-slate-300"
+                      placeholder="alumni@madnieducation.com"
+                    />
+                  ) : (
+                    <div className="space-y-3">
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={6}
+                        required
+                        value={resetOtp}
+                        onChange={(e) => setResetOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                        className="w-full px-4 py-3.5 bg-slate-50/50 hover:bg-slate-50 focus:bg-white border border-slate-100 focus:border-blue-500 rounded-xl outline-none transition-all duration-300 focus:ring-4 focus:ring-blue-500/5 text-slate-900 text-center text-2xl font-black tracking-[0.35em]"
+                        placeholder="000000"
+                      />
+                      <input
+                        type="password"
+                        required
+                        minLength={8}
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        className="w-full px-4 py-3.5 bg-slate-50/50 hover:bg-slate-50 focus:bg-white border border-slate-100 focus:border-blue-500 rounded-xl outline-none transition-all duration-300 focus:ring-4 focus:ring-blue-500/5 text-slate-800 text-xs font-semibold placeholder:text-slate-300"
+                        placeholder="New password"
+                      />
+                      <input
+                        type="password"
+                        required
+                        minLength={8}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        className="w-full px-4 py-3.5 bg-slate-50/50 hover:bg-slate-50 focus:bg-white border border-slate-100 focus:border-blue-500 rounded-xl outline-none transition-all duration-300 focus:ring-4 focus:ring-blue-500/5 text-slate-800 text-xs font-semibold placeholder:text-slate-300"
+                        placeholder="Confirm password"
+                      />
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setResetMode(false);
+                      setResetOtpSent(false);
+                      setResetOtp('');
+                      setNewPassword('');
+                      setConfirmPassword('');
+                    }}
+                    className="text-xs font-bold text-blue-600 hover:underline"
+                  >
+                    Back to login
+                  </button>
+                </div>
+              ) : otpStep ? (
+                <div className="space-y-5">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                    <ShieldCheck size={22} />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-slate-900 tracking-tight">Verify your email</h3>
+                    <p className="mt-1 text-sm font-medium text-slate-500">Enter the 6-digit OTP sent to {verifiedEmail}.</p>
+                  </div>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={6}
+                    required
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    className="w-full px-4 py-3.5 bg-slate-50/50 hover:bg-slate-50 focus:bg-white border border-slate-100 focus:border-blue-500 rounded-xl outline-none transition-all duration-300 focus:ring-4 focus:ring-blue-500/5 text-slate-900 text-center text-2xl font-black tracking-[0.35em]"
+                    placeholder="000000"
+                  />
+                  <button type="button" onClick={() => { setOtpStep(false); setOtp(''); }} className="text-xs font-bold text-blue-600 hover:underline">
+                    Use another email
+                  </button>
+                </div>
+              ) : (
+                <>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-
-            {activeTab === 'email' ? (
+	            {activeTab === 'email' ? (
               /* Email Input */
               <div className="space-y-1.5">
                 <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider ml-1">Email Address</label>
@@ -224,10 +402,12 @@ export default function AlumniLoginPage() {
               />
               <label htmlFor="terms" className="text-[10px] text-slate-400 font-semibold cursor-pointer select-none">
                 I have read and agree to the <a href="#" className="text-blue-600 hover:underline">User Agreement</a> and <a href="#" className="text-blue-600 hover:underline">Privacy Policy</a>
-              </label>
-            </div>
+	              </label>
+	            </div>
+                </>
+              )}
 
-            {/* Submit Button */}
+	            {/* Submit Button */}
             <button
               type="submit"
               disabled={loading}
@@ -236,11 +416,11 @@ export default function AlumniLoginPage() {
               {loading ? (
                 <>
                   <Loader2 className="animate-spin text-white" size={16} />
-                  <span>Logging in...</span>
+	                  <span>{resetMode ? 'Processing...' : otpStep ? 'Checking OTP...' : 'Logging in...'}</span>
                 </>
               ) : (
                 <>
-                  <span>Login</span>
+		                  <span>{resetMode ? (resetOtpSent ? 'Update Password' : 'Send Reset OTP') : otpStep ? 'Verify OTP' : 'Login'}</span>
                   <ArrowRight size={16} />
                 </>
               )}
@@ -248,13 +428,25 @@ export default function AlumniLoginPage() {
           </form>
 
           {/* Footer Text */}
-          <div className="pt-2 text-center text-xs text-slate-400">
-            <span>Forgot password? </span>
-            <a href="#" className="text-blue-600 font-bold hover:underline">Reset</a>
-          </div>
+	          <div className="pt-2 text-center text-xs text-slate-400">
+	            <span>Forgot password? </span>
+	            <button
+                type="button"
+                onClick={() => {
+                  setResetMode(true);
+                  setOtpStep(false);
+                  setResetEmail(email);
+                }}
+                className="text-blue-600 font-bold hover:underline"
+              >
+                Reset
+              </button>
+	          </div>
 
         </div>
       </div>
     </div>
+    {dialog}
+    </>
   );
 }

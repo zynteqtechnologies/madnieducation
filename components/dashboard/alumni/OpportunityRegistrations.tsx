@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Briefcase, ExternalLink, Loader2, Mail, Phone, UserRound } from 'lucide-react';
+import { usePortalDialog } from '@/components/ui/PortalDialog';
 
 interface Registration {
   id: string;
@@ -30,7 +31,7 @@ export default function OpportunityRegistrations({
   const [loading, setLoading] = useState(true);
   const [post, setPost] = useState<PostSummary | null>(null);
   const [registrations, setRegistrations] = useState<Registration[]>([]);
-  const [error, setError] = useState('');
+  const { dialog, showAlert } = usePortalDialog();
 
   useEffect(() => {
     const fetchRegistrations = async () => {
@@ -39,13 +40,13 @@ export default function OpportunityRegistrations({
         const res = await fetch(`/api/alumni/registrations?${params.toString()}`);
         const data = await res.json();
         if (!res.ok) {
-          setError(data.error || 'Unable to load registrations');
+          showAlert({ title: 'Load failed', message: data.error || 'Unable to load registrations.', variant: 'danger' });
           return;
         }
         setPost(data.post);
         setRegistrations(Array.isArray(data.registrations) ? data.registrations : []);
       } catch {
-        setError('Unable to load registrations');
+        showAlert({ title: 'Load failed', message: 'Unable to load registrations.', variant: 'danger' });
       } finally {
         setLoading(false);
       }
@@ -55,6 +56,7 @@ export default function OpportunityRegistrations({
   }, [postId, postType]);
 
   return (
+    <>
     <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in duration-500">
       <Link
         href="/alumni/dashboard"
@@ -89,8 +91,6 @@ export default function OpportunityRegistrations({
           <Loader2 className="animate-spin text-blue-600 mb-4" size={36} />
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.25em]">Loading registrations</p>
         </div>
-      ) : error ? (
-        <div className="p-8 bg-rose-50 border border-rose-100 rounded-2xl text-rose-700 text-sm font-bold">{error}</div>
       ) : registrations.length === 0 ? (
         <div className="py-24 text-center bg-white/40 rounded-[2rem] border border-white/60">
           <UserRound size={40} className="mx-auto text-slate-300 mb-4" />
@@ -135,5 +135,7 @@ export default function OpportunityRegistrations({
         </div>
       )}
     </div>
+    {dialog}
+    </>
   );
 }

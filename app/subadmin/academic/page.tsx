@@ -17,7 +17,7 @@ export default function SubAdminAcademicPage() {
           </div>
           <div className="flex bg-slate-100 p-1 rounded-md overflow-x-auto custom-scrollbar">
             <button onClick={() => setActiveTab('standards')} className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all whitespace-nowrap ${activeTab === 'standards' ? 'bg-[#18181b] text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
-              Grade Configurations
+              Standards list
             </button>
             <button onClick={() => setActiveTab('admissions')} className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all whitespace-nowrap ${activeTab === 'admissions' ? 'bg-[#18181b] text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
               Student Admissions

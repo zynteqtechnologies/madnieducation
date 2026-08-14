@@ -1,8 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import {
   CalendarDays,
   Plus,
@@ -17,6 +16,7 @@ import {
   Filter
 } from 'lucide-react';
 import Image from 'next/image';
+import { usePortalDialog } from '@/components/ui/PortalDialog';
 
 interface Media {
   id: string;
@@ -48,18 +48,18 @@ const DEFAULT_CATEGORIES = [
   'Excursion'
 ];
 
-export default function EventGallery({ schoolId }: EventGalleryProps) {
-  const router = useRouter();
-
+export default function EventGallery({ schoolId: _schoolId }: EventGalleryProps) {
   const [events, setEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>('ALL');
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
 
   // Youtube Video Modal state
   const [isYoutubeModalOpen, setIsYoutubeModalOpen] = useState(false);
   const [youtubeUrl, setYoutubeUrl] = useState('');
   const [activeEventId, setActiveEventId] = useState<string | null>(null);
   const [isAddingMedia, setIsAddingMedia] = useState(false);
+  const { dialog, confirmDialog, showAlert } = usePortalDialog();
 
   useEffect(() => {
     fetchEvents();
@@ -87,27 +87,41 @@ export default function EventGallery({ schoolId }: EventGalleryProps) {
   );
 
   const handleDeleteEvent = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this entire event and all its media?')) return;
+    if (!(await confirmDialog({
+      title: 'Delete this event?',
+      message: 'This will remove the full event and all attached media.',
+      confirmText: 'Delete event',
+      variant: 'danger',
+    }))) return;
     try {
-      await fetch(`/api/subadmin/events?id=${id}`, { method: 'DELETE' });
-      setEvents(events.filter(e => e.id !== id));
+      const res = await fetch(`/api/subadmin/events?id=${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete event');
+      setEvents((current) => current.filter(e => e.id !== id));
+      showAlert({ title: 'Event deleted', message: 'The event and its media have been removed.', variant: 'success' });
     } catch (error) {
-      console.error('Failed to delete event');
+      showAlert({ title: 'Delete failed', message: 'The event could not be deleted.', variant: 'danger' });
     }
   };
 
   const handleDeleteMedia = async (eventId: string, mediaId: string) => {
-    if (!confirm('Delete this media?')) return;
+    if (!(await confirmDialog({
+      title: 'Delete this media?',
+      message: 'This photo or video will be removed from the event gallery.',
+      confirmText: 'Delete media',
+      variant: 'danger',
+    }))) return;
     try {
-      await fetch(`/api/subadmin/events/media?id=${mediaId}`, { method: 'DELETE' });
-      setEvents(events.map(e => {
+      const res = await fetch(`/api/subadmin/events/media?id=${mediaId}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete media');
+      setEvents((current) => current.map(e => {
         if (e.id === eventId) {
           return { ...e, media: e.media.filter(m => m.id !== mediaId) };
         }
         return e;
       }));
+      showAlert({ title: 'Media deleted', message: 'The media item has been removed from this event.', variant: 'success' });
     } catch (error) {
-      console.error('Failed to delete media');
+      showAlert({ title: 'Delete failed', message: 'The media item could not be deleted.', variant: 'danger' });
     }
   };
 
@@ -130,17 +144,18 @@ export default function EventGallery({ schoolId }: EventGalleryProps) {
       });
       if (res.ok) {
         const newMedia = await res.json();
-        setEvents(events.map(ev => {
+        setEvents((current) => current.map(ev => {
           if (ev.id === eventId) {
             return { ...ev, media: [newMedia, ...ev.media] };
           }
           return ev;
         }));
+        showAlert({ title: 'Photo uploaded', message: 'The event photo has been added successfully.', variant: 'success' });
       } else {
-        alert('Upload failed');
+        showAlert({ title: 'Upload failed', message: 'The image could not be added to the event.', variant: 'danger' });
       }
     } catch (error) {
-      alert('Upload failed');
+      showAlert({ title: 'Upload failed', message: 'The image could not be added to the event.', variant: 'danger' });
     } finally {
       setIsAddingMedia(false);
     }
@@ -163,7 +178,7 @@ export default function EventGallery({ schoolId }: EventGalleryProps) {
       });
       if (res.ok) {
         const newMedia = await res.json();
-        setEvents(events.map(ev => {
+        setEvents((current) => current.map(ev => {
           if (ev.id === activeEventId) {
             return { ...ev, media: [newMedia, ...ev.media] };
           }
@@ -171,11 +186,12 @@ export default function EventGallery({ schoolId }: EventGalleryProps) {
         }));
         setIsYoutubeModalOpen(false);
         setYoutubeUrl('');
+        showAlert({ title: 'Video added', message: 'The YouTube video has been added to the event.', variant: 'success' });
       } else {
-        alert('Failed to add video');
+        showAlert({ title: 'Failed to add video', message: 'The video link could not be added to the gallery.', variant: 'danger' });
       }
     } catch (error) {
-      alert('Failed to add video');
+      showAlert({ title: 'Failed to add video', message: 'The video link could not be added to the gallery.', variant: 'danger' });
     } finally {
       setIsAddingMedia(false);
     }
@@ -190,6 +206,8 @@ export default function EventGallery({ schoolId }: EventGalleryProps) {
     ? events
     : events.filter(e => (e.category || 'General').toLowerCase() === selectedCategoryFilter.toLowerCase());
 
+  const selectedEvent = filteredEvents.find((event) => event.id === selectedEventId) || filteredEvents[0] || null;
+
   if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center p-12">
@@ -199,152 +217,185 @@ export default function EventGallery({ schoolId }: EventGalleryProps) {
   }
 
   return (
-    <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <>
+    <div className="lg:h-full lg:overflow-hidden flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white px-6 py-4 rounded-xl border border-slate-300 shadow-sm shrink-0">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white px-5 py-3 rounded-md border border-slate-200 shadow-sm shrink-0">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 tracking-tight">Event Gallery</h2>
+          <h2 className="text-lg font-bold text-slate-900 tracking-tight">Event Gallery</h2>
           <p className="text-xs text-slate-500 font-medium tracking-wide">Manage school events, categories, photos, and videos</p>
         </div>
         <Link
           href="/subadmin/events/add"
-          className="inline-flex items-center justify-center px-5 py-2.5 bg-[#18181b] text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-black transition-all shadow-md active:scale-95 shrink-0"
+          className="inline-flex items-center justify-center px-4 py-2 bg-[#18181b] text-white rounded-md text-xs font-bold uppercase tracking-wider hover:bg-black transition-all shadow-sm active:scale-95 shrink-0"
         >
           <Plus size={16} className="mr-2" />
           Create Event
         </Link>
       </div>
 
-      {/* Category Filter Pills */}
-      {events.length > 0 && (
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-          <div className="flex items-center gap-1.5 text-xs text-slate-400 font-semibold pr-2 border-r border-slate-200">
-            <Filter size={14} />
-            <span>Filter:</span>
+      <div className="flex-1 min-h-0 grid grid-cols-1 xl:grid-cols-[320px_1fr] gap-4 overflow-hidden">
+        <aside className="bg-white rounded-md border border-slate-200 shadow-sm overflow-hidden flex flex-col min-h-0">
+          <div className="px-4 py-3 border-b border-slate-100 shrink-0">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900">Events</h3>
+                <p className="text-xs text-slate-500 font-medium mt-0.5">{events.length} total events</p>
+              </div>
+              <Filter size={15} className="text-slate-400" />
+            </div>
           </div>
-          <button
-            onClick={() => setSelectedCategoryFilter('ALL')}
-            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap ${
-              selectedCategoryFilter === 'ALL'
-                ? 'bg-[#18181b] text-white shadow-sm'
-                : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50'
-            }`}
-          >
-            All Events ({events.length})
-          </button>
-          {existingCategories.map((cat) => {
-            const count = events.filter(e => (e.category || 'General').toLowerCase() === cat.toLowerCase()).length;
-            if (count === 0) return null;
-            const isSelected = selectedCategoryFilter.toLowerCase() === cat.toLowerCase();
-            return (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategoryFilter(cat)}
-                className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
-                  isSelected
-                    ? 'bg-[#18181b] text-white shadow-sm'
-                    : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50'
-                }`}
-              >
-                <Tag size={12} className={isSelected ? 'text-[#AAFFC7]' : 'text-slate-400'} />
-                {cat} ({count})
-              </button>
-            );
-          })}
-        </div>
-      )}
 
-      {/* Events List */}
-      {events.length === 0 ? (
-        <div className="bg-white rounded-xl border border-slate-300 p-12 text-center shadow-sm">
-          <div className="w-16 h-16 bg-[#efebe1] border border-[#e4dcd1] text-[#8b7355] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm">
-            <CalendarDays size={32} />
-          </div>
-          <h3 className="text-lg font-bold text-slate-900 mb-2">No Events Yet</h3>
-          <p className="text-sm text-slate-500 max-w-sm mx-auto mb-6">Create an event to start uploading photos and YouTube videos to your school's gallery.</p>
-          <Link
-            href="/subadmin/events/add"
-            className="inline-flex items-center px-5 py-2.5 bg-[#18181b] text-white rounded-xl text-xs font-bold shadow-md hover:bg-black transition-all"
-          >
-            <Plus size={16} className="mr-2" />
-            Create Your First Event
-          </Link>
-        </div>
-      ) : filteredEvents.length === 0 ? (
-        <div className="bg-white rounded-xl border border-slate-300 p-8 text-center shadow-sm">
-          <p className="text-sm text-slate-500 font-medium">No events found under category "{selectedCategoryFilter}".</p>
-          <button
-            onClick={() => setSelectedCategoryFilter('ALL')}
-            className="mt-3 text-xs text-[#18181b] font-bold hover:underline"
-          >
-            Show All Events
-          </button>
-        </div>
-      ) : (
-        <div className="space-y-6">
-          {filteredEvents.map((event) => (
-            <div key={event.id} className="bg-white rounded-xl border border-slate-300 shadow-sm overflow-hidden transition-all hover:shadow-md">
-              {/* Event Card Header */}
-              <div className="p-6 border-b border-slate-200 flex flex-col md:flex-row justify-between md:items-center gap-4 bg-slate-50/60">
-                <div>
-                  <div className="flex flex-wrap items-center gap-2.5">
-                    <h2 className="text-xl font-bold text-slate-900">{event.title}</h2>
+          {events.length > 0 && (
+            <div className="px-3 py-3 border-b border-slate-100 shrink-0">
+              <div className="flex gap-2 overflow-x-auto custom-scrollbar pb-1">
+                <button
+                  onClick={() => setSelectedCategoryFilter('ALL')}
+                  className={`px-3 py-1.5 rounded-md text-[11px] font-bold transition-all whitespace-nowrap ${
+                    selectedCategoryFilter === 'ALL'
+                      ? 'bg-[#18181b] text-white shadow-sm'
+                      : 'bg-slate-50 border border-slate-200 text-slate-600 hover:bg-[#EFECE5]'
+                  }`}
+                >
+                  All ({events.length})
+                </button>
+                {existingCategories.map((cat) => {
+                  const count = events.filter(e => (e.category || 'General').toLowerCase() === cat.toLowerCase()).length;
+                  if (count === 0) return null;
+                  const isSelected = selectedCategoryFilter.toLowerCase() === cat.toLowerCase();
+                  return (
+                    <button
+                      key={cat}
+                      onClick={() => setSelectedCategoryFilter(cat)}
+                      className={`px-3 py-1.5 rounded-md text-[11px] font-bold transition-all whitespace-nowrap ${
+                        isSelected
+                          ? 'bg-[#18181b] text-white shadow-sm'
+                          : 'bg-slate-50 border border-slate-200 text-slate-600 hover:bg-[#EFECE5]'
+                      }`}
+                    >
+                      {cat} ({count})
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
-                    {/* Category Badge */}
-                    <span className="px-3 py-1 bg-[#18181b]/5 text-[#18181b] border border-[#18181b]/20 rounded-full text-xs font-semibold flex items-center gap-1.5 shadow-2xs">
-                      <Tag size={12} className="text-[#18181b]" />
+          <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-3 space-y-2">
+            {events.length === 0 ? (
+              <div className="h-full min-h-72 flex flex-col items-center justify-center text-center px-4">
+                <div className="w-14 h-14 bg-[#efebe1] border border-[#e4dcd1] text-[#8b7355] rounded-md flex items-center justify-center mb-4 shadow-sm">
+                  <CalendarDays size={28} />
+                </div>
+                <h3 className="text-sm font-bold text-slate-900 mb-1">No Events Yet</h3>
+                <p className="text-xs text-slate-500 leading-relaxed mb-4">Create an event to start uploading school photos and videos.</p>
+                <Link href="/subadmin/events/add" className="inline-flex items-center px-4 py-2 bg-[#18181b] text-white rounded-md text-xs font-bold shadow-sm hover:bg-black transition-all">
+                  <Plus size={14} className="mr-2" />
+                  Create Event
+                </Link>
+              </div>
+            ) : filteredEvents.length === 0 ? (
+              <div className="h-full min-h-72 flex flex-col items-center justify-center text-center px-4">
+                <p className="text-sm text-slate-500 font-medium">No events found under "{selectedCategoryFilter}".</p>
+                <button onClick={() => setSelectedCategoryFilter('ALL')} className="mt-3 text-xs text-[#18181b] font-bold hover:underline">
+                  Show All Events
+                </button>
+              </div>
+            ) : (
+              filteredEvents.map((event, eventIndex) => {
+                const isSelected = selectedEvent?.id === event.id;
+                return (
+                  <button
+                    key={`event-nav-${event.id || eventIndex}-${eventIndex}`}
+                    type="button"
+                    onClick={() => setSelectedEventId(event.id)}
+                    className={`w-full text-left rounded-md border px-3 py-3 transition-all ${
+                      isSelected
+                        ? 'bg-[#18181b] text-white border-[#18181b] shadow-sm'
+                        : 'bg-slate-50 text-slate-700 border-slate-100 hover:bg-[#EFECE5] hover:text-slate-950'
+                    }`}
+                  >
+                    <span className="flex items-start justify-between gap-3">
+                      <span className="min-w-0">
+                        <span className="block text-xs font-bold truncate">{event.title || 'Untitled event'}</span>
+                        <span className={`mt-1 block text-[11px] leading-relaxed ${isSelected ? 'text-white/70' : 'text-slate-500'}`}>
+                          {new Date(event.date).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </span>
+                      </span>
+                      <span className={`shrink-0 rounded-md px-2 py-1 text-[10px] font-black ${isSelected ? 'bg-white/10 text-white' : 'bg-white text-slate-500 border border-slate-200'}`}>
+                        {event.media?.length || 0}
+                      </span>
+                    </span>
+                    <span className={`mt-2 inline-flex items-center gap-1 rounded-md px-2 py-1 text-[10px] font-bold ${isSelected ? 'bg-white/10 text-white/80' : 'bg-white text-slate-500 border border-slate-200'}`}>
+                      <Tag size={11} />
                       {event.category || 'General'}
                     </span>
+                  </button>
+                );
+              })
+            )}
+          </div>
+        </aside>
 
-                    {/* Date Badge */}
-                    <span className="px-2.5 py-1 bg-slate-100 text-slate-700 border border-slate-200 rounded-md text-[11px] font-bold uppercase tracking-wider">
-                      {new Date(event.date).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
+        <section className="bg-white rounded-md border border-slate-200 shadow-sm overflow-y-auto custom-scrollbar min-h-0">
+          {!selectedEvent ? (
+            <div className="h-full min-h-96 flex flex-col items-center justify-center text-center p-8">
+              <CalendarDays size={42} className="text-slate-300 mb-4" />
+              <h3 className="text-base font-bold text-slate-900">Select an event</h3>
+              <p className="text-sm text-slate-500 mt-1 max-w-sm">Choose an event from the left panel to manage photos, videos, and event actions.</p>
+            </div>
+          ) : (
+            <div className="min-h-full flex flex-col">
+              <div className="p-5 border-b border-slate-100 bg-slate-50/60 flex flex-col lg:flex-row lg:items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    <h2 className="text-lg font-bold text-slate-900">{selectedEvent.title || 'Untitled event'}</h2>
+                    <span className="px-2.5 py-1 bg-[#18181b]/5 text-[#18181b] border border-[#18181b]/20 rounded-md text-[11px] font-bold flex items-center gap-1.5">
+                      <Tag size={12} />
+                      {selectedEvent.category || 'General'}
+                    </span>
+                    <span className="px-2.5 py-1 bg-white text-slate-600 border border-slate-200 rounded-md text-[11px] font-bold uppercase tracking-wider">
+                      {new Date(selectedEvent.date).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </span>
                   </div>
-                  {event.description && <p className="text-sm text-slate-600 mt-2 leading-relaxed">{event.description}</p>}
+                  {selectedEvent.description && <p className="text-sm text-slate-600 mt-2 leading-relaxed">{selectedEvent.description}</p>}
                 </div>
 
-                {/* Actions */}
-                <div className="flex items-center space-x-2 shrink-0">
+                <div className="flex flex-wrap items-center gap-2 shrink-0">
                   <div className="relative">
                     <input
                       type="file"
                       accept="image/*"
                       className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                      onChange={(e) => handleImageUpload(e, event.id)}
+                      onChange={(e) => handleImageUpload(e, selectedEvent.id)}
                       disabled={isAddingMedia}
                     />
-                    <button className="flex items-center px-3.5 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg text-xs font-bold hover:bg-slate-50 transition-all pointer-events-none shadow-xs">
+                    <button className="flex items-center px-3.5 py-2 bg-white border border-slate-200 text-slate-700 rounded-md text-xs font-bold hover:bg-slate-50 transition-all pointer-events-none shadow-xs">
                       <ImageIcon size={14} className="mr-2 text-[#dac48b]" />
                       Upload Photo
                     </button>
                   </div>
-                  
-                  <button 
+                  <button
                     onClick={() => {
-                      setActiveEventId(event.id);
+                      setActiveEventId(selectedEvent.id);
                       setIsYoutubeModalOpen(true);
                     }}
                     disabled={isAddingMedia}
-                    className="flex items-center px-3.5 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg text-xs font-bold hover:bg-slate-50 transition-all shadow-xs"
+                    className="flex items-center px-3.5 py-2 bg-white border border-slate-200 text-slate-700 rounded-md text-xs font-bold hover:bg-slate-50 transition-all shadow-xs"
                   >
                     <Video size={14} className="mr-2 text-red-500" />
                     Add Video
                   </button>
-
-                  <div className="w-px h-6 bg-slate-300 mx-1"></div>
-
-                  <Link 
-                    href={`/subadmin/events/edit/${event.id}`}
-                    className="p-2 text-slate-600 hover:text-[#1b4a50] hover:bg-teal-50 border border-transparent hover:border-teal-200 rounded-lg transition-colors"
+                  <Link
+                    href={`/subadmin/events/edit/${selectedEvent.id}`}
+                    className="p-2 text-slate-600 hover:text-[#1b4a50] hover:bg-teal-50 border border-transparent hover:border-teal-200 rounded-md transition-colors"
                     title="Edit Event Page"
                   >
                     <Pencil size={16} />
                   </Link>
-
-                  <button 
-                    onClick={() => handleDeleteEvent(event.id)}
-                    className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 border border-transparent hover:border-red-200 rounded-lg transition-colors"
+                  <button
+                    onClick={() => handleDeleteEvent(selectedEvent.id)}
+                    className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 border border-transparent hover:border-red-200 rounded-md transition-colors"
                     title="Delete Event"
                   >
                     <Trash2 size={16} />
@@ -352,23 +403,29 @@ export default function EventGallery({ schoolId }: EventGalleryProps) {
                 </div>
               </div>
 
-              {/* Event Media Content */}
-              <div className="p-6">
-                {event.media.length === 0 ? (
-                  <p className="text-sm text-slate-400 italic text-center py-8">No media uploaded yet for this event.</p>
+              <div className="p-5">
+                <div className="flex items-center justify-between gap-3 mb-4">
+                  <h3 className="text-sm font-bold text-slate-900">Media Gallery</h3>
+                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">{selectedEvent.media?.length || 0} items</span>
+                </div>
+                {!selectedEvent.media || selectedEvent.media.length === 0 ? (
+                  <div className="rounded-md border border-dashed border-slate-200 bg-slate-50 p-10 text-center">
+                    <ImageIcon size={34} className="mx-auto text-slate-300 mb-3" />
+                    <p className="text-sm text-slate-500 font-medium">No media uploaded yet for this event.</p>
+                  </div>
                 ) : (
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {event.media.map(item => (
-                      <div key={item.id} className="relative group aspect-video bg-slate-100 rounded-lg overflow-hidden border border-slate-200 shadow-xs">
+                  <div className="grid grid-cols-2 md:grid-cols-3 2xl:grid-cols-4 gap-4">
+                    {selectedEvent.media.map((item, mediaIndex) => (
+                      <div key={`media-${item.id || mediaIndex}-${mediaIndex}`} className="relative group aspect-video bg-slate-100 rounded-md overflow-hidden border border-slate-200 shadow-xs">
                         {item.mediaType === 'IMAGE' ? (
                           <Image src={item.url} alt="Event photo" fill className="object-cover" unoptimized />
                         ) : (
                           <div className="w-full h-full relative">
-                            <Image 
-                              src={`https://img.youtube.com/vi/${getYoutubeVideoId(item.url)}/maxresdefault.jpg`} 
-                              alt="Video thumbnail" 
-                              fill 
-                              className="object-cover" 
+                            <Image
+                              src={`https://img.youtube.com/vi/${getYoutubeVideoId(item.url)}/maxresdefault.jpg`}
+                              alt="Video thumbnail"
+                              fill
+                              className="object-cover"
                               unoptimized
                               onError={(e) => {
                                 e.currentTarget.src = `https://img.youtube.com/vi/${getYoutubeVideoId(item.url)}/hqdefault.jpg`;
@@ -379,10 +436,10 @@ export default function EventGallery({ schoolId }: EventGalleryProps) {
                             </div>
                           </div>
                         )}
-                        
+
                         <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                          <button 
-                            onClick={() => handleDeleteMedia(event.id, item.id)}
+                          <button
+                            onClick={() => handleDeleteMedia(selectedEvent.id, item.id)}
                             className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors transform scale-90 group-hover:scale-100 shadow-md"
                           >
                             <Trash2 size={16} />
@@ -394,9 +451,9 @@ export default function EventGallery({ schoolId }: EventGalleryProps) {
                 )}
               </div>
             </div>
-          ))}
-        </div>
-      )}
+          )}
+        </section>
+      </div>
 
       {/* Add YouTube Modal */}
       {isYoutubeModalOpen && (
@@ -435,5 +492,7 @@ export default function EventGallery({ schoolId }: EventGalleryProps) {
         </div>
       )}
     </div>
+    {dialog}
+    </>
   );
 }

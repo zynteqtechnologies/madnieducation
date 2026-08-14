@@ -269,7 +269,7 @@ export default function AlumniMentorshipHub({ autoOpenForm }: AlumniMentorshipHu
               </div>
               <form onSubmit={handleSubmit} className="p-8 md:p-10 space-y-8 relative z-10">
                 <div className="space-y-1.5">
-                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">Mentorship Title / Expertise Area</label>
+                  <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider ml-1">Mentorship Title / Expertise Area</label>
                   <input
                     type="text"
                     required
@@ -281,7 +281,7 @@ export default function AlumniMentorshipHub({ autoOpenForm }: AlumniMentorshipHu
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">Profession Category</label>
+                  <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider ml-1">Profession Category</label>
                   <select 
                     value={formData.category}
                     onChange={e => setFormData({...formData, category: e.target.value})}
@@ -294,7 +294,7 @@ export default function AlumniMentorshipHub({ autoOpenForm }: AlumniMentorshipHu
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">Detailed Description</label>
+                  <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider ml-1">Detailed Description</label>
                   <textarea
                     rows={4}
                     required
@@ -307,7 +307,7 @@ export default function AlumniMentorshipHub({ autoOpenForm }: AlumniMentorshipHu
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">Target Mentees / Eligibility</label>
+                    <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider ml-1">Target Mentees / Eligibility</label>
                     <input
                       type="text"
                       placeholder="e.g. Standard 10 Students with math interest..."
@@ -317,7 +317,7 @@ export default function AlumniMentorshipHub({ autoOpenForm }: AlumniMentorshipHu
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">Visit / Session Availability</label>
+                    <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider ml-1">Visit / Session Availability</label>
                     <input
                       type="text"
                       placeholder="e.g. Weekends, Monthly visits..."

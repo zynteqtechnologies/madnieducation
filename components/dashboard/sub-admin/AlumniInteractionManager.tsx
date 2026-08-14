@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from 'react';
 import {
-  AlertCircle,
   BookOpen,
   Briefcase,
   Calendar,
@@ -27,6 +26,7 @@ import {
   Tag,
   Tags
 } from 'lucide-react';
+import { usePortalDialog } from '@/components/ui/PortalDialog';
 
 type ModerationTab = 'job' | 'mentorship' | 'blog' | 'achievement' | 'aoy';
 type ModerationStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
@@ -79,8 +79,8 @@ export default function AlumniInteractionManager() {
   const [data, setData] = useState<ModerationData>({ jobs: [], mentorships: [], blogs: [], achievements: [] });
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState('');
-  const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState<ModerationTab>('job');
+  const { dialog, showAlert } = usePortalDialog();
 
   // Alumni of the Year state
   const [aoyYear, setAoyYear] = useState<number>(2026);
@@ -95,7 +95,6 @@ export default function AlumniInteractionManager() {
     highlight3: ''
   });
   const [aoySubmitting, setAoySubmitting] = useState(false);
-  const [aoySuccessMsg, setAoySuccessMsg] = useState('');
 
   useEffect(() => {
     fetchInteractions();
@@ -157,7 +156,6 @@ export default function AlumniInteractionManager() {
     if (!selectedCandidate && !aoyData?.currentAward) return;
 
     setAoySubmitting(true);
-    setAoySuccessMsg('');
 
     const targetAlumniId = selectedCandidate?.id || aoyData.currentAward.alumniId;
     const targetSchoolId = selectedCandidate?.schoolId || aoyData.currentAward?.schoolId;
@@ -183,12 +181,16 @@ export default function AlumniInteractionManager() {
       });
 
       if (res.ok) {
-        setAoySuccessMsg(`🎉 Successfully declared Alumni of the Year ${aoyYear}!`);
+        showAlert({
+          title: 'Alumni of the Year declared',
+          message: `Successfully declared Alumni of the Year ${aoyYear}.`,
+          variant: 'success',
+        });
         setSelectedCandidate(null);
         fetchAoyData(aoyYear);
       }
     } catch {
-      setError('Failed to save Alumni of the Year');
+      showAlert({ title: 'Save failed', message: 'Failed to save Alumni of the Year.', variant: 'danger' });
     } finally {
       setAoySubmitting(false);
     }
@@ -209,9 +211,9 @@ export default function AlumniInteractionManager() {
         blogs: Array.isArray(json.blogs) ? json.blogs : [],
         achievements: Array.isArray(json.achievements) ? json.achievements : [],
       });
-      else setError(json.error || 'Unable to load moderation queue');
+      else showAlert({ title: 'Load failed', message: json.error || 'Unable to load moderation queue.', variant: 'danger' });
     } catch {
-      setError('Communication failed');
+      showAlert({ title: 'Communication failed', message: 'Unable to load moderation queue.', variant: 'danger' });
     } finally {
       setLoading(false);
     }
@@ -234,10 +236,10 @@ export default function AlumniInteractionManager() {
       if (res.ok) fetchInteractions();
       else {
         const json = await res.json();
-        setError(json.error || 'Update failed');
+        showAlert({ title: 'Update failed', message: json.error || 'The moderation action could not be saved.', variant: 'danger' });
       }
     } catch {
-      setError('Update failed');
+      showAlert({ title: 'Update failed', message: 'The moderation action could not be saved.', variant: 'danger' });
     } finally {
       setUpdatingId('');
     }
@@ -271,6 +273,7 @@ export default function AlumniInteractionManager() {
   const isFeatureCapable = activeTab === 'blog' || activeTab === 'achievement';
 
   return (
+    <>
     <div className="lg:h-full lg:overflow-hidden flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3 bg-white px-5 py-3 rounded-md border border-slate-200 shadow-sm shrink-0">
         <div>
@@ -317,13 +320,6 @@ export default function AlumniInteractionManager() {
               </select>
             </div>
           </div>
-
-          {aoySuccessMsg && (
-            <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl text-xs font-bold flex items-center justify-between">
-              <span>{aoySuccessMsg}</span>
-              <button onClick={() => setAoySuccessMsg('')} className="text-emerald-600 hover:text-emerald-900">✕</button>
-            </div>
-          )}
 
           {aoyData?.currentAward && (
             <div className="bg-gradient-to-br from-amber-50 to-orange-50/50 p-6 rounded-3xl border border-amber-200 shadow-sm relative overflow-hidden">
@@ -523,11 +519,6 @@ export default function AlumniInteractionManager() {
         <div className="flex-1 flex flex-col items-center justify-center bg-white rounded-md border border-slate-100 shadow-sm py-20">
           <Loader2 className="animate-spin text-[#dac48b] mb-4" size={32} />
           <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Checking Moderation Queue...</p>
-        </div>
-      ) : error ? (
-        <div className="flex-1 flex flex-col items-center justify-center text-rose-500 bg-white rounded-md border border-slate-100 shadow-sm py-20">
-          <AlertCircle size={32} className="mb-4 text-rose-300" />
-          <p className="text-xs font-bold uppercase tracking-wide">{error}</p>
         </div>
       ) : currentList.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center bg-white rounded-md border border-slate-100 shadow-sm py-20">
@@ -736,5 +727,7 @@ export default function AlumniInteractionManager() {
         </div>
       )}
     </div>
+    {dialog}
+    </>
   );
 }

@@ -30,23 +30,37 @@ interface AlumniBlogHubProps {
   autoOpenForm?: boolean;
 }
 
+type BlogFormData = {
+  title: string;
+  content: string;
+  tags: string;
+  mediaType: 'IMAGE' | 'VIDEO';
+  mediaUrl: string;
+  file: File | null;
+};
+
+const emptyBlogFormData: BlogFormData = {
+  title: '',
+  content: '',
+  tags: '',
+  mediaType: 'IMAGE',
+  mediaUrl: '',
+  file: null,
+};
+
 const AlumniBlogHub: React.FC<AlumniBlogHubProps> = ({ autoOpenForm }) => {
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(Boolean(autoOpenForm));
+  const [selectedBlog, setSelectedBlog] = useState<Blog | null>(null);
+  const [formData, setFormData] = useState<BlogFormData>(() => ({ ...emptyBlogFormData }));
 
   useEffect(() => {
-    if (autoOpenForm) setShowForm(true);
+    if (autoOpenForm) {
+      setFormData({ ...emptyBlogFormData });
+      setShowForm(true);
+    }
   }, [autoOpenForm]);
-  const [selectedBlog, setSelectedBlog] = useState<Blog | null>(null);
-  const [formData, setFormData] = useState({
-    title: '',
-    content: '',
-    tags: '',
-    mediaType: 'IMAGE' as 'IMAGE' | 'VIDEO',
-    mediaUrl: '',
-    file: null as File | null
-  });
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -89,7 +103,7 @@ const AlumniBlogHub: React.FC<AlumniBlogHubProps> = ({ autoOpenForm }) => {
 
       if (response.ok) {
         setShowForm(false);
-        setFormData({ title: '', content: '', tags: '', mediaType: 'IMAGE', mediaUrl: '', file: null });
+        setFormData({ ...emptyBlogFormData });
         fetchBlogs();
       }
     } catch (error) {
@@ -147,6 +161,16 @@ const AlumniBlogHub: React.FC<AlumniBlogHubProps> = ({ autoOpenForm }) => {
         }
     }
     return null;
+  };
+
+  const openBlogForm = () => {
+    setFormData({ ...emptyBlogFormData });
+    setShowForm(true);
+  };
+
+  const closeBlogForm = () => {
+    setShowForm(false);
+    setFormData({ ...emptyBlogFormData });
   };
 
   return (
@@ -240,7 +264,7 @@ const AlumniBlogHub: React.FC<AlumniBlogHubProps> = ({ autoOpenForm }) => {
                 <p className="text-xs text-slate-500 font-medium">Manage and compose your published articles</p>
               </div>
               <button
-                onClick={() => setShowForm(true)}
+                onClick={openBlogForm}
                 className="bg-slate-900 text-white font-extrabold text-xs px-4 py-2.5 rounded-2xl shadow-md flex items-center gap-1.5 hover:bg-slate-800 transition-all cursor-pointer shrink-0"
               >
                 <Plus size={15} />
@@ -257,53 +281,53 @@ const AlumniBlogHub: React.FC<AlumniBlogHubProps> = ({ autoOpenForm }) => {
               </div>
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-1.5">
-                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider ml-1">Article Title</label>
+                  <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider ml-1">Article Title</label>
                   <input
                     type="text"
                     required
                     placeholder="Enter a compelling title..."
-                    value={formData.title || ''}
-                    onChange={e => setFormData({ ...formData, title: e.target.value })}
+                    value={formData.title}
+                    onChange={e => setFormData(prev => ({ ...prev, title: e.target.value }))}
                     className="w-full px-5 py-3.5 bg-white/50 border border-slate-200/80 hover:bg-white focus:bg-white focus:border-blue-500 rounded-2xl outline-none transition-all duration-300 focus:ring-4 focus:ring-blue-500/10 text-xs font-semibold text-slate-800 placeholder:text-slate-400 animate-transition"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider ml-1">Content</label>
+                  <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider ml-1">Content</label>
                   <textarea
                     rows={8}
                     required
                     placeholder="Write your article here..."
-                    value={formData.content || ''}
-                    onChange={e => setFormData({ ...formData, content: e.target.value })}
+                    value={formData.content}
+                    onChange={e => setFormData(prev => ({ ...prev, content: e.target.value }))}
                     className="w-full px-5 py-3.5 bg-white/50 border border-slate-200/80 hover:bg-white focus:bg-white focus:border-blue-500 rounded-2xl outline-none transition-all duration-300 focus:ring-4 focus:ring-blue-500/10 text-xs font-semibold text-slate-800 placeholder:text-slate-400 resize-none animate-transition"
                   />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider ml-1">Tags (Comma separated)</label>
+                    <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider ml-1">Tags (Comma separated)</label>
                     <input
                       type="text"
                       placeholder="e.g. Life Advice, Career, Tech"
-                      value={formData.tags || ''}
-                      onChange={e => setFormData({ ...formData, tags: e.target.value })}
+                      value={formData.tags}
+                      onChange={e => setFormData(prev => ({ ...prev, tags: e.target.value }))}
                       className="w-full px-5 py-3.5 bg-white/50 border border-slate-200/80 hover:bg-white focus:bg-white focus:border-blue-500 rounded-2xl outline-none transition-all duration-300 focus:ring-4 focus:ring-blue-500/10 text-xs font-semibold text-slate-800 placeholder:text-slate-400 animate-transition"
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider ml-1">Media Type</label>
+                    <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider ml-1">Media Type</label>
                     <div className="flex space-x-4 bg-white/50 p-1.5 rounded-2xl border border-slate-200/80">
                         <button
                             type="button"
-                            onClick={() => setFormData({ ...formData, mediaType: 'IMAGE' })}
+                            onClick={() => setFormData(prev => ({ ...prev, mediaType: 'IMAGE', mediaUrl: '' }))}
                             className={`flex-1 flex items-center justify-center p-2.5 rounded-xl text-xs font-bold transition-all ${formData.mediaType === 'IMAGE' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20' : 'text-slate-500 hover:text-slate-700'}`}
                         >
                             <ImageIcon size={16} className="mr-2" /> Image
                         </button>
                         <button
                             type="button"
-                            onClick={() => setFormData({ ...formData, mediaType: 'VIDEO' })}
+                            onClick={() => setFormData(prev => ({ ...prev, mediaType: 'VIDEO', file: null }))}
                             className={`flex-1 flex items-center justify-center p-2.5 rounded-xl text-xs font-bold transition-all ${formData.mediaType === 'VIDEO' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20' : 'text-slate-500 hover:text-slate-700'}`}
                         >
                             <Video size={16} className="mr-2" /> YouTube
@@ -313,22 +337,22 @@ const AlumniBlogHub: React.FC<AlumniBlogHubProps> = ({ autoOpenForm }) => {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider ml-1">
+                  <label className="text-[11px] font-bold text-slate-700 uppercase tracking-wider ml-1">
                     {formData.mediaType === 'IMAGE' ? 'Upload Illustration' : 'YouTube Link'}
                   </label>
                   {formData.mediaType === 'IMAGE' ? (
                     <input
                         type="file"
                         accept="image/*"
-                        onChange={e => setFormData({ ...formData, file: e.target.files?.[0] || null })}
+                        onChange={e => setFormData(prev => ({ ...prev, file: e.target.files?.[0] || null }))}
                         className="w-full px-5 py-3 bg-white/50 border border-slate-200/80 hover:bg-white focus:bg-white focus:border-blue-500 rounded-2xl outline-none transition-all duration-300 focus:ring-4 focus:ring-blue-500/10 text-xs font-semibold text-slate-800 animate-transition"
                     />
                   ) : (
                     <input
                         type="url"
                         placeholder="https://www.youtube.com/watch?v=..."
-                        value={formData.mediaUrl || ''}
-                        onChange={e => setFormData({ ...formData, mediaUrl: e.target.value })}
+                        value={formData.mediaUrl}
+                        onChange={e => setFormData(prev => ({ ...prev, mediaUrl: e.target.value }))}
                         className="w-full px-5 py-3.5 bg-white/50 border border-slate-200/80 hover:bg-white focus:bg-white focus:border-blue-500 rounded-2xl outline-none transition-all duration-300 focus:ring-4 focus:ring-blue-500/10 text-xs font-semibold text-slate-800 placeholder:text-slate-400 animate-transition"
                     />
                   )}
@@ -337,7 +361,7 @@ const AlumniBlogHub: React.FC<AlumniBlogHubProps> = ({ autoOpenForm }) => {
                 <div className="flex justify-end space-x-4 pt-4 border-t border-white/50">
                   <button
                     type="button"
-                    onClick={() => setShowForm(false)}
+                    onClick={closeBlogForm}
                     className="px-6 py-2.5 text-slate-500 rounded-2xl font-bold text-xs hover:bg-slate-100 hover:text-slate-700 transition-all"
                   >
                     Cancel
@@ -369,7 +393,7 @@ const AlumniBlogHub: React.FC<AlumniBlogHubProps> = ({ autoOpenForm }) => {
                 <h3 className="text-lg font-bold text-slate-800">No Stories Added Yet</h3>
                 <p className="text-slate-500 text-xs font-medium mt-1.5 max-w-sm mx-auto">Share your experience, articles, or student memories to inspire the community.</p>
                 <button
-                  onClick={() => setShowForm(true)}
+                  onClick={openBlogForm}
                   className="bg-slate-900 text-white hover:bg-slate-800 text-xs font-extrabold px-5 py-2.5 rounded-2xl shadow-md inline-flex items-center gap-2 cursor-pointer transition-all hover:scale-[1.02] mt-5"
                 >
                   <Plus size={16} />

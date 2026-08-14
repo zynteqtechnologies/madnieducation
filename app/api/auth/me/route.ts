@@ -21,6 +21,7 @@ export async function GET() {
       const name = userRes.rows[0]?.name || 'Administrator';
 
       userData = {
+        id: session.userId,
         name,
         email: session.email,
         role: session.role,
@@ -40,6 +41,7 @@ export async function GET() {
         const alumniData = alumniRes.rows[0] || {};
 
         userData = {
+          id: session.userId,
           name: alumniData.name || 'Alumni',
           email: session.email,
           role: 'ALUMNI',

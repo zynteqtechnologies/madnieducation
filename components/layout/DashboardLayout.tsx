@@ -37,7 +37,8 @@ import {
   Heart,
   PieChart,
   Newspaper,
-  Plus
+  Plus,
+  Mail
 } from 'lucide-react';
 import NotificationBell from './NotificationBell';
 import CreatePostModal from '../dashboard/alumni/CreatePostModal';
@@ -96,6 +97,7 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
           'Academic Years': 'academic-year',
           'Mission Stats': 'mission-stats',
           'Monitoring': 'monitoring',
+          'Alumni Communication': 'alumni-communication',
           'Alumni': 'alumni',
           'Profile': 'profile',
           'Careers': 'careers',
@@ -109,7 +111,8 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
           'Updates': 'updates',
           'School Page': 'school-page',
           'School Hub': 'school-hub',
-          'Class Setup': 'class-setup'
+          'Class Setup': 'class-setup',
+          'CSR Management': 'csr'
         };
         const path = routeMap[item];
         if (path) {
@@ -120,9 +123,13 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
     setIsMobileMenuOpen(false); // Close mobile menu on navigation
   };
 
-  const handleLogout = () => {
-    document.cookie = `${role === 'ALUMNI' ? 'alumni_token' : 'admin_session'}=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
-    router.push(`/${role.toLowerCase().replace('_', '')}/login`);
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } finally {
+      router.push(`/${role.toLowerCase().replace('_', '')}/login`);
+      router.refresh();
+    }
   };
 
   const menuItems = [
@@ -131,11 +138,14 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
     { name: 'My Posts', icon: <Plus size={18} />, role: ['ALUMNI'] },
     { name: 'Find Alumni', icon: <UserSearch size={18} />, role: ['ALUMNI'] },
     { name: 'Give Back', icon: <Heart size={18} />, role: ['ALUMNI'] },
+    { name: 'CSR Referrals', icon: <Handshake size={18} />, role: ['ALUMNI'] },
     { name: 'My Impact', icon: <PieChart size={18} />, role: ['ALUMNI'] },
     { name: 'Trusts', icon: <Building2 size={18} />, role: ['SUPER_ADMIN'] },
     { name: 'Schools', icon: <School size={18} />, role: ['SUPER_ADMIN'] },
     { name: 'Mission Stats', icon: <Activity size={18} />, role: ['SUPER_ADMIN'] },
-    { name: 'Monitoring', icon: <Shield size={18} />, role: ['SUPER_ADMIN'] },
+    { name: 'Monitoring', icon: <Shield size={18} />, role: ['SUPER_ADMIN', 'SUB_ADMIN'] },
+    { name: 'Alumni Communication', icon: <Mail size={18} />, role: ['SUPER_ADMIN'] },
+    { name: 'CSR Management', icon: <Handshake size={18} />, role: ['SUPER_ADMIN', 'SUB_ADMIN'] },
     { name: 'Updates', icon: <Newspaper size={18} />, role: ['SUPER_ADMIN'] },
     { name: 'School Hub', icon: <BookOpen size={18} />, role: ['SUB_ADMIN'] },
     { name: 'Class Setup', icon: <Sparkles size={18} />, role: ['SUB_ADMIN'] },

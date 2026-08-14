@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { publicDonationHeaders } from '@/lib/donationInquiry';
+import { logEmail } from '@/lib/monitoring';
+import { checkRateLimit, rateLimitResponse } from '@/lib/security/rateLimit';
 
 export async function OPTIONS() {
   return NextResponse.json({}, { headers: publicDonationHeaders });
@@ -8,6 +10,9 @@ export async function OPTIONS() {
 
 export async function POST(request: Request) {
   try {
+    const limit = await checkRateLimit(request, 'otp');
+    if (!limit.allowed) return rateLimitResponse(limit.retryAfter);
+
     const body = await request.json();
     const { email, action } = body;
 
@@ -77,7 +82,7 @@ export async function POST(request: Request) {
       `;
 
       try {
-        await fetch('https://api.resend.com/emails', {
+        const resendRes = await fetch('https://api.resend.com/emails', {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
@@ -90,9 +95,49 @@ export async function POST(request: Request) {
             html: emailHtml,
           }),
         });
+        await logEmail({
+          schoolId: alumnus.schoolId,
+          alumniId: alumnus.id,
+          recipientEmail: cleanEmail,
+          recipientRole: 'ALUMNI',
+          sourceRole: 'SYSTEM',
+          emailType: isForgotPassword ? 'PASSWORD_RESET_INSTRUCTION' : 'LOGIN_LINK',
+          subject,
+          status: resendRes.ok ? 'SENT' : 'FAILED',
+          relatedEntityType: 'Alumni',
+          relatedEntityId: alumnus.id,
+          errorMessage: resendRes.ok ? null : `Resend returned ${resendRes.status}`,
+        });
       } catch (err) {
         console.error('Failed to send Resend email:', err);
+        await logEmail({
+          schoolId: alumnus.schoolId,
+          alumniId: alumnus.id,
+          recipientEmail: cleanEmail,
+          recipientRole: 'ALUMNI',
+          sourceRole: 'SYSTEM',
+          emailType: isForgotPassword ? 'PASSWORD_RESET_INSTRUCTION' : 'LOGIN_LINK',
+          subject,
+          status: 'FAILED',
+          relatedEntityType: 'Alumni',
+          relatedEntityId: alumnus.id,
+          errorMessage: err instanceof Error ? err.message : 'Failed to send email',
+        });
       }
+    } else {
+      await logEmail({
+        schoolId: alumnus.schoolId,
+        alumniId: alumnus.id,
+        recipientEmail: cleanEmail,
+        recipientRole: 'ALUMNI',
+        sourceRole: 'SYSTEM',
+        emailType: isForgotPassword ? 'PASSWORD_RESET_INSTRUCTION' : 'LOGIN_LINK',
+        subject: isForgotPassword ? 'Madni Alumni Portal - Password Reset Request' : 'Madni Alumni Portal - Your Direct Login Link',
+        status: 'SKIPPED',
+        relatedEntityType: 'Alumni',
+        relatedEntityId: alumnus.id,
+        errorMessage: 'RESEND_API_KEY not configured',
+      });
     }
 
     return NextResponse.json({

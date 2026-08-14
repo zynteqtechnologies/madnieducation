@@ -5,7 +5,7 @@ import * as XLSX from 'xlsx';
 export async function POST(request: Request) {
   try {
     const session = await getSessionFromCookies('ADMIN');
-    if (!session || session.role !== 'SUB_ADMIN') {
+    if (!session || session.role !== 'SUB_ADMIN' || !session.schoolId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
@@ -14,6 +14,20 @@ export async function POST(request: Request) {
 
     if (!file) {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
+    }
+
+    const allowedTypes = [
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.ms-excel',
+    ];
+    const hasValidExtension = /\.(xlsx|xls)$/i.test(file.name);
+    if (!allowedTypes.includes(file.type) && !hasValidExtension) {
+      return NextResponse.json({ error: 'Only .xlsx or .xls files are allowed' }, { status: 400 });
+    }
+
+    const maxSizeBytes = 5 * 1024 * 1024;
+    if (file.size > maxSizeBytes) {
+      return NextResponse.json({ error: 'Excel file must be 5MB or smaller' }, { status: 400 });
     }
 
     const bytes = await file.arrayBuffer();
@@ -32,6 +46,11 @@ export async function POST(request: Request) {
 
     const headers = (rawData[1] as string[]).map(h => h ? h.trim() : h);
     const rows = rawData.slice(2);
+
+    const maxRows = 1000;
+    if (rows.length > maxRows) {
+      return NextResponse.json({ error: `Please import ${maxRows} students or fewer at one time` }, { status: 400 });
+    }
 
     // Map rows to structured objects
     const students = rows.map((row: any) => {

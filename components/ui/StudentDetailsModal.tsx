@@ -10,10 +10,9 @@ import {
   Phone, 
   Home, 
   CreditCard,
-  Loader2,
-  CheckCircle2,
-  AlertCircle
+  Loader2
 } from 'lucide-react';
+import { usePortalDialog } from '@/components/ui/PortalDialog';
 
 interface Standard {
   id: string;
@@ -31,8 +30,7 @@ interface StudentDetailsModalProps {
 export default function StudentDetailsModal({ student, standards, onClose, onUpdate }: StudentDetailsModalProps) {
   const [formData, setFormData] = useState({ ...student });
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
+  const { dialog, showAlert } = usePortalDialog();
 
   const [history, setHistory] = useState<any[]>([]);
   const [activeView, setActiveView] = useState<'profile' | 'timeline'>('profile');
@@ -77,7 +75,6 @@ export default function StudentDetailsModal({ student, standards, onClose, onUpd
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    setError('');
 
     try {
       const res = await fetch(`/api/subadmin/students/${student.id}`, {
@@ -87,17 +84,20 @@ export default function StudentDetailsModal({ student, standards, onClose, onUpd
       });
 
       if (res.ok) {
-        setSuccess(true);
-        setTimeout(() => {
+        showAlert({
+          title: 'Registry synchronized',
+          message: 'Student record has been updated successfully.',
+          variant: 'success',
+        }).then(() => {
           onUpdate();
           onClose();
-        }, 1500);
+        });
       } else {
         const data = await res.json();
-        setError(data.error);
+        showAlert({ title: 'Update failed', message: data.error || 'Student record could not be updated.', variant: 'danger' });
       }
     } catch (err) {
-      setError('Communication failed');
+      showAlert({ title: 'Communication failed', message: 'The student record could not be synchronized. Please try again.', variant: 'danger' });
     } finally {
       setSaving(false);
     }
@@ -211,20 +211,24 @@ export default function StudentDetailsModal({ student, standards, onClose, onUpd
   if (!mounted) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4 md:p-8 animate-in fade-in duration-300">
       <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose}></div>
       
-      <div className="bg-white w-full max-w-6xl max-h-[90vh] overflow-hidden rounded-md shadow-2xl relative z-10 flex flex-col md:flex-row border border-slate-100 animate-in zoom-in-95 duration-300">
+      <div className="bg-white w-full max-w-6xl h-[96dvh] max-h-[96dvh] md:h-[90vh] md:max-h-[90vh] overflow-hidden rounded-md shadow-2xl relative z-10 flex flex-col md:flex-row border border-slate-100 animate-in zoom-in-95 duration-300">
         
         {/* Left Panel: Profile Summary */}
-        <div className="w-full md:w-80 bg-slate-50 p-8 border-r border-slate-100 flex flex-col items-center shrink-0">
-           <div className="w-24 h-24 bg-white border border-slate-200 rounded-md flex items-center justify-center text-[#dac48b] text-4xl font-bold mb-6 shadow-sm">
+        <div className="w-full md:w-80 bg-slate-50 p-4 md:p-8 border-b md:border-b-0 md:border-r border-slate-100 flex flex-col md:items-center shrink-0 md:h-full md:min-h-0 md:overflow-y-auto custom-scrollbar">
+           <div className="flex w-full items-center gap-3 md:flex-col md:gap-0">
+           <div className="w-14 h-14 md:w-24 md:h-24 bg-white border border-slate-200 rounded-md flex items-center justify-center text-[#dac48b] text-2xl md:text-4xl font-bold md:mb-6 shadow-sm shrink-0">
               {formData.name?.[0]}
            </div>
-           <h3 className="text-lg font-bold text-slate-900 text-center leading-tight mb-1">{formData.name}</h3>
-           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-6">Institutional Registry</p>
+           <div className="min-w-0 md:text-center">
+             <h3 className="text-base md:text-lg font-bold text-slate-900 leading-tight mb-1 truncate">{formData.name}</h3>
+             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Institutional Registry</p>
+           </div>
+           </div>
            
-           <div className="w-full space-y-3 mt-4">
+           <div className="hidden md:block w-full space-y-3 mt-4">
               <div className="px-4 py-3 bg-white rounded-md border border-slate-200 shadow-sm">
                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wide mb-1">Student code</p>
                  <p className="text-xs font-bold text-slate-700">{formData.studentCode || 'UNASSIGNED'}</p>
@@ -235,11 +239,11 @@ export default function StudentDetailsModal({ student, standards, onClose, onUpd
               </div>
            </div>
 
-           <div className="w-full space-y-2 mt-8">
+           <div className="w-full grid grid-cols-2 gap-2 mt-4 md:mt-8 md:block md:space-y-2">
               <button
                 type="button"
                 onClick={() => setActiveView('profile')}
-                className={`w-full py-2.5 px-4 rounded-md text-xs font-bold transition-all text-left flex items-center space-x-2.5 ${activeView === 'profile' ? 'bg-[#18181b] text-white shadow-sm' : 'bg-slate-100 hover:bg-slate-200 text-slate-500'}`}
+                className={`w-full py-2.5 px-3 md:px-4 rounded-md text-xs font-bold transition-all text-left flex items-center justify-center md:justify-start space-x-2.5 ${activeView === 'profile' ? 'bg-[#18181b] text-white shadow-sm' : 'bg-slate-100 hover:bg-slate-200 text-slate-500'}`}
               >
                  <User size={14} />
                  <span>Profile Details</span>
@@ -247,7 +251,7 @@ export default function StudentDetailsModal({ student, standards, onClose, onUpd
               <button
                 type="button"
                 onClick={() => setActiveView('timeline')}
-                className={`w-full py-2.5 px-4 rounded-md text-xs font-bold transition-all text-left flex items-center space-x-2.5 ${activeView === 'timeline' ? 'bg-[#18181b] text-white shadow-sm' : 'bg-slate-100 hover:bg-slate-200 text-slate-500'}`}
+                className={`w-full py-2.5 px-3 md:px-4 rounded-md text-xs font-bold transition-all text-left flex items-center justify-center md:justify-start space-x-2.5 ${activeView === 'timeline' ? 'bg-[#18181b] text-white shadow-sm' : 'bg-slate-100 hover:bg-slate-200 text-slate-500'}`}
               >
                  <BookOpen size={14} />
                  <span>Academic Timeline</span>
@@ -256,47 +260,43 @@ export default function StudentDetailsModal({ student, standards, onClose, onUpd
 
            <button 
              onClick={onClose}
-             className="mt-auto w-full py-3 bg-white text-slate-500 rounded-md font-bold text-xs hover:bg-slate-100 transition-all flex items-center justify-center border border-slate-200 shadow-sm"
+             className="hidden md:flex mt-auto w-full py-3 bg-white text-slate-500 rounded-md font-bold text-xs hover:bg-slate-100 transition-all items-center justify-center border border-slate-200 shadow-sm"
            >
               <X size={14} className="mr-2" /> Cancel
            </button>
         </div>
 
         {/* Right Panel: Scrollable Content */}
-        <div className="flex-1 flex flex-col overflow-hidden bg-white">
-           <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/30">
-              <h4 className="text-base font-bold text-slate-900 tracking-tight">
+        <div className="flex-1 min-h-0 flex flex-col overflow-hidden bg-white">
+           <div className="p-4 md:p-6 border-b border-slate-100 flex items-center justify-between gap-3 bg-slate-50/30 shrink-0">
+              <h4 className="min-w-0 text-sm md:text-base font-bold text-slate-900 tracking-tight leading-tight">
                  {activeView === 'profile' ? 'Modify Student Profile' : 'Academic Journey Timeline'}
               </h4>
               
+              <div className="flex shrink-0 items-center gap-2">
               {activeView === 'profile' && (
                 <button 
                   onClick={handleSubmit} 
-                  className="px-6 py-2 bg-[#18181b] hover:bg-black text-white rounded-md font-bold text-xs uppercase tracking-wider shadow-sm transition-all disabled:opacity-50 flex items-center"
-                  disabled={saving || success}
+                  className="px-3 md:px-6 py-2 bg-[#18181b] hover:bg-black text-white rounded-md font-bold text-xs uppercase tracking-wider shadow-sm transition-all disabled:opacity-50 flex items-center shrink-0"
+                  disabled={saving}
                 >
                    {saving ? <Loader2 size={14} className="animate-spin mr-2" /> : <Save size={14} className="mr-2" />}
                    Save Changes
                 </button>
               )}
+              <button
+                type="button"
+                onClick={onClose}
+                className="md:hidden flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 shadow-sm"
+                aria-label="Close student details"
+              >
+                <X size={16} />
+              </button>
+              </div>
            </div>
 
            {activeView === 'profile' ? (
-             <form className="flex-1 overflow-y-auto p-8 space-y-10 custom-scrollbar scroll-smooth">
-                {success && (
-                  <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-md flex items-center space-x-3 text-emerald-600 font-bold text-xs animate-in zoom-in duration-300">
-                     <CheckCircle2 size={16} />
-                     <p>Registry record synchronized successfully.</p>
-                  </div>
-                )}
-
-                {error && (
-                  <div className="p-3 bg-rose-50 border border-rose-100 rounded-md flex items-center space-x-3 text-rose-600 font-bold text-xs animate-in zoom-in duration-300">
-                     <AlertCircle size={16} />
-                     <p>{error}</p>
-                  </div>
-                )}
-
+             <form className="flex-1 min-h-0 overflow-y-auto p-4 md:p-8 pb-8 space-y-8 md:space-y-10 custom-scrollbar scroll-smooth">
                 {sections.map((section, idx) => (
                   <div key={idx} className="space-y-5">
                      <div className="flex items-center space-x-3 py-1 border-b border-slate-100">
@@ -364,7 +364,7 @@ export default function StudentDetailsModal({ student, standards, onClose, onUpd
                 ))}
              </form>
            ) : (
-             <div className="flex-1 overflow-y-auto p-8 space-y-6 custom-scrollbar scroll-smooth animate-in slide-in-from-right duration-300">
+             <div className="flex-1 min-h-0 overflow-y-auto p-4 md:p-8 pb-8 space-y-6 custom-scrollbar scroll-smooth animate-in slide-in-from-right duration-300">
                 {loadingHistory ? (
                    <div className="py-20 flex flex-col items-center justify-center">
                       <Loader2 className="animate-spin text-[#dac48b] mb-4" size={32} />
@@ -431,6 +431,7 @@ export default function StudentDetailsModal({ student, standards, onClose, onUpd
         </div>
 
       </div>
+      {dialog}
     </div>,
     document.body
   );

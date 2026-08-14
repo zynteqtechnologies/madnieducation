@@ -4,14 +4,13 @@ import React, { useState, useEffect } from 'react';
 import {
   Plus,
   Calendar,
-  CheckCircle2,
   Clock,
   Trash2,
-  AlertCircle,
   Loader2,
   Save,
   Edit3
 } from 'lucide-react';
+import { usePortalDialog } from '@/components/ui/PortalDialog';
 
 interface AcademicYear {
   id: string;
@@ -32,7 +31,7 @@ export default function AcademicYearManager({ schoolId, isAdmin = false }: Props
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingYear, setEditingYear] = useState<AcademicYear | null>(null);
   const [newYear, setNewYear] = useState({ label: '', isActive: false, statusTag: 'CURRENT' });
-  const [error, setError] = useState<string | null>(null);
+  const { dialog, showAlert } = usePortalDialog();
 
   useEffect(() => {
     fetchYears();
@@ -47,9 +46,11 @@ export default function AcademicYearManager({ schoolId, isAdmin = false }: Props
       const data = await response.json();
       if (Array.isArray(data)) {
         setYears(data);
+      } else {
+        showAlert({ title: 'Load failed', message: data.error || 'Failed to load academic years.', variant: 'danger' });
       }
     } catch (err) {
-      console.error('Failed to fetch years:', err);
+      showAlert({ title: 'Communication failed', message: 'Failed to load academic years.', variant: 'danger' });
     } finally {
       setIsLoading(false);
     }
@@ -60,7 +61,6 @@ export default function AcademicYearManager({ schoolId, isAdmin = false }: Props
     if (!newYear.label) return;
 
     setIsSubmitting(true);
-    setError(null);
 
     try {
       const url = isAdmin ? '/api/superadmin/academic-years' : '/api/subadmin/academic-years';
@@ -74,12 +74,13 @@ export default function AcademicYearManager({ schoolId, isAdmin = false }: Props
         setNewYear({ label: '', isActive: false, statusTag: 'CURRENT' });
         setEditingYear(null);
         fetchYears();
+        showAlert({ title: editingYear ? 'Academic year updated' : 'Academic year created', message: 'Academic year registry has been synchronized successfully.', variant: 'success' });
       } else {
         const data = await response.json();
-        setError(data.error || 'Failed to save academic year');
+        showAlert({ title: 'Save failed', message: data.error || 'Failed to save academic year.', variant: 'danger' });
       }
     } catch (err) {
-      setError('An unexpected error occurred');
+      showAlert({ title: 'Unexpected error', message: 'Failed to save academic year.', variant: 'danger' });
     } finally {
       setIsSubmitting(false);
     }
@@ -94,6 +95,7 @@ export default function AcademicYearManager({ schoolId, isAdmin = false }: Props
   }
 
   return (
+    <>
     <div className="space-y-6">
       <div className="flex items-center justify-between pb-6 border-b border-slate-100 mb-8">
         <div>
@@ -174,13 +176,6 @@ export default function AcademicYearManager({ schoolId, isAdmin = false }: Props
                    New year
                  </button>
               </div>
-
-              {error && (
-                <div className="p-3 bg-red-50 text-red-600 rounded-lg flex items-center text-[11px] font-semibold">
-                  <AlertCircle size={14} className="mr-2" />
-                  {error}
-                </div>
-              )}
 
               <div className="flex space-x-3 py-2">
                 <button
@@ -282,5 +277,7 @@ export default function AcademicYearManager({ schoolId, isAdmin = false }: Props
         </div>
       </div>
     </div>
+    {dialog}
+    </>
   );
 }

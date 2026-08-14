@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server';
 import Razorpay from 'razorpay';
+import { checkRateLimit, rateLimitResponse } from '@/lib/security/rateLimit';
 
 export async function POST(req: Request) {
   try {
+    const limit = await checkRateLimit(req, 'payment');
+    if (!limit.allowed) return rateLimitResponse(limit.retryAfter);
+
     const { amount, currency = 'INR', receipt, notes } = await req.json();
 
     if (!amount || amount <= 0) {

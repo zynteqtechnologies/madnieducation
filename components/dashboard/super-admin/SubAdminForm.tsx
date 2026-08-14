@@ -7,7 +7,6 @@ import {
   Phone, 
   Mail, 
   MapPin, 
-  ShieldCheck, 
   Lock,
   X,
   Loader2,
@@ -15,6 +14,7 @@ import {
   ChevronLeft,
   Briefcase
 } from 'lucide-react';
+import { usePortalDialog } from '@/components/ui/PortalDialog';
 
 interface School {
   id: string;
@@ -31,7 +31,7 @@ export default function SubAdminForm({ subAdminId, isEdit = false, onSubmitSucce
   const [schools, setSchools] = useState<School[]>([]);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(isEdit);
-  const [error, setError] = useState('');
+  const { dialog, showAlert } = usePortalDialog();
 
   const [formData, setFormData] = useState({
     name: '',
@@ -75,7 +75,7 @@ export default function SubAdminForm({ subAdminId, isEdit = false, onSubmitSucce
         }
       }
     } catch (err) {
-      setError('Failed to fetch data.');
+      showAlert({ title: 'Load failed', message: 'Failed to fetch officer data.', variant: 'danger' });
     } finally {
       setLoading(false);
       setFetching(false);
@@ -85,7 +85,6 @@ export default function SubAdminForm({ subAdminId, isEdit = false, onSubmitSucce
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
 
     try {
       const res = await fetch('/api/admin/subadmins', {
@@ -98,13 +97,18 @@ export default function SubAdminForm({ subAdminId, isEdit = false, onSubmitSucce
       });
 
       if (res.ok) {
+        await showAlert({
+          title: isEdit ? 'Officer updated' : 'Officer provisioned',
+          message: 'Administrative officer profile has been synchronized successfully.',
+          variant: 'success',
+        });
         if (onSubmitSuccess) onSubmitSuccess();
       } else {
         const data = await res.json();
-        setError(data.error || 'Action failed.');
+        showAlert({ title: 'Action failed', message: data.error || 'Officer profile could not be saved.', variant: 'danger' });
       }
     } catch (err) {
-      setError('Sync failed.');
+      showAlert({ title: 'Sync failed', message: 'Officer profile could not be saved.', variant: 'danger' });
     } finally {
       setLoading(false);
     }
@@ -120,6 +124,7 @@ export default function SubAdminForm({ subAdminId, isEdit = false, onSubmitSucce
   }
 
   return (
+    <>
     <div className="bg-white w-full max-w-4xl mx-auto rounded-[2.5rem] border border-slate-200 shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-500">
       <div className="p-10 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
         <div>
@@ -134,13 +139,6 @@ export default function SubAdminForm({ subAdminId, isEdit = false, onSubmitSucce
       </div>
 
       <form onSubmit={handleSubmit} className="p-10 space-y-8">
-        {error && (
-          <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl flex items-center space-x-3 text-rose-700 text-xs font-semibold">
-            <ShieldCheck size={18} />
-            <p>{error}</p>
-          </div>
-        )}
-
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="space-y-2">
             <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest ml-1">Officer Name</label>
@@ -267,5 +265,7 @@ export default function SubAdminForm({ subAdminId, isEdit = false, onSubmitSucce
         </div>
       </form>
     </div>
+    {dialog}
+    </>
   );
 }

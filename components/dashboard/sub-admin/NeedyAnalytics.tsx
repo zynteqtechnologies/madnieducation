@@ -8,11 +8,10 @@ import {
   ShieldCheck, 
   Loader2, 
   TrendingUp,
-  AlertCircle,
   HelpCircle,
-  Banknote,
   School
 } from 'lucide-react';
+import { usePortalDialog } from '@/components/ui/PortalDialog';
 
 interface AnalyticsData {
   id: string;
@@ -33,7 +32,7 @@ interface AnalyticsData {
 export default function NeedyAnalytics() {
   const [data, setData] = useState<AnalyticsData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const { dialog, showAlert } = usePortalDialog();
 
   useEffect(() => {
     fetchAnalytics();
@@ -47,10 +46,10 @@ export default function NeedyAnalytics() {
         const result = await res.json();
         setData(result);
       } else {
-        setError('Failed to load financial aid analytics.');
+        showAlert({ title: 'Analysis failed', message: 'Failed to load financial aid analytics.', variant: 'danger' });
       }
     } catch (err) {
-      setError('Network synchronization error.');
+      showAlert({ title: 'Network synchronization error', message: 'Failed to load financial aid analytics.', variant: 'danger' });
     } finally {
       setLoading(false);
     }
@@ -65,6 +64,7 @@ export default function NeedyAnalytics() {
   }), { needy: 0, zakat: 0, lillah: 0, rte: 0, amount: 0 });
 
   return (
+    <>
     <div className="lg:h-full lg:overflow-hidden flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-4 duration-700">
       
       {/* Global Stats Row */}
@@ -90,12 +90,6 @@ export default function NeedyAnalytics() {
            <Loader2 className="animate-spin text-[#dac48b]" size={36} />
            <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">Analyzing Student Data...</p>
         </div>
-      ) : error ? (
-        <div className="flex-1 flex flex-col items-center justify-center bg-rose-50 border border-rose-100 rounded-md p-10 max-w-md mx-auto">
-           <AlertCircle size={40} className="text-rose-300 mb-4" />
-           <h3 className="text-base font-bold text-rose-900 mb-2">Analysis Failed</h3>
-           <p className="text-rose-600 font-medium text-sm">{error}</p>
-        </div>
       ) : data.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center bg-white rounded-md border border-dashed border-slate-200">
            <HelpCircle size={40} className="text-slate-200 mb-4" />
@@ -108,7 +102,7 @@ export default function NeedyAnalytics() {
                  <thead className="bg-slate-50 sticky top-0 z-20 border-b border-slate-200">
                     <tr>
                        <th className="px-6 py-4 text-[#dac48b] font-bold uppercase tracking-wider sticky left-0 z-30 bg-slate-50 border-r border-slate-200">Grade Level</th>
-                       <th className="px-6 py-4 text-[#dac48b] font-bold uppercase tracking-wider text-right">Tuition Fee</th>
+                       <th className="px-6 py-4 text-[#dac48b] font-bold uppercase tracking-wider text-right">Annual Fee</th>
                        <th className="px-6 py-4 text-[#dac48b] font-bold uppercase tracking-wider border-l border-slate-200 bg-amber-50/30 text-center" colSpan={3}>Zakat Fund Focus</th>
                        <th className="px-6 py-4 text-[#dac48b] font-bold uppercase tracking-wider border-l border-slate-200 bg-slate-100/30 text-center" colSpan={3}>Lillah Fund Focus</th>
                        <th className="px-6 py-4 text-[#dac48b] font-bold uppercase tracking-wider border-l border-slate-200 text-center">Metrics</th>
@@ -223,5 +217,7 @@ export default function NeedyAnalytics() {
       )}
 
     </div>
+    {dialog}
+    </>
   );
 }
