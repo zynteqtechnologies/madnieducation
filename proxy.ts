@@ -53,8 +53,7 @@ export async function proxy(request: NextRequest) {
     }
     try {
       const { payload } = await jwtVerify(sessionToken, SESSION_SECRET);
-      // Super admins are often allowed to access subadmin paths too
-      if (payload.role !== 'SUB_ADMIN' && payload.role !== 'SUPER_ADMIN') {
+      if (payload.role !== 'SUB_ADMIN' || !payload.schoolId) {
         return NextResponse.redirect(new URL('/subadmin/login', request.url));
       }
       return NextResponse.next();
