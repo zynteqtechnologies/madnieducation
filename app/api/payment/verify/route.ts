@@ -106,6 +106,7 @@ export async function POST(request: Request) {
       client.release();
     }
 
+    // 1. Detailed Notification with amount for Superadmin & Subadmin
     await createNotification({
       title: 'Donation payment received',
       message: `${donorName || 'A donor'} paid Rs. ${Number(amount).toLocaleString('en-IN')} for ${type}.`,
@@ -114,12 +115,29 @@ export async function POST(request: Request) {
       schoolId,
       entityType: 'Transaction',
       entityId: razorpay_payment_id,
-      link: '/superadmin/dashboard',
+      link: '/subadmin/dashboard',
       audiences: [
         { type: 'ROLE', recipientRole: 'SUPER_ADMIN' },
         ...(schoolId ? [{ type: 'SCHOOL_ROLE' as const, recipientRole: 'SUB_ADMIN' as const, schoolId }] : []),
       ],
     });
+
+    // 2. Privacy-Safe Broadcast for All Alumni (NO AMOUNT SHOWN)
+    if (schoolId) {
+      await createNotification({
+        title: 'New Contribution Alert! 🎉',
+        message: `${donorName || 'An Alumni'} contributed towards ${type} for our school!`,
+        type: 'DONATION',
+        priority: 'NORMAL',
+        schoolId,
+        entityType: 'Transaction',
+        entityId: razorpay_payment_id,
+        link: '/alumni/dashboard',
+        audiences: [
+          { type: 'SCHOOL_ALUMNI', schoolId }
+        ],
+      });
+    }
 
     return NextResponse.json({ success: true });
 

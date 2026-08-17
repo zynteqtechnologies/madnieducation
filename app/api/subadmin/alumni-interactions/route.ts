@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { getSessionFromCookies } from '@/lib/auth';
+import { createNotification } from '@/lib/notifications';
 
 export async function GET(request: Request) {
   try {
@@ -145,7 +146,57 @@ export async function PATCH(request: Request) {
       RETURNING *
     `, params);
 
-    return NextResponse.json(result.rows[0]);
+    const updatedRow = result.rows[0];
+
+    // Trigger Notifications if status changed to APPROVED
+    if (status === 'APPROVED' && updatedRow) {
+      try {
+        const itemTitle = updatedRow.title || updatedRow.role || updatedRow.companyName || 'Update';
+        const alumniId = updatedRow.alumniId;
+        let authorName = 'An Alumni';
+
+        if (alumniId) {
+          const alumniRes = await pool.query('SELECT name FROM "Alumni" WHERE id = $1', [alumniId]);
+          if (alumniRes.rows[0]?.name) {
+            authorName = alumniRes.rows[0].name;
+          }
+
+          // 1. Direct Notification to the Author
+          await createNotification({
+            title: 'Post Approved! 🎉',
+            message: `Your ${type} "${itemTitle}" has been approved and is now live on the feed.`,
+            type: 'CONTENT',
+            priority: 'NORMAL',
+            schoolId: session.schoolId,
+            actorId: session.userId,
+            actorRole: 'SUB_ADMIN',
+            link: '/alumni/dashboard',
+            audiences: [
+              { type: 'DIRECT', recipientRole: 'ALUMNI', recipientId: alumniId }
+            ]
+          });
+        }
+
+        // 2. Broadcast Notification to ALL School Alumni (Excludes author via actorId)
+        await createNotification({
+          title: `New Post by ${authorName}`,
+          message: `${authorName} posted "${itemTitle}". Check it out on the community feed!`,
+          type: 'CONTENT',
+          priority: 'NORMAL',
+          schoolId: session.schoolId,
+          actorId: alumniId || session.userId,
+          actorRole: 'ALUMNI',
+          link: '/alumni/dashboard',
+          audiences: [
+            { type: 'SCHOOL_ALUMNI', schoolId: session.schoolId }
+          ]
+        });
+      } catch (notifErr) {
+        console.error('Approval notification error:', notifErr);
+      }
+    }
+
+    return NextResponse.json(updatedRow);
 
   } catch (error) {
     console.error('Interaction update error:', error);
