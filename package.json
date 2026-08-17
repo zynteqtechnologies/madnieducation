@@ -19,6 +19,8 @@
     "clsx": "^2.1.1",
     "cookie": "^1.1.1",
     "drizzle-orm": "^0.45.2",
+    "firebase": "^12.17.1",
+    "firebase-admin": "^14.2.0",
     "imagekit": "^6.0.0",
     "jose": "^6.2.2",
     "jsonwebtoken": "^9.0.3",

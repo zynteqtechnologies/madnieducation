@@ -42,6 +42,7 @@ import {
 } from 'lucide-react';
 import NotificationBell from './NotificationBell';
 import CreatePostModal from '../dashboard/alumni/CreatePostModal';
+import { requestFcmPermissionAndRegister } from '@/lib/firebaseClient';
 
 interface DashboardLayoutProps {
   title: string;
@@ -64,7 +65,10 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
 
   useEffect(() => {
     fetch('/api/auth/me').then(res => res.json()).then(data => {
-      if (!data.error) setUserData(data);
+      if (!data.error) {
+        setUserData(data);
+        requestFcmPermissionAndRegister().catch(() => {});
+      }
     }).catch(() => { });
 
     const hr = new Date().getHours();

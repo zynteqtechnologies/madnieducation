@@ -1,5 +1,6 @@
 import { randomUUID } from 'crypto';
 import pool from '@/lib/db';
+import { sendPushToUsers } from '@/lib/fcmAdmin';
 
 export type NotificationRole = 'SUPER_ADMIN' | 'SUB_ADMIN' | 'ALUMNI';
 
@@ -123,6 +124,10 @@ export async function createNotification(input: CreateNotificationInput) {
       )
       VALUES ${placeholders.join(', ')}
     `, values);
+
+    // Trigger FCM Web Push notification to all target device tokens
+    const recipientUserIds = recipients.map((r) => r.recipientId);
+    await sendPushToUsers(recipientUserIds, input.title, input.message, input.link);
   } catch (error) {
     console.error('Notification create error:', error);
   }
