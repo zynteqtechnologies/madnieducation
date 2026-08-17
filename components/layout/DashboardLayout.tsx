@@ -206,24 +206,24 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
       {role === 'SUB_ADMIN' ? (
         <div className="flex flex-col h-full min-h-0">
           {/* Horizontal Topbar */}
-          <header className="sticky top-0 z-50 shrink-0 backdrop-blur-md px-6 py-4 flex items-center justify-between">
+          <header className="sticky top-0 z-50 shrink-0 backdrop-blur-md px-6 py-4 flex items-center justify-between gap-4">
             {/* Logo Section (Left-aligned) */}
-            <div className="flex items-center cursor-pointer" onClick={() => handleNavigate('Dashboard')}>
+            <div className="flex items-center cursor-pointer shrink-0" onClick={() => handleNavigate('Dashboard')}>
               <div className="relative w-18 h-18 flex items-center justify-center shrink-0">
                 <Image src="/madni-logo.png" alt="Logo" fill className="object-contain p-1" priority />
               </div>
             </div>
 
             {/* Centered Navigation Tabs */}
-            <nav className="hidden lg:flex items-center justify-center flex-1 mx-6">
-              <div className="inline-flex items-center rounded-lg border border-[#E6DFD3]/70 bg-[#fff9] px-2 py-2 gap-2">
+            <nav className="hidden lg:flex items-center justify-center flex-1 mx-4 min-w-0 overflow-x-auto no-scrollbar py-1">
+              <div className="inline-flex items-center rounded-xl border border-[#E6DFD3]/70 bg-white/80 backdrop-blur-md px-2 py-1.5 gap-1.5 shadow-sm max-w-full overflow-x-auto no-scrollbar">
                 {menuItems.map((item) => (
                   <button
                     key={item.name}
                     onClick={() => handleNavigate(item.name)}
-                    className={`px-6 py-2.5 text-xs font-medium rounded-lg transition-all duration-300 whitespace-nowrap ${activeItem === item.name
+                    className={`px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all duration-200 whitespace-nowrap cursor-pointer ${activeItem === item.name
                       ? 'bg-[#18181b] text-white shadow-sm'
-                      : 'text-slate-700 hover:bg-[#E4E0D5] hover:text-slate-900'
+                      : 'text-slate-700 hover:bg-[#E4E0D5]/70 hover:text-slate-900'
                       }`}
                   >
                     {item.name}
@@ -233,11 +233,11 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
             </nav>
 
             {/* Right Accessories */}
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-3 shrink-0">
               {/* Mobile Menu Toggle */}
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="p-2.5 bg-white border border-[#E6DFD3] rounded-full text-slate-500 hover:text-slate-900 transition-colors shadow-sm lg:hidden"
+                className="p-2.5 bg-white border border-[#E6DFD3] rounded-full text-slate-500 hover:text-slate-900 transition-colors shadow-sm lg:hidden cursor-pointer"
               >
                 <Menu size={16} />
               </button>
@@ -257,33 +257,51 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
               <div className="h-6 w-px bg-[#E6DFD3] hidden md:block"></div>
 
               {/* Profile Info & Dropdown */}
-              <div className="relative">
-                <div
-                  className="flex items-center space-x-3 cursor-pointer group"
+              <div className="relative shrink-0">
+                <button
+                  type="button"
+                  className="flex items-center gap-2.5 p-1.5 pl-2 pr-3 bg-white/80 hover:bg-white border border-[#E6DFD3] rounded-xl transition-all shadow-sm group cursor-pointer"
                   onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
                 >
-                  <div className="w-10 h-10 rounded-lg bg-[#18181b] border border-[#E6DFD3] flex items-center justify-center text-white font-bold text-sm overflow-hidden transition-all group-hover:scale-105">
-                    {userData?.name ? userData.name[0] : 'S'}
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#18181b] to-[#27272a] text-white font-bold text-xs flex items-center justify-center border border-[#E6DFD3] shadow-inner shrink-0">
+                    {userData?.name ? userData.name[0].toUpperCase() : 'S'}
                   </div>
-                  <div className="hidden md:block text-left">
+                  <div className="hidden md:flex flex-col text-left">
+                    <span className="text-xs font-bold text-slate-800 leading-tight max-w-[120px] truncate">
+                      {userData?.name || 'Sub Admin'}
+                    </span>
+                    <span className="text-[10px] font-medium text-slate-500 max-w-[120px] truncate">
+                      {userData?.schoolName || 'Officer'}
+                    </span>
                   </div>
-                </div>
+                  <ChevronDown size={14} className={`text-slate-400 transition-transform duration-200 ${isProfileDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
 
                 {/* Dropdown Menu */}
                 {isProfileDropdownOpen && (
                   <>
                     {/* Backdrop to dismiss dropdown */}
                     <div className="fixed inset-0 z-10" onClick={() => setIsProfileDropdownOpen(false)}></div>
-                    <div className="absolute right-0 mt-2 w-48 bg-[#FAF7F0] border border-[#E6DFD3] rounded-2xl shadow-xl py-2 z-20 animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="absolute right-0 mt-2 w-56 bg-white border border-slate-200/80 rounded-2xl shadow-xl py-2 z-20 animate-in fade-in slide-in-from-top-2 duration-200">
+                      <div className="px-4 py-2.5 border-b border-slate-100 bg-slate-50/60 rounded-t-2xl">
+                        <p className="text-xs font-bold text-slate-900 truncate">{userData?.name || 'Sub Admin'}</p>
+                        <p className="text-[11px] text-slate-500 truncate">{userData?.email || 'subadmin@madni.org'}</p>
+                        {userData?.schoolName && (
+                          <span className="inline-block mt-1 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200/50 text-[10px] font-semibold truncate max-w-full">
+                            {userData.schoolName}
+                          </span>
+                        )}
+                      </div>
+
                       <button
                         onClick={() => {
                           setIsProfileDropdownOpen(false);
                           handleNavigate('Profile');
                         }}
-                        className="w-full text-left px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-[#EFECE5] hover:text-slate-900 transition-colors flex items-center space-x-2"
+                        className="w-full text-left px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors flex items-center space-x-2 cursor-pointer"
                       >
                         <User size={14} className="text-slate-500" />
-                        <span>Profile</span>
+                        <span>Profile Settings</span>
                       </button>
 
                       <button
@@ -291,10 +309,10 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
                           setIsProfileDropdownOpen(false);
                           handleLogout();
                         }}
-                        className="w-full text-left px-4 py-2.5 text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors flex items-center space-x-2 border-t border-[#E6DFD3]/40"
+                        className="w-full text-left px-4 py-2.5 text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors flex items-center space-x-2 border-t border-slate-100 cursor-pointer"
                       >
                         <LogOut size={14} className="text-red-500" />
-                        <span>Logout</span>
+                        <span>Sign Out</span>
                       </button>
                     </div>
                   </>
@@ -341,9 +359,9 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
           )}
 
           {/* Main Content Area */}
-          <main className="flex-1 min-h-0 overflow-hidden px-4 md:px-8 py-6 lg:py-4 flex flex-col w-full mx-auto">
+          <main className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden no-scrollbar px-4 md:px-8 py-6 lg:py-4 flex flex-col w-full mx-auto">
 
-            <div className="flex-1 w-full min-h-0 overflow-y-auto overflow-x-hidden lg:overflow-hidden flex flex-col">
+            <div className="flex-1 w-full min-h-0 overflow-y-auto overflow-x-hidden no-scrollbar flex flex-col">
               {children}
             </div>
           </main>

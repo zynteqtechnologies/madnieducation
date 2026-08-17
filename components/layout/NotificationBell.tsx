@@ -85,15 +85,15 @@ export default function NotificationBell({ role, variant = 'default' }: Notifica
 
   const isSubadminTopbar = variant === 'subadmin';
   const buttonClass = isSubadminTopbar
-    ? 'relative p-2.5 bg-white border border-[#E6DFD3] rounded-lg text-slate-500 hover:text-slate-900 transition-colors flex items-center justify-center'
+    ? 'relative p-2.5 bg-white/80 hover:bg-white border border-[#E6DFD3] rounded-xl text-slate-600 hover:text-slate-900 transition-all flex items-center justify-center shadow-sm cursor-pointer group'
     : `relative p-2 transition-colors ${role === 'ALUMNI' ? 'text-slate-600 hover:text-blue-600' : 'text-slate-400 hover:text-[#3f72af]'}`;
 
   return (
-    <div ref={containerRef} className="relative">
+    <div ref={containerRef} className="relative shrink-0">
       <button className={buttonClass} onClick={() => setOpen((value) => !value)} title="Notifications">
-        <Bell size={isSubadminTopbar ? 16 : 20} />
+        <Bell size={isSubadminTopbar ? 17 : 20} className="transition-transform group-hover:scale-105" />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center border-2 border-white">
+          <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center border-2 border-white shadow-sm animate-pulse">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}

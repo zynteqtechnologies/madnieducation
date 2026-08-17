@@ -106,7 +106,7 @@ function OverviewTab({ stats }: { stats: any }) {
     : '';
 
   return (
-    <div className="lg:h-full lg:overflow-hidden flex flex-col gap-3 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="flex flex-col gap-3 pb-8 no-scrollbar animate-in fade-in slide-in-from-bottom-4 duration-700">
 
       {/* ── HEADER ───────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white px-5 py-3 rounded-md border border-slate-200 shadow-sm shrink-0">
@@ -159,7 +159,7 @@ function OverviewTab({ stats }: { stats: any }) {
       </div>
 
       {/* ── ZONE 2 (BOTTOM ROW): Charts + Ledger ──────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 flex-1 min-h-0 lg:overflow-hidden">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 min-h-0 shrink-0 pb-4">
 
         {/* LEFT: Donation ratio donut + Trend chart */}
         <div className="bg-white p-4 rounded-md shadow-sm flex flex-col gap-3 min-h-[240px] overflow-hidden">

@@ -109,7 +109,7 @@ export default function LoginForm({ roleName, loginEndpoint, accentColor, roleIc
         bg: 'bg-indigo-600',
         hover: 'hover:bg-indigo-700',
         light: 'bg-indigo-50',
-        text: 'text-indigo-600',
+        text: 'text-indigo-700',
         darkText: 'text-white',
         ring: 'focus:ring-indigo-500/20',
         border: 'focus:border-indigo-500',
