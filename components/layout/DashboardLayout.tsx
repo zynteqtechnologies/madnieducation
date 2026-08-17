@@ -413,24 +413,6 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
                     </div>
                   );
                 })}
-
-                {/* Separator */}
-                <div className="h-5 sm:h-6 w-px bg-slate-300/60 mx-0.5 sm:mx-1 shrink-0"></div>
-
-                {/* Logout Action in Dock */}
-                <div className="relative group shrink-0">
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 px-3 py-1.5 bg-red-600 text-white text-[10px] font-bold rounded-xl opacity-0 pointer-events-none group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 transition-all duration-200 whitespace-nowrap shadow-lg">
-                    Logout
-                  </div>
-                  <button
-                    onClick={handleLogout}
-                    aria-label="Logout"
-                    title="Logout"
-                    className="w-9 h-9 sm:w-11 sm:h-11 rounded-full flex items-center justify-center text-slate-600 hover:text-red-600 hover:bg-white/30 hover:scale-105 transition-all duration-300"
-                  >
-                    <LogOut size={16} />
-                  </button>
-                </div>
               </div>
             </div>
           )}
@@ -579,29 +561,32 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
                   {isProfileDropdownOpen && (
                     <>
                       <div className="fixed inset-0 z-10" onClick={() => setIsProfileDropdownOpen(false)}></div>
-                      <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-200/60 rounded-2xl shadow-xl py-2 z-20 animate-in fade-in slide-in-from-top-2 duration-200">
-                        {role === 'ALUMNI' && (
-                          <button
-                            onClick={() => {
-                              setIsProfileDropdownOpen(false);
-                              handleNavigate('Profile');
-                            }}
-                            className="w-full text-left px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors flex items-center space-x-2"
-                          >
-                            <User size={14} className="text-slate-500" />
-                            <span>Profile</span>
-                          </button>
-                        )}
+                      <div className="absolute right-0 mt-2 w-52 bg-white border border-slate-200/80 rounded-2xl shadow-xl py-2 z-20 animate-in fade-in slide-in-from-top-2 duration-200">
+                        <div className="px-4 py-2 border-b border-slate-100 bg-slate-50/60 rounded-t-2xl">
+                          <p className="text-xs font-bold text-slate-900 truncate">{userData?.name || (role === 'ALUMNI' ? 'Alumni User' : 'Admin User')}</p>
+                          <p className="text-[11px] text-slate-500 truncate">{userData?.email || ''}</p>
+                        </div>
+
+                        <button
+                          onClick={() => {
+                            setIsProfileDropdownOpen(false);
+                            handleNavigate('Profile');
+                          }}
+                          className="w-full text-left px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors flex items-center space-x-2 cursor-pointer"
+                        >
+                          <User size={14} className="text-slate-500" />
+                          <span>Profile Settings</span>
+                        </button>
 
                         <button
                           onClick={() => {
                             setIsProfileDropdownOpen(false);
                             handleLogout();
                           }}
-                          className={`w-full text-left px-4 py-2.5 text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors flex items-center space-x-2 ${role === 'ALUMNI' ? 'border-t border-slate-100' : ''}`}
+                          className="w-full text-left px-4 py-2.5 text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors flex items-center space-x-2 border-t border-slate-100 cursor-pointer"
                         >
                           <LogOut size={14} className="text-red-500" />
-                          <span>Logout</span>
+                          <span>Sign Out</span>
                         </button>
                       </div>
                     </>
