@@ -268,12 +268,12 @@ function OverviewTab({ stats }: { stats: any }) {
         <div className="bg-white p-4 rounded-md shadow-sm flex flex-col min-h-[240px] overflow-hidden">
           <div className="flex items-center justify-between mb-3 shrink-0">
             <p className="text-sm font-black text-slate-900 uppercase tracking-wide">Recent Donations</p>
-            <span className="text-xs font-semibold text-slate-400">up to 10 entries</span>
+            <span className="text-xs font-semibold text-slate-400">up to 5 entries</span>
           </div>
 
           <div className="flex-1 overflow-y-auto min-h-0 custom-scrollbar space-y-0.5 pr-0.5">
             {recentTx.length > 0 ? (
-              recentTx.slice(0, 10).map((t: any, i: number) => {
+              recentTx.slice(0, 5).map((t: any, i: number) => {
                 const amount = parseFloat(t.amount) || 0;
                 const isConstruction = t.type === 'CONSTRUCTION';
                 return (
