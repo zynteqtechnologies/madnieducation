@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { comparePassword } from '@/lib/auth';
-import { startLoginOtp, normalizeLoginEmail } from '@/lib/auth/loginOtp';
+import { startLoginOtp, normalizeLoginEmail, isDemoEmail } from '@/lib/auth/loginOtp';
 import { checkRateLimit, rateLimitResponse } from '@/lib/security/rateLimit';
 
 export async function POST(request: Request) {
@@ -26,12 +26,16 @@ export async function POST(request: Request) {
       name: user.name,
     });
 
+    const isDemo = isDemoEmail(cleanEmail);
+
     return NextResponse.json({
       success: true,
       requiresOtp: true,
       role: 'SUPER_ADMIN',
       email: user.email,
-      message: 'OTP sent to your registered email.',
+      message: isDemo
+        ? 'OTP sent to your registered email. (Demo OTP: 123456)'
+        : 'OTP sent to your registered email.',
     });
   } catch (error) {
     console.error('Login error:', error);

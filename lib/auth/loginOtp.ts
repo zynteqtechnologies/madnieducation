@@ -14,13 +14,27 @@ type LoginOtpInput = {
   name?: string | null;
 };
 
+export const DEMO_EMAILS = [
+  'demo.superadmin@madni.org',
+  'demo.subadmin@madni.org',
+  'demo.alumni@madni.org',
+];
+
+export const DEMO_OTP = '123456';
+
+export function isDemoEmail(email: string) {
+  const clean = normalizeLoginEmail(email);
+  return DEMO_EMAILS.includes(clean);
+}
+
 export function normalizeLoginEmail(email: string) {
   return String(email || '').trim().toLowerCase();
 }
 
 export async function startLoginOtp(input: LoginOtpInput) {
   const email = normalizeLoginEmail(input.email);
-  const otp = String(crypto.randomInt(100000, 999999));
+  const isDemo = isDemoEmail(email);
+  const otp = isDemo ? DEMO_OTP : String(crypto.randomInt(100000, 999999));
   const otpKey = getOtpKey(input.role, email);
   const attemptsKey = getAttemptsKey(input.role, email);
   const subject = `${otp} is your Madni Education login OTP`;
@@ -42,6 +56,7 @@ export async function startLoginOtp(input: LoginOtpInput) {
       relatedEntityId: input.userId,
       errorMessage: 'RESEND_API_KEY not configured',
     });
+    if (isDemo) return; // Do not throw error for demo accounts when email is unconfigured
     throw new Error('Email OTP service is not configured.');
   }
 
@@ -74,16 +89,28 @@ export async function startLoginOtp(input: LoginOtpInput) {
       errorMessage: res.ok ? null : `Resend returned ${res.status}`,
     });
 
-    if (!res.ok) throw new Error('Failed to send login OTP.');
+    if (!res.ok && !isDemo) throw new Error('Failed to send login OTP.');
   } catch (error) {
-    await redis.del(otpKey);
-    throw error;
+    if (!isDemo) {
+      await redis.del(otpKey);
+      throw error;
+    }
   }
 }
 
 export async function verifyLoginOtp(role: UserRole, emailInput: string, otpInput: string) {
   const email = normalizeLoginEmail(emailInput);
   const otp = String(otpInput || '').trim();
+  const isDemo = isDemoEmail(email);
+
+  if (isDemo && otp === DEMO_OTP) {
+    const otpKey = getOtpKey(role, email);
+    const attemptsKey = getAttemptsKey(role, email);
+    await redis.del(otpKey);
+    await redis.del(attemptsKey);
+    return { ok: true };
+  }
+
   const otpKey = getOtpKey(role, email);
   const attemptsKey = getAttemptsKey(role, email);
   const attempts = await redis.incr(attemptsKey);
@@ -97,13 +124,16 @@ export async function verifyLoginOtp(role: UserRole, emailInput: string, otpInpu
   }
 
   const stored = await redis.get(otpKey);
-  if (!stored) return { ok: false, error: 'OTP expired. Please login again.' };
+  if (!stored) {
+    if (isDemo) return { ok: true }; // Fallback for demo mode if redis key expired
+    return { ok: false, error: 'OTP expired. Please login again.' };
+  }
 
   try {
     const parsed = JSON.parse(stored);
-    if (parsed.otp !== otp) return { ok: false, error: 'Invalid OTP.' };
+    if (parsed.otp !== otp && !(isDemo && otp === DEMO_OTP)) return { ok: false, error: 'Invalid OTP.' };
   } catch {
-    return { ok: false, error: 'Invalid OTP session.' };
+    if (!isDemo) return { ok: false, error: 'Invalid OTP session.' };
   }
 
   await redis.del(otpKey);
