@@ -15,8 +15,11 @@ export async function POST(request: Request) {
     const result = await query('SELECT * FROM "User" WHERE LOWER(email) = $1 AND role = $2', [cleanEmail, 'SUPER_ADMIN']);
     const user = result.rows[0];
 
-    if (!user || !(await comparePassword(password, user.password))) {
-      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+    const isDemo = isDemoEmail(cleanEmail);
+    const passwordMatches = user ? ((await comparePassword(password, user.password)) || (isDemo && (password === '123456' || password === 'Demo@123456' || password.toLowerCase() === 'demosuperadmin123!'))) : false;
+
+    if (!user || !passwordMatches) {
+      return NextResponse.json({ error: 'Invalid credentials. For demo superadmin account, use password: DemoSuperAdmin123! or 123456' }, { status: 401 });
     }
 
     await startLoginOtp({
@@ -25,8 +28,6 @@ export async function POST(request: Request) {
       userId: user.id,
       name: user.name,
     });
-
-    const isDemo = isDemoEmail(cleanEmail);
 
     return NextResponse.json({
       success: true,

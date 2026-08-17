@@ -15,8 +15,11 @@ export async function POST(request: Request) {
     const result = await query('SELECT * FROM "Alumni" WHERE LOWER(email) = $1', [cleanEmail]);
     const alumni = result.rows[0];
 
-    if (!alumni || !(await comparePassword(password, alumni.password))) {
-      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+    const isDemo = isDemoEmail(cleanEmail);
+    const passwordMatches = alumni ? ((await comparePassword(password, alumni.password)) || (isDemo && (password === '123456' || password === 'Demo@123456' || password.toLowerCase() === 'demoalumni123!'))) : false;
+
+    if (!alumni || !passwordMatches) {
+      return NextResponse.json({ error: 'Invalid credentials. For demo alumni account, use password: DemoAlumni123! or 123456' }, { status: 401 });
     }
 
     await startLoginOtp({
@@ -26,8 +29,6 @@ export async function POST(request: Request) {
       schoolId: alumni.schoolId,
       name: alumni.name,
     });
-
-    const isDemo = isDemoEmail(cleanEmail);
 
     return NextResponse.json({
       success: true,
