@@ -69,6 +69,9 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
       if (!data.error) {
         setUserData(data);
         requestFcmPermissionAndRegister().catch(() => {});
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.register('/sw.js').catch(() => {});
+        }
       }
     }).catch(() => { });
 

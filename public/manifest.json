@@ -1,0 +1,31 @@
+{
+  "name": "Madni Education Trust Platform",
+  "short_name": "Madni Portal",
+  "description": "Official Madni Education Trust Platform for Alumni, School Officers, and Superadmins",
+  "start_url": "/alumni/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#1b4a50",
+  "icons": [
+    {
+      "src": "/madni-logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/madni-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/madni-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
