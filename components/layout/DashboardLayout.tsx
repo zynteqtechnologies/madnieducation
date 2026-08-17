@@ -38,7 +38,8 @@ import {
   PieChart,
   Newspaper,
   Plus,
-  Mail
+  Mail,
+  FileCheck2
 } from 'lucide-react';
 import NotificationBell from './NotificationBell';
 import CreatePostModal from '../dashboard/alumni/CreatePostModal';
@@ -116,7 +117,8 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
           'School Page': 'school-page',
           'School Hub': 'school-hub',
           'Class Setup': 'class-setup',
-          'CSR Management': 'csr'
+          'CSR Management': 'csr',
+          '80G Requests': '80g-requests'
         };
         const path = routeMap[item];
         if (path) {
@@ -160,6 +162,7 @@ export default function DashboardLayout({ title, role, activeItem: externalActiv
     { name: 'Alumni', icon: <GraduationCap size={18} />, role: ['SUB_ADMIN'] },
     { name: 'Subadmins', icon: <UserCog size={18} />, role: ['SUPER_ADMIN'] },
     { name: 'Academic Years', icon: <Calendar size={18} />, role: ['SUPER_ADMIN'] },
+    { name: '80G Requests', icon: <FileCheck2 size={18} />, role: ['SUPER_ADMIN'] },
     { name: 'Promotion', icon: <ArrowUpCircle size={18} />, role: ['SUB_ADMIN'] },
   ].filter(item => item.role.includes(role));
 

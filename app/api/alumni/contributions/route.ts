@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { getSessionFromCookies } from '@/lib/auth';
+import { createNotification } from '@/lib/notifications';
 
 const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -53,9 +54,10 @@ export async function POST(request: Request) {
   try {
     const session = await getSessionFromCookies('ALUMNI');
     const body = await request.json();
-    const { contributionType, title, description, amount, quantity, proofUrl, isPublic } = body;
+    const { contributionType, title, description, amount, quantity, proofUrl, isPublic, wants80G, panNumber, pan } = body;
     const alumniId = normalizeUuid(body.alumniId) || (session?.role === 'ALUMNI' ? session.userId : null);
     const schoolId = normalizeUuid(body.schoolId);
+    const finalPan = String(panNumber || pan || '').trim().toUpperCase();
 
     if (!alumniId || !contributionType || !title) {
       return NextResponse.json({ error: 'Missing required fields: alumniId, contributionType, title' }, { status: 400 });
@@ -78,6 +80,31 @@ export async function POST(request: Request) {
       proofUrl || null,
       isPublic !== undefined ? isPublic : true
     ]);
+
+    // Send 80G Notification if requested
+    if (wants80G || finalPan) {
+      try {
+        const alumniRes = await pool.query('SELECT name, email, phone FROM "Alumni" WHERE id = $1', [alumniId]);
+        const alumniInfo = alumniRes.rows[0];
+
+        await createNotification({
+          title: '80G Certificate Requested! 📜',
+          message: `Alumni ${alumniInfo?.name || 'Alumni'} requested 80G Certificate for ${contributionType} contribution "${title}". PAN: ${finalPan || 'Provided'}, Email: ${alumniInfo?.email || 'N/A'}.`,
+          type: 'DONATION',
+          priority: 'HIGH',
+          schoolId: schoolId || null,
+          entityType: 'AlumniContribution',
+          entityId: res.rows[0].id,
+          link: '/subadmin/dashboard',
+          audiences: [
+            { type: 'ROLE', recipientRole: 'SUPER_ADMIN' },
+            ...(schoolId ? [{ type: 'SCHOOL_ROLE' as const, recipientRole: 'SUB_ADMIN' as const, schoolId }] : []),
+          ],
+        });
+      } catch (notifErr) {
+        console.error('Alumni contribution 80G notification error:', notifErr);
+      }
+    }
 
     return NextResponse.json({ success: true, contribution: res.rows[0] });
   } catch (error: any) {

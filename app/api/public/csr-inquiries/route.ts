@@ -27,6 +27,7 @@ export async function POST(req: Request) {
     const category = normalizeCsrCategory(body.category);
     const budgetRange = String(body.budgetRange || '').trim();
     const message = String(body.message || '').trim();
+    const panNumber = String(body.pan || body.donorPan || '').trim().toUpperCase();
     const school = await resolveSchool(body.schoolId, body.schoolName);
 
     if (!companyName || !contactPerson || !email.includes('@')) {
@@ -68,7 +69,7 @@ export async function POST(req: Request) {
       budgetRange,
       schoolName: school.schoolName,
       source: 'PUBLIC',
-      message,
+      message: panNumber ? `${message}\n\n[80G TAX CLAIM PAN: ${panNumber}]` : message,
     });
 
     await logActivity({
@@ -79,7 +80,7 @@ export async function POST(req: Request) {
       category: 'CSR',
       action: 'CSR_INQUIRY_CREATED',
       title: 'New CSR inquiry',
-      message: `${companyName} submitted a CSR partnership inquiry.`,
+      message: `${companyName} submitted a CSR partnership inquiry.${panNumber ? ` (Requested 80G, PAN: ${panNumber})` : ''}`,
       status: 'PENDING',
       entityType: 'CsrInquiry',
       entityId: inquiry.id,
@@ -93,7 +94,7 @@ export async function POST(req: Request) {
       sourceRole: 'PUBLIC',
       sourceName: contactPerson,
       emailType: 'CSR_INQUIRY',
-      subject: `New CSR inquiry - ${companyName}`,
+      subject: `New CSR inquiry - ${companyName}${panNumber ? ' (80G Requested)' : ''}`,
       status: emailSent ? 'SENT' : 'FAILED',
       relatedEntityType: 'CsrInquiry',
       relatedEntityId: inquiry.id,
@@ -101,10 +102,12 @@ export async function POST(req: Request) {
     })));
 
     await createNotification({
-      title: 'New CSR inquiry',
-      message: `${companyName} wants to support ${school.schoolName || 'Madni Education Trust'}.`,
+      title: panNumber ? '80G Certificate Requested! 📜' : 'New CSR inquiry',
+      message: panNumber
+        ? `${companyName} (${contactPerson}) requested 80G Certificate for CSR partnership. PAN: ${panNumber}, Phone: ${phone}, Email: ${email}.`
+        : `${companyName} wants to support ${school.schoolName || 'Madni Education Trust'}.`,
       type: 'ACTION',
-      priority: 'NORMAL',
+      priority: panNumber ? 'HIGH' : 'NORMAL',
       schoolId: school.schoolId,
       entityType: 'CsrInquiry',
       entityId: inquiry.id,
